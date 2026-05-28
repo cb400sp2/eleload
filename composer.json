@@ -1,0 +1,21 @@
+{
+  "name": "cb400sp2/eleload",
+  "description": "Lightweight HTTP load testing CLI written in PHP.",
+  "type": "library",
+  "license": "MIT",
+  "require": {
+    "php": "^8.2",
+    "ext-curl": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Eleload\\": "src/"
+    }
+  },
+  "scripts": {
+    "test": "php tests/run.php"
+  },
+  "bin": [
+    "bin/phpload"
+  ]
+}
