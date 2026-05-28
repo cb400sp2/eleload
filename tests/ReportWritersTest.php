@@ -40,3 +40,28 @@ test('Report writers create json and html files', function (): void {
     assertContains('Total Requests', $html);
 });
 
+test('JsonReporter keeps status_codes as object map even for zero code', function (): void {
+    $report = [
+        'target' => ['url' => 'https://example.com', 'method' => 'GET'],
+        'config' => ['requests' => 1, 'concurrency' => 1, 'timeout' => 10, 'target_rps' => null, 'target_tps' => null],
+        'summary' => [
+            'duration_sec' => 1.0,
+            'requests' => ['total' => 1, 'success' => 0, 'failed' => 1, 'success_rate' => 0.0, 'error_rate' => 100.0],
+            'throughput' => ['rps' => 1.0, 'tps' => 0.0, 'tps_rps_rate' => 0.0],
+            'latency' => ['min' => 1.0, 'avg' => 1.0, 'p50' => 1.0, 'p95' => 1.0, 'p99' => 1.0, 'max' => 1.0],
+            'status_codes' => [0 => ['count' => 1, 'rate' => 100.0]],
+        ],
+        'errors' => [['request' => 1, 'http_code' => 0, 'error_no' => 6, 'error' => 'Could not resolve host', 'latency_ms' => 1.0]],
+        'meta' => ['tool' => 'eleload', 'version' => '0.1.0'],
+    ];
+
+    $tmpDir = sys_get_temp_dir() . '/eleload-tests-status-codes-' . uniqid('', true);
+    assertTrue(mkdir($tmpDir, 0775, true), 'Failed to create temp directory');
+
+    $jsonPath = $tmpDir . '/report.json';
+    (new JsonReporter())->write($report, $jsonPath);
+
+    $json = (string) file_get_contents($jsonPath);
+    assertContains('"status_codes": {', $json, 'status_codes should be encoded as an object');
+    assertContains('"0": {', $json, 'status code 0 should remain an object key');
+});

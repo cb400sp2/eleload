@@ -115,6 +115,56 @@ final class ArgvParser
 
     /**
      * @param list<string> $args
+     */
+    public function parseReport(array $args): ReportOptions
+    {
+        $jsonPath = null;
+        $htmlPath = null;
+
+        $i = 0;
+        while ($i < count($args)) {
+            $token = $args[$i];
+
+            if ($this->isOption($token)) {
+                [$name, $value, $i] = $this->parseOptionToken($args, $i);
+
+                if ($name !== 'html') {
+                    throw new InvalidArgumentException("Unknown option for report command: --{$name}");
+                }
+
+                $htmlPath = $value;
+                continue;
+            }
+
+            if ($jsonPath === null) {
+                $jsonPath = $token;
+                $i++;
+                continue;
+            }
+
+            throw new InvalidArgumentException("Unexpected argument for report command: {$token}");
+        }
+
+        if ($jsonPath === null) {
+            throw new InvalidArgumentException(
+                'JSON report path is required. Usage: phpload report <report.json> --html=<output.html>'
+            );
+        }
+
+        if ($htmlPath === null) {
+            throw new InvalidArgumentException(
+                'Output HTML path is required. Usage: phpload report <report.json> --html=<output.html>'
+            );
+        }
+
+        return new ReportOptions(
+            jsonPath: $jsonPath,
+            htmlPath: $htmlPath
+        );
+    }
+
+    /**
+     * @param list<string> $args
      * @return array{0:string, 1:string, 2:int}
      */
     private function parseOptionToken(array $args, int $index): array
@@ -184,4 +234,3 @@ final class ArgvParser
         return $parsed;
     }
 }
-

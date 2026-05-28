@@ -86,3 +86,30 @@ test('ArgvParser rejects missing URL', function (): void {
     );
 });
 
+test('ArgvParser parses report command options', function (): void {
+    $parser = new ArgvParser();
+    $options = $parser->parseReport(['reports/input.json', '--html=reports/output.html']);
+
+    assertSame('reports/input.json', $options->jsonPath);
+    assertSame('reports/output.html', $options->htmlPath);
+});
+
+test('ArgvParser report command requires html option', function (): void {
+    $parser = new ArgvParser();
+
+    assertThrows(
+        fn () => $parser->parseReport(['reports/input.json']),
+        InvalidArgumentException::class,
+        'Output HTML path is required'
+    );
+});
+
+test('ArgvParser report command rejects unknown option', function (): void {
+    $parser = new ArgvParser();
+
+    assertThrows(
+        fn () => $parser->parseReport(['reports/input.json', '--output=reports/out.html']),
+        InvalidArgumentException::class,
+        'Unknown option for report command'
+    );
+});

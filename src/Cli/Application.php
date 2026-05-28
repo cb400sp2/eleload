@@ -11,6 +11,7 @@ use Eleload\Report\ConsoleReporter;
 use Eleload\Report\HtmlReporter;
 use Eleload\Report\JsonReporter;
 use InvalidArgumentException;
+use JsonException;
 use RuntimeException;
 use Throwable;
 
@@ -42,6 +43,10 @@ final class Application
                 return $this->runLoadTest(array_slice($argv, 2), $output);
             }
 
+            if ($command === 'report') {
+                return $this->runReportCommand(array_slice($argv, 2), $output);
+            }
+
             $output->errorln("Unknown command: {$command}");
             $output->writeln();
             $this->printHelp($output);
@@ -51,6 +56,9 @@ final class Application
             return 1;
         } catch (RuntimeException $e) {
             $output->errorln('Runtime error: ' . $e->getMessage());
+            return 1;
+        } catch (JsonException $e) {
+            $output->errorln('JSON error: ' . $e->getMessage());
             return 1;
         } catch (Throwable $e) {
             $output->errorln('Unexpected error: ' . $e->getMessage());
@@ -101,12 +109,42 @@ final class Application
         return $report['summary']['requests']['failed'] > 0 ? 1 : 0;
     }
 
+    /**
+     * @param list<string> $args
+     */
+    private function runReportCommand(array $args, ConsoleOutput $output): int
+    {
+        $parser = new ArgvParser();
+        $options = $parser->parseReport($args);
+        $htmlReporter = new HtmlReporter(__DIR__ . '/../../templates/report.php');
+
+        if (!is_file($options->jsonPath)) {
+            throw new RuntimeException("JSON report file not found: {$options->jsonPath}");
+        }
+
+        $json = file_get_contents($options->jsonPath);
+        if ($json === false) {
+            throw new RuntimeException("Failed to read JSON report: {$options->jsonPath}");
+        }
+
+        $report = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+        if (!is_array($report)) {
+            throw new RuntimeException('Invalid JSON report format: root must be an object');
+        }
+
+        $htmlReporter->write($report, $options->htmlPath);
+        $output->writeln('HTML report: ' . $options->htmlPath);
+
+        return 0;
+    }
+
     private function printHelp(ConsoleOutput $output): void
     {
         $output->writeln('eleload ' . self::VERSION);
         $output->writeln();
         $output->writeln('Usage:');
         $output->writeln('  phpload run <url> [options]');
+        $output->writeln('  phpload report <report.json> --html=<output.html>');
         $output->writeln('  phpload help');
         $output->writeln('  phpload version');
         $output->writeln();
@@ -121,6 +159,8 @@ final class Application
         $output->writeln('  --report-html=FILE       Write HTML report');
         $output->writeln('  --target-rps=NUM         Target RPS');
         $output->writeln('  --target-tps=NUM         Target TPS');
+        $output->writeln();
+        $output->writeln('Options for report:');
+        $output->writeln('  --html=FILE              Output HTML path');
     }
 }
-

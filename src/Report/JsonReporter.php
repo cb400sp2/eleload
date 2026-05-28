@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Eleload\Report;
 
 use RuntimeException;
+use stdClass;
 
 final class JsonReporter
 {
@@ -14,9 +15,10 @@ final class JsonReporter
     public function write(array $report, string $path): void
     {
         $this->ensureParentDirectory($path);
+        $normalized = $this->normalizeReport($report);
 
         $json = json_encode(
-            $report,
+            $normalized,
             JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR
         );
 
@@ -36,5 +38,28 @@ final class JsonReporter
             throw new RuntimeException("Failed to create directory: {$dir}");
         }
     }
-}
 
+    /**
+     * @param array<string, mixed> $report
+     * @return array<string, mixed>
+     */
+    private function normalizeReport(array $report): array
+    {
+        if (
+            isset($report['summary']) &&
+            is_array($report['summary']) &&
+            isset($report['summary']['status_codes']) &&
+            is_array($report['summary']['status_codes'])
+        ) {
+            $statusCodeObject = new stdClass();
+
+            foreach ($report['summary']['status_codes'] as $code => $stats) {
+                $statusCodeObject->{(string)$code} = $stats;
+            }
+
+            $report['summary']['status_codes'] = $statusCodeObject;
+        }
+
+        return $report;
+    }
+}

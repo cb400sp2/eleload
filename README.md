@@ -20,6 +20,7 @@ It uses `curl_multi` for concurrent requests and prints throughput and latency m
 - Report output:
   - `--report-json`
   - `--report-html`
+  - `report` command to regenerate HTML from saved JSON
 
 ## Requirements
 
@@ -44,6 +45,12 @@ composer test
 ```bash
 ./bin/phpload help
 ./bin/phpload version
+```
+
+Regenerate HTML from an existing JSON report:
+
+```bash
+./bin/phpload report reports/report.json --html=reports/regenerated.html
 ```
 
 Run a simple load test:
