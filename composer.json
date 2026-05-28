@@ -16,6 +16,6 @@
     "test": "php tests/run.php"
   },
   "bin": [
-    "bin/phpload"
+    "bin/eleload"
   ]
 }

@@ -32,7 +32,7 @@ It uses `curl_multi` for concurrent requests and prints throughput and latency m
 
 ```bash
 composer install
-chmod +x bin/phpload
+chmod +x bin/eleload
 ```
 
 ## Test
@@ -44,26 +44,26 @@ composer test
 ## Usage
 
 ```bash
-./bin/phpload help
-./bin/phpload version
+./bin/eleload help
+./bin/eleload version
 ```
 
 Regenerate HTML from an existing JSON report:
 
 ```bash
-./bin/phpload report reports/report.json --html=reports/regenerated.html
+./bin/eleload report reports/report.json --html=reports/regenerated.html
 ```
 
 Run a simple load test:
 
 ```bash
-./bin/phpload run https://example.com --requests=100 --concurrency=10
+./bin/eleload run https://example.com --requests=100 --concurrency=10
 ```
 
 POST example:
 
 ```bash
-./bin/phpload run https://example.com/api/items \
+./bin/eleload run https://example.com/api/items \
   --method=POST \
   --header="Content-Type: application/json" \
   --body='{"name":"test"}' \
@@ -74,7 +74,7 @@ POST example:
 Output JSON + HTML reports:
 
 ```bash
-./bin/phpload run https://example.com \
+./bin/eleload run https://example.com \
   --requests=1000 \
   --concurrency=50 \
   --target-rps=100 \

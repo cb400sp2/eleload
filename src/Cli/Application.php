@@ -143,10 +143,10 @@ final class Application
         $output->writeln('eleload ' . self::VERSION);
         $output->writeln();
         $output->writeln('Usage:');
-        $output->writeln('  phpload run <url> [options]');
-        $output->writeln('  phpload report <report.json> --html=<output.html>');
-        $output->writeln('  phpload help');
-        $output->writeln('  phpload version');
+        $output->writeln('  eleload run <url> [options]');
+        $output->writeln('  eleload report <report.json> --html=<output.html>');
+        $output->writeln('  eleload help');
+        $output->writeln('  eleload version');
         $output->writeln();
         $output->writeln('Options for run:');
         $output->writeln('  --requests=100           Total requests');

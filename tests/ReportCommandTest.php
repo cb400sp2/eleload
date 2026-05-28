@@ -28,7 +28,7 @@ test('report command regenerates html from json report', function (): void {
         json_encode($report, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR)
     );
 
-    $binPath = dirname(__DIR__) . '/bin/phpload';
+    $binPath = dirname(__DIR__) . '/bin/eleload';
     $command = sprintf(
         '%s %s report %s --html=%s 2>&1',
         escapeshellarg(PHP_BINARY),
@@ -73,7 +73,7 @@ test('report command preserves multibyte text from json report', function (): vo
         json_encode($report, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)
     );
 
-    $binPath = dirname(__DIR__) . '/bin/phpload';
+    $binPath = dirname(__DIR__) . '/bin/eleload';
     $command = sprintf(
         '%s %s report %s --html=%s 2>&1',
         escapeshellarg(PHP_BINARY),
