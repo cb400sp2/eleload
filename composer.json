@@ -12,6 +12,9 @@
       "Eleload\\": "src/"
     }
   },
+  "scripts": {
+    "test": "php tests/run.php"
+  },
   "bin": [
     "bin/phpload"
   ]

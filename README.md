@@ -33,6 +33,12 @@ composer install
 chmod +x bin/phpload
 ```
 
+## Test
+
+```bash
+composer test
+```
+
 ## Usage
 
 ```bash
