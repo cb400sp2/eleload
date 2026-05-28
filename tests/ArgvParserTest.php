@@ -35,6 +35,9 @@ test('ArgvParser parses full option set', function (): void {
         '--report-json',
         'reports/report.json',
         '--report-html=reports/report.html',
+        '--report-md=reports/report.md',
+        '--output-dir=reports',
+        '--name=top page smoke load',
         '--target-rps',
         '120.5',
         '--target-tps=110.25',
@@ -52,6 +55,9 @@ test('ArgvParser parses full option set', function (): void {
     assertSame('{"name":"eleload"}', $options->body);
     assertSame('reports/report.json', $options->reportJsonPath);
     assertSame('reports/report.html', $options->reportHtmlPath);
+    assertSame('reports/report.md', $options->reportMdPath);
+    assertSame('reports', $options->outputDir);
+    assertSame('top page smoke load', $options->name);
     assertSame(120.5, $options->targetRps);
     assertSame(110.25, $options->targetTps);
 });

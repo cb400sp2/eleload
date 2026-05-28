@@ -7,6 +7,7 @@ $summary = $report['summary'];
 $requests = $summary['requests'];
 $throughput = $summary['throughput'];
 $latency = $summary['latency'];
+$testName = $report['meta']['test_name'] ?? null;
 
 $esc = static fn (mixed $value): string => htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
 $pct = static fn (float $value): string => number_format($value, 2) . '%';
@@ -127,6 +128,9 @@ $num = static fn (float $value): string => number_format($value, 2);
   <section class="hero">
     <h1>eleload report</h1>
     <div class="meta">
+      <?php if (is_string($testName) && $testName !== ''): ?>
+        <div>Test Name: <?= $esc($testName) ?></div>
+      <?php endif; ?>
       <div>URL: <?= $esc($report['target']['url']) ?></div>
       <div>Method: <?= $esc($report['target']['method']) ?></div>
       <div>Requests: <?= $esc($requests['total']) ?></div>

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Eleload\Report\HtmlReporter;
 use Eleload\Report\JsonReporter;
+use Eleload\Report\MarkdownReporter;
+use Eleload\Report\ReportPathGenerator;
 
 test('Report writers create json and html files', function (): void {
     $report = [
@@ -17,7 +19,7 @@ test('Report writers create json and html files', function (): void {
             'status_codes' => ['200' => ['count' => 1, 'rate' => 100.0]],
         ],
         'errors' => [],
-        'meta' => ['tool' => 'eleload', 'version' => '0.1.0'],
+        'meta' => ['tool' => 'eleload', 'version' => '0.1.0', 'test_name' => 'top page smoke load'],
     ];
 
     $tmpDir = sys_get_temp_dir() . '/eleload-tests-' . uniqid('', true);
@@ -25,19 +27,28 @@ test('Report writers create json and html files', function (): void {
 
     $jsonPath = $tmpDir . '/report.json';
     $htmlPath = $tmpDir . '/report.html';
+    $mdPath = $tmpDir . '/report.md';
 
     (new JsonReporter())->write($report, $jsonPath);
     (new HtmlReporter(dirname(__DIR__) . '/templates/report.php'))->write($report, $htmlPath);
+    (new MarkdownReporter())->write($report, $mdPath);
 
     assertTrue(is_file($jsonPath), 'JSON report was not created');
     assertTrue(is_file($htmlPath), 'HTML report was not created');
+    assertTrue(is_file($mdPath), 'Markdown report was not created');
 
     $json = (string) file_get_contents($jsonPath);
     $html = (string) file_get_contents($htmlPath);
+    $markdown = (string) file_get_contents($mdPath);
 
     assertContains('"tool": "eleload"', $json);
+    assertContains('"test_name": "top page smoke load"', $json);
     assertContains('<title>eleload report</title>', $html);
+    assertContains('Test Name: top page smoke load', $html);
     assertContains('Total Requests', $html);
+    assertContains('# Eleload Report', $markdown);
+    assertContains('**Test Name:** top page smoke load', $markdown);
+    assertContains('| RPS | 1.00 req/sec |', $markdown);
 });
 
 test('JsonReporter keeps status_codes as object map even for zero code', function (): void {
@@ -105,4 +116,12 @@ test('Report writers preserve multibyte text and escape html output', function (
     assertContains('接続に失敗しました', $json, 'JSON should preserve multibyte error text');
     assertContains('検索?name=太郎&amp;team=開発', $html, 'HTML should preserve multibyte URL text and escape ampersands');
     assertContains('接続に失敗しました: &lt;再試行&gt;', $html, 'HTML should escape multibyte error text safely');
+});
+
+test('ReportPathGenerator creates timestamped report paths', function (): void {
+    $paths = (new ReportPathGenerator())->generate('reports', strtotime('2026-05-29 15:30:00'));
+
+    assertSame('reports/eleload-20260529-153000.json', $paths['json']);
+    assertSame('reports/eleload-20260529-153000.html', $paths['html']);
+    assertSame('reports/eleload-20260529-153000.md', $paths['md']);
 });

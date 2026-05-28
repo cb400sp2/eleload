@@ -19,9 +19,11 @@ final class RunOptions
         public readonly ?string $body,
         public readonly ?string $reportJsonPath,
         public readonly ?string $reportHtmlPath,
+        public readonly ?string $reportMdPath,
+        public readonly ?string $outputDir,
+        public readonly ?string $name,
         public readonly ?float $targetRps,
         public readonly ?float $targetTps
     ) {
     }
 }
-

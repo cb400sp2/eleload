@@ -22,6 +22,9 @@ final class ConsoleReporter
         $output->writeln('HTTP Load Test Result');
         $output->writeln();
         $output->writeln('Target');
+        if (!empty($report['meta']['test_name']) && is_string($report['meta']['test_name'])) {
+            $output->writeln('  Test Name            : ' . $report['meta']['test_name']);
+        }
         $output->writeln('  URL                  : ' . $report['target']['url']);
         $output->writeln('  Method               : ' . $report['target']['method']);
         $output->writeln('  Requests             : ' . $requests['total']);
@@ -125,4 +128,3 @@ final class ConsoleReporter
         return number_format($value, 2) . ' ms';
     }
 }
-
