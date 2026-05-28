@@ -91,6 +91,18 @@ final class ConsoleReporter
             );
         }
 
+        if (!empty($report['thresholds']['checks'])) {
+            $output->writeln();
+            $output->writeln('Thresholds');
+            foreach ($report['thresholds']['checks'] as $check) {
+                $output->writeln(
+                    '  ' . str_pad((string)$check['name'], 20, ' ', STR_PAD_RIGHT) .
+                    ': actual ' . $check['actual'] . ' ' . $check['operator'] . ' ' . $check['threshold'] .
+                    ' [' . ($check['passed'] ? 'PASS' : 'FAIL') . ']'
+                );
+            }
+        }
+
         if (!empty($report['errors'])) {
             $output->writeln();
             $output->writeln('Errors');

@@ -22,6 +22,13 @@ final class RunOptions
         public readonly ?string $reportMdPath,
         public readonly ?string $outputDir,
         public readonly ?string $name,
+        public readonly ?float $durationSec,
+        public readonly float $warmupSec,
+        public readonly ?float $failOnP95,
+        public readonly ?float $failOnP99,
+        public readonly ?float $failOnErrorRate,
+        public readonly ?float $failOnRpsBelow,
+        public readonly ?float $failOnTpsBelow,
         public readonly ?float $targetRps,
         public readonly ?float $targetTps
     ) {

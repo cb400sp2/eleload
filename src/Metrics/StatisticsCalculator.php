@@ -21,13 +21,17 @@ final class StatisticsCalculator
      */
     public function summarize(RunResult $runResult): array
     {
-        $total = count($runResult->requestResults);
+        $metricResults = array_values(array_filter(
+            $runResult->requestResults,
+            static fn (RequestResult $result): bool => $result->includedInMetrics
+        ));
+        $total = count($metricResults);
         $success = 0;
         $statusCounts = [];
         $latencies = [];
         $errors = [];
 
-        foreach ($runResult->requestResults as $result) {
+        foreach ($metricResults as $result) {
             $latencies[] = $result->latencyMs;
             $statusKey = (string)$result->httpCode;
             $statusCounts[$statusKey] = ($statusCounts[$statusKey] ?? 0) + 1;
@@ -42,7 +46,7 @@ final class StatisticsCalculator
         ksort($statusCounts, SORT_NATURAL);
 
         $failed = $total - $success;
-        $durationSec = $runResult->durationSec;
+        $durationSec = max($runResult->durationSec - min($runResult->options->warmupSec, $runResult->durationSec), 0.000_001);
         $successRate = $total > 0 ? ($success / $total) * 100.0 : 0.0;
         $errorRate = $total > 0 ? ($failed / $total) * 100.0 : 0.0;
         $rps = $total / $durationSec;
@@ -87,13 +91,18 @@ final class StatisticsCalculator
                 'concurrency' => $runResult->options->concurrency,
                 'timeout' => $runResult->options->timeout,
                 'name' => $runResult->options->name,
+                'duration' => $runResult->options->durationSec,
+                'warmup' => $runResult->options->warmupSec,
                 'target_rps' => $runResult->options->targetRps,
                 'target_tps' => $runResult->options->targetTps,
             ],
             'summary' => [
                 'duration_sec' => $this->round3($durationSec),
+                'total_duration_sec' => $this->round3($runResult->durationSec),
                 'requests' => [
                     'total' => $total,
+                    'executed' => count($runResult->requestResults),
+                    'warmup' => count($runResult->requestResults) - $total,
                     'success' => $success,
                     'failed' => $failed,
                     'success_rate' => $this->round2($successRate),

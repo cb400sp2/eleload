@@ -17,6 +17,14 @@ It uses `curl_multi` for concurrent requests and prints throughput and latency m
 - Optional target metrics:
   - `--target-rps`
   - `--target-tps`
+- Duration and CI threshold options:
+  - `--duration`
+  - `--warmup`
+  - `--fail-on-p95`
+  - `--fail-on-p99`
+  - `--fail-on-error-rate`
+  - `--fail-on-rps-below`
+  - `--fail-on-tps-below`
 - Report output:
   - `--report-json`
   - `--report-html`
@@ -95,6 +103,17 @@ Output timestamped reports to a directory:
   --concurrency=50 \
   --name="top page smoke load" \
   --output-dir=reports
+```
+
+Run for a fixed duration and fail on thresholds:
+
+```bash
+./bin/eleload run https://example.com \
+  --duration=60 \
+  --warmup=5 \
+  --concurrency=50 \
+  --fail-on-p95=500 \
+  --fail-on-error-rate=1
 ```
 
 ## Metric Definitions

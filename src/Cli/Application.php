@@ -6,6 +6,7 @@ namespace Eleload\Cli;
 
 use Eleload\LoadTesting\CurlMultiRunner;
 use Eleload\LoadTesting\RequestOptions;
+use Eleload\Metrics\FailureEvaluator;
 use Eleload\Metrics\StatisticsCalculator;
 use Eleload\Report\ConsoleReporter;
 use Eleload\Report\HtmlReporter;
@@ -78,6 +79,7 @@ final class Application
 
         $runner = new CurlMultiRunner();
         $stats = new StatisticsCalculator();
+        $failureEvaluator = new FailureEvaluator();
         $consoleReporter = new ConsoleReporter();
         $jsonReporter = new JsonReporter();
         $htmlReporter = new HtmlReporter(__DIR__ . '/../../templates/report.php');
@@ -93,11 +95,14 @@ final class Application
             headers: $options->headers,
             body: $options->body,
             name: $options->name,
+            durationSec: $options->durationSec,
+            warmupSec: $options->warmupSec,
             targetRps: $options->targetRps,
             targetTps: $options->targetTps
         ));
 
         $report = $stats->summarize($result);
+        $report['thresholds'] = $failureEvaluator->evaluate($report, $options);
 
         $consoleReporter->render($report, $output);
 
@@ -126,7 +131,7 @@ final class Application
             $output->writeln('Markdown report: ' . $paths['md']);
         }
 
-        return $report['summary']['requests']['failed'] > 0 ? 1 : 0;
+        return $report['summary']['requests']['failed'] > 0 || $report['thresholds']['failed'] ? 1 : 0;
     }
 
     /**
@@ -175,6 +180,8 @@ final class Application
         $output->writeln('  --header="K: V"          Repeatable HTTP header');
         $output->writeln('  --body="..."             Request body');
         $output->writeln('  --timeout=10             Timeout seconds');
+        $output->writeln('  --duration=SECONDS       Run for a fixed duration instead of request count');
+        $output->writeln('  --warmup=SECONDS         Exclude initial seconds from metrics');
         $output->writeln('  --report-json=FILE       Write JSON report');
         $output->writeln('  --report-html=FILE       Write HTML report');
         $output->writeln('  --report-md=FILE         Write Markdown report');
@@ -182,6 +189,11 @@ final class Application
         $output->writeln('  --name=TEXT              Test name shown in reports');
         $output->writeln('  --target-rps=NUM         Target RPS');
         $output->writeln('  --target-tps=NUM         Target TPS');
+        $output->writeln('  --fail-on-p95=MS         Fail if p95 exceeds this latency');
+        $output->writeln('  --fail-on-p99=MS         Fail if p99 exceeds this latency');
+        $output->writeln('  --fail-on-error-rate=PCT Fail if error rate exceeds this percent');
+        $output->writeln('  --fail-on-rps-below=NUM  Fail if RPS is below this value');
+        $output->writeln('  --fail-on-tps-below=NUM  Fail if TPS is below this value');
         $output->writeln();
         $output->writeln('Options for report:');
         $output->writeln('  --html=FILE              Output HTML path');

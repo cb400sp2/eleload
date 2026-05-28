@@ -1,0 +1,76 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Eleload\Metrics;
+
+use Eleload\Cli\RunOptions;
+
+final class FailureEvaluator
+{
+    /**
+     * @param array<string, mixed> $report
+     * @return array{checks:list<array{name:string, actual:float, threshold:float, operator:string, passed:bool}>, failed:bool}
+     */
+    public function evaluate(array $report, RunOptions $options): array
+    {
+        $checks = [];
+        $latency = $report['summary']['latency'];
+        $requests = $report['summary']['requests'];
+        $throughput = $report['summary']['throughput'];
+
+        if ($options->failOnP95 !== null) {
+            $checks[] = $this->maxCheck('p95', (float)$latency['p95'], $options->failOnP95);
+        }
+
+        if ($options->failOnP99 !== null) {
+            $checks[] = $this->maxCheck('p99', (float)$latency['p99'], $options->failOnP99);
+        }
+
+        if ($options->failOnErrorRate !== null) {
+            $checks[] = $this->maxCheck('error_rate', (float)$requests['error_rate'], $options->failOnErrorRate);
+        }
+
+        if ($options->failOnRpsBelow !== null) {
+            $checks[] = $this->minCheck('rps', (float)$throughput['rps'], $options->failOnRpsBelow);
+        }
+
+        if ($options->failOnTpsBelow !== null) {
+            $checks[] = $this->minCheck('tps', (float)$throughput['tps'], $options->failOnTpsBelow);
+        }
+
+        return [
+            'checks' => $checks,
+            'failed' => count(array_filter($checks, static fn (array $check): bool => !$check['passed'])) > 0,
+        ];
+    }
+
+    /**
+     * @return array{name:string, actual:float, threshold:float, operator:string, passed:bool}
+     */
+    private function maxCheck(string $name, float $actual, float $threshold): array
+    {
+        return [
+            'name' => $name,
+            'actual' => round($actual, 2),
+            'threshold' => round($threshold, 2),
+            'operator' => '<=',
+            'passed' => $actual <= $threshold,
+        ];
+    }
+
+    /**
+     * @return array{name:string, actual:float, threshold:float, operator:string, passed:bool}
+     */
+    private function minCheck(string $name, float $actual, float $threshold): array
+    {
+        return [
+            'name' => $name,
+            'actual' => round($actual, 2),
+            'threshold' => round($threshold, 2),
+            'operator' => '>=',
+            'passed' => $actual >= $threshold,
+        ];
+    }
+}
+

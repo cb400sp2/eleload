@@ -23,9 +23,13 @@ final class CurlMultiRunner
         $inFlight = [];
         $results = [];
         $startedAt = hrtime(true);
+        $durationMode = $options->durationSec !== null;
 
-        while ($completed < $options->requests) {
-            while ($nextRequest <= $options->requests && count($inFlight) < $options->concurrency) {
+        while (true) {
+            while (
+                $this->canStartRequest($options, $startedAt, $nextRequest, $durationMode) &&
+                count($inFlight) < $options->concurrency
+            ) {
                 $handle = $this->createHandle($options);
                 $handleId = spl_object_id($handle);
 
@@ -56,7 +60,9 @@ final class CurlMultiRunner
                     continue;
                 }
 
-                $latencyMs = (hrtime(true) - $meta['started_at']) / 1_000_000;
+                $endedAt = hrtime(true);
+                $latencyMs = ($endedAt - $meta['started_at']) / 1_000_000;
+                $elapsedSec = ($endedAt - $startedAt) / 1_000_000_000;
                 $httpCode = (int) curl_getinfo($handle, CURLINFO_HTTP_CODE);
                 $downloadBytes = (float) curl_getinfo($handle, CURLINFO_SIZE_DOWNLOAD);
                 $errorNo = curl_errno($handle);
@@ -68,7 +74,8 @@ final class CurlMultiRunner
                     httpCode: $httpCode,
                     downloadBytes: $downloadBytes,
                     errorNo: $errorNo,
-                    error: $error
+                    error: $error,
+                    includedInMetrics: $elapsedSec >= $options->warmupSec
                 );
 
                 unset($inFlight[$handleId]);
@@ -76,11 +83,17 @@ final class CurlMultiRunner
                 $completed++;
             }
 
+            if ($this->isComplete($options, $startedAt, $completed, count($inFlight), $durationMode)) {
+                break;
+            }
+
             if ($running > 0) {
                 $selected = curl_multi_select($multi, 1.0);
                 if ($selected === -1) {
                     usleep(1_000);
                 }
+            } else {
+                usleep(1_000);
             }
         }
 
@@ -92,6 +105,35 @@ final class CurlMultiRunner
             durationSec: max($durationSec, 0.000_001),
             requestResults: $results
         );
+    }
+
+    private function canStartRequest(
+        RequestOptions $options,
+        int $startedAt,
+        int $nextRequest,
+        bool $durationMode
+    ): bool {
+        if ($durationMode) {
+            $elapsedSec = (hrtime(true) - $startedAt) / 1_000_000_000;
+            return $elapsedSec < (float)$options->durationSec;
+        }
+
+        return $nextRequest <= $options->requests;
+    }
+
+    private function isComplete(
+        RequestOptions $options,
+        int $startedAt,
+        int $completed,
+        int $inFlightCount,
+        bool $durationMode
+    ): bool {
+        if ($durationMode) {
+            $elapsedSec = (hrtime(true) - $startedAt) / 1_000_000_000;
+            return $elapsedSec >= (float)$options->durationSec && $inFlightCount === 0;
+        }
+
+        return $completed >= $options->requests;
     }
 
     private function createHandle(RequestOptions $options): CurlHandle

@@ -38,6 +38,13 @@ test('ArgvParser parses full option set', function (): void {
         '--report-md=reports/report.md',
         '--output-dir=reports',
         '--name=top page smoke load',
+        '--duration=60',
+        '--warmup=5',
+        '--fail-on-p95=500',
+        '--fail-on-p99=1000',
+        '--fail-on-error-rate=1',
+        '--fail-on-rps-below=100',
+        '--fail-on-tps-below=90',
         '--target-rps',
         '120.5',
         '--target-tps=110.25',
@@ -58,8 +65,25 @@ test('ArgvParser parses full option set', function (): void {
     assertSame('reports/report.md', $options->reportMdPath);
     assertSame('reports', $options->outputDir);
     assertSame('top page smoke load', $options->name);
+    assertSame(60.0, $options->durationSec);
+    assertSame(5.0, $options->warmupSec);
+    assertSame(500.0, $options->failOnP95);
+    assertSame(1000.0, $options->failOnP99);
+    assertSame(1.0, $options->failOnErrorRate);
+    assertSame(100.0, $options->failOnRpsBelow);
+    assertSame(90.0, $options->failOnTpsBelow);
     assertSame(120.5, $options->targetRps);
     assertSame(110.25, $options->targetTps);
+});
+
+test('ArgvParser rejects warmup greater than duration', function (): void {
+    $parser = new ArgvParser();
+
+    assertThrows(
+        fn () => $parser->parseRun(['https://example.com', '--duration=5', '--warmup=5']),
+        InvalidArgumentException::class,
+        'Option --warmup must be lower than --duration'
+    );
 });
 
 test('ArgvParser rejects invalid URL', function (): void {

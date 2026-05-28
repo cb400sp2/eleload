@@ -29,6 +29,13 @@ final class ArgvParser
         $reportMdPath = null;
         $outputDir = null;
         $testName = null;
+        $durationSec = null;
+        $warmupSec = 0.0;
+        $failOnP95 = null;
+        $failOnP99 = null;
+        $failOnErrorRate = null;
+        $failOnRpsBelow = null;
+        $failOnTpsBelow = null;
         $targetRps = null;
         $targetTps = null;
 
@@ -73,6 +80,27 @@ final class ArgvParser
                     case 'name':
                         $testName = $value;
                         break;
+                    case 'duration':
+                        $durationSec = $this->parsePositiveFloat($name, $value);
+                        break;
+                    case 'warmup':
+                        $warmupSec = $this->parseNonNegativeFloat($name, $value);
+                        break;
+                    case 'fail-on-p95':
+                        $failOnP95 = $this->parsePositiveFloat($name, $value);
+                        break;
+                    case 'fail-on-p99':
+                        $failOnP99 = $this->parsePositiveFloat($name, $value);
+                        break;
+                    case 'fail-on-error-rate':
+                        $failOnErrorRate = $this->parsePercent($name, $value);
+                        break;
+                    case 'fail-on-rps-below':
+                        $failOnRpsBelow = $this->parsePositiveFloat($name, $value);
+                        break;
+                    case 'fail-on-tps-below':
+                        $failOnTpsBelow = $this->parsePositiveFloat($name, $value);
+                        break;
                     case 'target-rps':
                         $targetRps = $this->parsePositiveFloat($name, $value);
                         break;
@@ -110,6 +138,10 @@ final class ArgvParser
             );
         }
 
+        if ($durationSec !== null && $warmupSec >= $durationSec) {
+            throw new InvalidArgumentException('Option --warmup must be lower than --duration.');
+        }
+
         return new RunOptions(
             url: $url,
             requests: $requests,
@@ -123,6 +155,13 @@ final class ArgvParser
             reportMdPath: $reportMdPath,
             outputDir: $outputDir,
             name: $testName,
+            durationSec: $durationSec,
+            warmupSec: $warmupSec,
+            failOnP95: $failOnP95,
+            failOnP99: $failOnP99,
+            failOnErrorRate: $failOnErrorRate,
+            failOnRpsBelow: $failOnRpsBelow,
+            failOnTpsBelow: $failOnTpsBelow,
             targetRps: $targetRps,
             targetTps: $targetTps
         );
@@ -244,6 +283,30 @@ final class ArgvParser
         $parsed = (float)$value;
         if ($parsed <= 0.0) {
             throw new InvalidArgumentException("Option --{$name} must be > 0.");
+        }
+
+        return $parsed;
+    }
+
+    private function parseNonNegativeFloat(string $name, string $value): float
+    {
+        if (!is_numeric($value)) {
+            throw new InvalidArgumentException("Option --{$name} must be numeric.");
+        }
+
+        $parsed = (float)$value;
+        if ($parsed < 0.0) {
+            throw new InvalidArgumentException("Option --{$name} must be >= 0.");
+        }
+
+        return $parsed;
+    }
+
+    private function parsePercent(string $name, string $value): float
+    {
+        $parsed = $this->parseNonNegativeFloat($name, $value);
+        if ($parsed > 100.0) {
+            throw new InvalidArgumentException("Option --{$name} must be <= 100.");
         }
 
         return $parsed;
