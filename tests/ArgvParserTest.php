@@ -15,6 +15,7 @@ test('ArgvParser parses minimum arguments', function (): void {
     assertSame(10, $options->timeout);
     assertSame([], $options->headers);
     assertSame(null, $options->body);
+    assertSame(null, $options->successStatusCodes);
 });
 
 test('ArgvParser parses full option set', function (): void {
@@ -38,6 +39,7 @@ test('ArgvParser parses full option set', function (): void {
         '--report-md=reports/report.md',
         '--output-dir=reports',
         '--name=top page smoke load',
+        '--success-status=200,201,204',
         '--duration=60',
         '--warmup=5',
         '--fail-on-p95=500',
@@ -65,6 +67,7 @@ test('ArgvParser parses full option set', function (): void {
     assertSame('reports/report.md', $options->reportMdPath);
     assertSame('reports', $options->outputDir);
     assertSame('top page smoke load', $options->name);
+    assertSame([200, 201, 204], $options->successStatusCodes);
     assertSame(60.0, $options->durationSec);
     assertSame(5.0, $options->warmupSec);
     assertSame(500.0, $options->failOnP95);
@@ -83,6 +86,22 @@ test('ArgvParser rejects warmup greater than duration', function (): void {
         fn () => $parser->parseRun(['https://example.com', '--duration=5', '--warmup=5']),
         InvalidArgumentException::class,
         'Option --warmup must be lower than --duration'
+    );
+});
+
+test('ArgvParser rejects invalid success status list', function (): void {
+    $parser = new ArgvParser();
+
+    assertThrows(
+        fn () => $parser->parseRun(['https://example.com', '--success-status=200,abc']),
+        InvalidArgumentException::class,
+        'comma-separated integers'
+    );
+
+    assertThrows(
+        fn () => $parser->parseRun(['https://example.com', '--success-status=99']),
+        InvalidArgumentException::class,
+        'between 100 and 599'
     );
 });
 

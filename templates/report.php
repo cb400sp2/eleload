@@ -8,6 +8,10 @@ $requests = $summary['requests'];
 $throughput = $summary['throughput'];
 $latency = $summary['latency'];
 $testName = $report['meta']['test_name'] ?? null;
+$successStatusCodes = $report['config']['success_status'] ?? null;
+$successStatusLabel = (is_array($successStatusCodes) && $successStatusCodes !== [])
+    ? implode(',', array_map(static fn (mixed $code): string => (string)$code, $successStatusCodes))
+    : '2xx,3xx (default)';
 
 $esc = static fn (mixed $value): string => htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
 $pct = static fn (float $value): string => number_format($value, 2) . '%';
@@ -133,6 +137,7 @@ $num = static fn (float $value): string => number_format($value, 2);
       <?php endif; ?>
       <div>URL: <?= $esc($report['target']['url']) ?></div>
       <div>Method: <?= $esc($report['target']['method']) ?></div>
+      <div>Success Status: <?= $esc($successStatusLabel) ?></div>
       <div>Requests: <?= $esc($requests['total']) ?></div>
       <div>Concurrency: <?= $esc($report['config']['concurrency']) ?></div>
       <div>Duration: <?= $esc(number_format((float)$summary['duration_sec'], 3)) ?> sec</div>

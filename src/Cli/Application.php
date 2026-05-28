@@ -95,6 +95,7 @@ final class Application
             headers: $options->headers,
             body: $options->body,
             name: $options->name,
+            successStatusCodes: $options->successStatusCodes,
             durationSec: $options->durationSec,
             warmupSec: $options->warmupSec,
             targetRps: $options->targetRps,
@@ -180,6 +181,7 @@ final class Application
         $output->writeln('  --header="K: V"          Repeatable HTTP header');
         $output->writeln('  --body="..."             Request body');
         $output->writeln('  --timeout=10             Timeout seconds');
+        $output->writeln('  --success-status=LIST    Comma-separated success status codes (e.g. 200,201,204)');
         $output->writeln('  --duration=SECONDS       Run for a fixed duration instead of request count');
         $output->writeln('  --warmup=SECONDS         Exclude initial seconds from metrics');
         $output->writeln('  --report-json=FILE       Write JSON report');

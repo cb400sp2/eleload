@@ -8,6 +8,7 @@ final class RunOptions
 {
     /**
      * @param list<string> $headers
+     * @param list<int>|null $successStatusCodes
      */
     public function __construct(
         public readonly string $url,
@@ -22,6 +23,7 @@ final class RunOptions
         public readonly ?string $reportMdPath,
         public readonly ?string $outputDir,
         public readonly ?string $name,
+        public readonly ?array $successStatusCodes,
         public readonly ?float $durationSec,
         public readonly float $warmupSec,
         public readonly ?float $failOnP95,

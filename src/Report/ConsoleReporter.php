@@ -27,6 +27,7 @@ final class ConsoleReporter
         }
         $output->writeln('  URL                  : ' . $report['target']['url']);
         $output->writeln('  Method               : ' . $report['target']['method']);
+        $output->writeln('  Success Status       : ' . $this->formatSuccessStatus($report['config']['success_status'] ?? null));
         $output->writeln('  Requests             : ' . $requests['total']);
         $output->writeln('  Concurrency          : ' . $report['config']['concurrency']);
         $output->writeln('  Duration             : ' . number_format((float)$summary['duration_sec'], 3) . ' sec');
@@ -138,5 +139,14 @@ final class ConsoleReporter
     private function formatMs(float $value): string
     {
         return number_format($value, 2) . ' ms';
+    }
+
+    private function formatSuccessStatus(mixed $value): string
+    {
+        if (!is_array($value) || $value === []) {
+            return '2xx,3xx (default)';
+        }
+
+        return implode(',', array_map(static fn (mixed $code): string => (string)$code, $value));
     }
 }
