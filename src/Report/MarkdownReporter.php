@@ -30,6 +30,7 @@ final class MarkdownReporter
         $throughput = $summary['throughput'];
         $latency = $summary['latency'];
         $testName = $report['meta']['test_name'] ?? null;
+        $successStatusLabel = $this->formatSuccessStatus($report['config']['success_status'] ?? null);
 
         $lines = [
             '# Eleload Report',
@@ -48,6 +49,7 @@ final class MarkdownReporter
             '|---|---:|',
             '| URL | ' . $this->escape((string)$report['target']['url']) . ' |',
             '| Method | ' . $this->escape((string)$report['target']['method']) . ' |',
+            '| Success Status | ' . $this->escape($successStatusLabel) . ' |',
             '| Requests | ' . $requests['total'] . ' |',
             '| Concurrency | ' . $report['config']['concurrency'] . ' |',
             '| Duration | ' . number_format((float)$summary['duration_sec'], 3) . ' sec |',
@@ -149,5 +151,14 @@ final class MarkdownReporter
     private function percent(float $value): string
     {
         return number_format($value, 2) . '%';
+    }
+
+    private function formatSuccessStatus(mixed $value): string
+    {
+        if (!is_array($value) || $value === []) {
+            return '2xx,3xx (default)';
+        }
+
+        return implode(',', array_map(static fn (mixed $code): string => (string)$code, $value));
     }
 }

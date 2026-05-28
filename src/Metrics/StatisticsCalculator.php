@@ -30,13 +30,14 @@ final class StatisticsCalculator
         $statusCounts = [];
         $latencies = [];
         $errors = [];
+        $successStatusCodes = $runResult->options->successStatusCodes;
 
         foreach ($metricResults as $result) {
             $latencies[] = $result->latencyMs;
             $statusKey = (string)$result->httpCode;
             $statusCounts[$statusKey] = ($statusCounts[$statusKey] ?? 0) + 1;
 
-            if ($result->isSuccess()) {
+            if ($result->isSuccess($successStatusCodes)) {
                 $success++;
             } else {
                 $errors[] = $this->formatError($result);
@@ -91,6 +92,7 @@ final class StatisticsCalculator
                 'concurrency' => $runResult->options->concurrency,
                 'timeout' => $runResult->options->timeout,
                 'name' => $runResult->options->name,
+                'success_status' => $runResult->options->successStatusCodes,
                 'duration' => $runResult->options->durationSec,
                 'warmup' => $runResult->options->warmupSec,
                 'target_rps' => $runResult->options->targetRps,

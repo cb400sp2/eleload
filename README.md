@@ -25,6 +25,8 @@ It uses `curl_multi` for concurrent requests and prints throughput and latency m
   - `--fail-on-error-rate`
   - `--fail-on-rps-below`
   - `--fail-on-tps-below`
+- Success criteria customization:
+  - `--success-status`
 - Report output:
   - `--report-json`
   - `--report-html`
@@ -78,6 +80,16 @@ POST example:
   --method=POST \
   --header="Content-Type: application/json" \
   --body='{"name":"test"}' \
+  --requests=500 \
+  --concurrency=20
+```
+
+Custom success status example:
+
+```bash
+./bin/eleload run https://example.com/api/items \
+  --method=POST \
+  --success-status=200,201,204 \
   --requests=500 \
   --concurrency=20
 ```

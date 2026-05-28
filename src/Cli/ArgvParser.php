@@ -29,6 +29,7 @@ final class ArgvParser
         $reportMdPath = null;
         $outputDir = null;
         $testName = null;
+        $successStatusCodes = null;
         $durationSec = null;
         $warmupSec = 0.0;
         $failOnP95 = null;
@@ -79,6 +80,9 @@ final class ArgvParser
                         break;
                     case 'name':
                         $testName = $value;
+                        break;
+                    case 'success-status':
+                        $successStatusCodes = $this->parseStatusCodeList($name, $value);
                         break;
                     case 'duration':
                         $durationSec = $this->parsePositiveFloat($name, $value);
@@ -155,6 +159,7 @@ final class ArgvParser
             reportMdPath: $reportMdPath,
             outputDir: $outputDir,
             name: $testName,
+            successStatusCodes: $successStatusCodes,
             durationSec: $durationSec,
             warmupSec: $warmupSec,
             failOnP95: $failOnP95,
@@ -310,5 +315,36 @@ final class ArgvParser
         }
 
         return $parsed;
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function parseStatusCodeList(string $name, string $value): array
+    {
+        $rawCodes = explode(',', $value);
+        $parsedCodes = [];
+
+        foreach ($rawCodes as $rawCode) {
+            $trimmed = trim($rawCode);
+            if ($trimmed === '') {
+                throw new InvalidArgumentException("Option --{$name} must not include empty status codes.");
+            }
+
+            if (!preg_match('/^\d+$/', $trimmed)) {
+                throw new InvalidArgumentException("Option --{$name} must be comma-separated integers.");
+            }
+
+            $statusCode = (int)$trimmed;
+            if ($statusCode < 100 || $statusCode > 599) {
+                throw new InvalidArgumentException("Option --{$name} status code must be between 100 and 599.");
+            }
+
+            if (!in_array($statusCode, $parsedCodes, true)) {
+                $parsedCodes[] = $statusCode;
+            }
+        }
+
+        return $parsedCodes;
     }
 }

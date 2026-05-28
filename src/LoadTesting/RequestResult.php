@@ -17,8 +17,19 @@ final class RequestResult
     ) {
     }
 
-    public function isSuccess(): bool
+    /**
+     * @param list<int>|null $successStatusCodes
+     */
+    public function isSuccess(?array $successStatusCodes = null): bool
     {
-        return $this->errorNo === 0 && $this->httpCode >= 200 && $this->httpCode < 400;
+        if ($this->errorNo !== 0) {
+            return false;
+        }
+
+        if ($successStatusCodes === null) {
+            return $this->httpCode >= 200 && $this->httpCode < 400;
+        }
+
+        return in_array($this->httpCode, $successStatusCodes, true);
     }
 }
