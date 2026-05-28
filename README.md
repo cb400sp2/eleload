@@ -21,6 +21,7 @@ It uses `curl_multi` for concurrent requests and prints throughput and latency m
   - `--report-json`
   - `--report-html`
   - `report` command to regenerate HTML from saved JSON
+- UTF-8 report content, including multibyte text in JSON and HTML reports
 
 ## Requirements
 

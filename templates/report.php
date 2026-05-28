@@ -31,7 +31,7 @@ $num = static fn (float $value): string => number_format($value, 2);
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: "IBM Plex Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-family: "IBM Plex Sans", "Hiragino Sans", "Yu Gothic", "Noto Sans CJK JP", "Helvetica Neue", Helvetica, Arial, sans-serif;
       color: var(--ink);
       background:
         radial-gradient(circle at 0% 0%, #e4f0ff 0%, rgba(228, 240, 255, 0) 45%),
@@ -234,4 +234,3 @@ $num = static fn (float $value): string => number_format($value, 2);
 </main>
 </body>
 </html>
-
