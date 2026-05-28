@@ -84,7 +84,7 @@ final class ArgvParser
         }
 
         if ($url === null) {
-            throw new InvalidArgumentException('URL is required. Usage: phpload run <url> [options]');
+            throw new InvalidArgumentException('URL is required. Usage: eleload run <url> [options]');
         }
 
         if (!filter_var($url, FILTER_VALIDATE_URL)) {
@@ -147,13 +147,13 @@ final class ArgvParser
 
         if ($jsonPath === null) {
             throw new InvalidArgumentException(
-                'JSON report path is required. Usage: phpload report <report.json> --html=<output.html>'
+                'JSON report path is required. Usage: eleload report <report.json> --html=<output.html>'
             );
         }
 
         if ($htmlPath === null) {
             throw new InvalidArgumentException(
-                'Output HTML path is required. Usage: phpload report <report.json> --html=<output.html>'
+                'Output HTML path is required. Usage: eleload report <report.json> --html=<output.html>'
             );
         }
 
