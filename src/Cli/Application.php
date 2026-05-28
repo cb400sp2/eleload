@@ -10,6 +10,8 @@ use Eleload\Metrics\StatisticsCalculator;
 use Eleload\Report\ConsoleReporter;
 use Eleload\Report\HtmlReporter;
 use Eleload\Report\JsonReporter;
+use Eleload\Report\MarkdownReporter;
+use Eleload\Report\ReportPathGenerator;
 use InvalidArgumentException;
 use JsonException;
 use RuntimeException;
@@ -79,6 +81,8 @@ final class Application
         $consoleReporter = new ConsoleReporter();
         $jsonReporter = new JsonReporter();
         $htmlReporter = new HtmlReporter(__DIR__ . '/../../templates/report.php');
+        $markdownReporter = new MarkdownReporter();
+        $pathGenerator = new ReportPathGenerator();
 
         $result = $runner->run(new RequestOptions(
             url: $options->url,
@@ -88,6 +92,7 @@ final class Application
             timeout: $options->timeout,
             headers: $options->headers,
             body: $options->body,
+            name: $options->name,
             targetRps: $options->targetRps,
             targetTps: $options->targetTps
         ));
@@ -104,6 +109,21 @@ final class Application
         if ($options->reportHtmlPath !== null) {
             $htmlReporter->write($report, $options->reportHtmlPath);
             $output->writeln('HTML report: ' . $options->reportHtmlPath);
+        }
+
+        if ($options->reportMdPath !== null) {
+            $markdownReporter->write($report, $options->reportMdPath);
+            $output->writeln('Markdown report: ' . $options->reportMdPath);
+        }
+
+        if ($options->outputDir !== null) {
+            $paths = $pathGenerator->generate($options->outputDir);
+            $jsonReporter->write($report, $paths['json']);
+            $htmlReporter->write($report, $paths['html']);
+            $markdownReporter->write($report, $paths['md']);
+            $output->writeln('JSON report: ' . $paths['json']);
+            $output->writeln('HTML report: ' . $paths['html']);
+            $output->writeln('Markdown report: ' . $paths['md']);
         }
 
         return $report['summary']['requests']['failed'] > 0 ? 1 : 0;
@@ -157,6 +177,9 @@ final class Application
         $output->writeln('  --timeout=10             Timeout seconds');
         $output->writeln('  --report-json=FILE       Write JSON report');
         $output->writeln('  --report-html=FILE       Write HTML report');
+        $output->writeln('  --report-md=FILE         Write Markdown report');
+        $output->writeln('  --output-dir=DIR         Write timestamped JSON/HTML/Markdown reports');
+        $output->writeln('  --name=TEXT              Test name shown in reports');
         $output->writeln('  --target-rps=NUM         Target RPS');
         $output->writeln('  --target-tps=NUM         Target TPS');
         $output->writeln();

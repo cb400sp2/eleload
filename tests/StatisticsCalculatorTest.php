@@ -16,6 +16,7 @@ test('StatisticsCalculator aggregates throughput, rates, and latency', function 
         timeout: 10,
         headers: [],
         body: null,
+        name: 'top page smoke load',
         targetRps: 2.0,
         targetTps: 1.0
     );
@@ -34,6 +35,8 @@ test('StatisticsCalculator aggregates throughput, rates, and latency', function 
     $summary = (new StatisticsCalculator())->summarize($result);
 
     assertSame(4, $summary['summary']['requests']['total']);
+    assertSame('top page smoke load', $summary['config']['name']);
+    assertSame('top page smoke load', $summary['meta']['test_name']);
     assertSame(2, $summary['summary']['requests']['success']);
     assertSame(2, $summary['summary']['requests']['failed']);
     assertSame(50.0, $summary['summary']['requests']['success_rate']);
@@ -58,4 +61,3 @@ test('StatisticsCalculator aggregates throughput, rates, and latency', function 
     assertSame(3, $summary['errors'][0]['request']);
     assertSame(4, $summary['errors'][1]['request']);
 });
-

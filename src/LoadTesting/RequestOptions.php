@@ -17,9 +17,9 @@ final class RequestOptions
         public readonly int $timeout,
         public readonly array $headers = [],
         public readonly ?string $body = null,
+        public readonly ?string $name = null,
         public readonly ?float $targetRps = null,
         public readonly ?float $targetTps = null
     ) {
     }
 }
-

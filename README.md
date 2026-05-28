@@ -20,6 +20,9 @@ It uses `curl_multi` for concurrent requests and prints throughput and latency m
 - Report output:
   - `--report-json`
   - `--report-html`
+  - `--report-md`
+  - `--output-dir`
+  - `--name`
   - `report` command to regenerate HTML from saved JSON
 - UTF-8 report content, including multibyte text in JSON and HTML reports
 
@@ -80,7 +83,18 @@ Output JSON + HTML reports:
   --target-rps=100 \
   --target-tps=95 \
   --report-json=reports/report.json \
-  --report-html=reports/report.html
+  --report-html=reports/report.html \
+  --report-md=reports/report.md
+```
+
+Output timestamped reports to a directory:
+
+```bash
+./bin/eleload run https://example.com \
+  --requests=1000 \
+  --concurrency=50 \
+  --name="top page smoke load" \
+  --output-dir=reports
 ```
 
 ## Metric Definitions

@@ -26,6 +26,9 @@ final class ArgvParser
         $body = null;
         $reportJsonPath = null;
         $reportHtmlPath = null;
+        $reportMdPath = null;
+        $outputDir = null;
+        $testName = null;
         $targetRps = null;
         $targetTps = null;
 
@@ -60,6 +63,15 @@ final class ArgvParser
                         break;
                     case 'report-html':
                         $reportHtmlPath = $value;
+                        break;
+                    case 'report-md':
+                        $reportMdPath = $value;
+                        break;
+                    case 'output-dir':
+                        $outputDir = $value;
+                        break;
+                    case 'name':
+                        $testName = $value;
                         break;
                     case 'target-rps':
                         $targetRps = $this->parsePositiveFloat($name, $value);
@@ -108,6 +120,9 @@ final class ArgvParser
             body: $body,
             reportJsonPath: $reportJsonPath,
             reportHtmlPath: $reportHtmlPath,
+            reportMdPath: $reportMdPath,
+            outputDir: $outputDir,
+            name: $testName,
             targetRps: $targetRps,
             targetTps: $targetTps
         );

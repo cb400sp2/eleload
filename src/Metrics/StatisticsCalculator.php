@@ -86,6 +86,7 @@ final class StatisticsCalculator
                 'requests' => $runResult->options->requests,
                 'concurrency' => $runResult->options->concurrency,
                 'timeout' => $runResult->options->timeout,
+                'name' => $runResult->options->name,
                 'target_rps' => $runResult->options->targetRps,
                 'target_tps' => $runResult->options->targetTps,
             ],
@@ -113,6 +114,7 @@ final class StatisticsCalculator
             'meta' => [
                 'tool' => 'eleload',
                 'version' => '0.1.0',
+                'test_name' => $runResult->options->name,
             ],
         ];
     }
@@ -169,4 +171,3 @@ final class StatisticsCalculator
         return round($value, 3);
     }
 }
-
