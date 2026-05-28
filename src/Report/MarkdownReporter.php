@@ -86,6 +86,23 @@ final class MarkdownReporter
             $lines[] = '| ' . $this->escape((string)$code) . ' | ' . $item['count'] . ' | ' . $this->percent((float)$item['rate']) . ' |';
         }
 
+        if (!empty($report['thresholds']['checks'])) {
+            $lines = array_merge($lines, [
+                '',
+                '## Thresholds',
+                '',
+                '| Check | Actual | Rule | Result |',
+                '|---|---:|---:|---|',
+            ]);
+
+            foreach ($report['thresholds']['checks'] as $check) {
+                $lines[] = '| ' . $this->escape((string)$check['name']) .
+                    ' | ' . $this->number((float)$check['actual']) .
+                    ' | ' . $check['operator'] . ' ' . $this->number((float)$check['threshold']) .
+                    ' | ' . ($check['passed'] ? 'PASS' : 'FAIL') . ' |';
+            }
+        }
+
         if (!empty($report['errors'])) {
             $lines = array_merge($lines, [
                 '',
@@ -134,4 +151,3 @@ final class MarkdownReporter
         return number_format($value, 2) . '%';
     }
 }
-

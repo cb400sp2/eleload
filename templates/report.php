@@ -202,6 +202,32 @@ $num = static fn (float $value): string => number_format($value, 2);
     </table>
   </section>
 
+  <?php if (!empty($report['thresholds']['checks'])): ?>
+    <section class="panel">
+      <h2>Thresholds</h2>
+      <table>
+        <thead>
+        <tr>
+          <th>Check</th>
+          <th>Actual</th>
+          <th>Rule</th>
+          <th>Result</th>
+        </tr>
+        </thead>
+        <tbody>
+        <?php foreach ($report['thresholds']['checks'] as $check): ?>
+          <tr>
+            <td><?= $esc($check['name']) ?></td>
+            <td><?= $esc($num((float)$check['actual'])) ?></td>
+            <td><?= $esc($check['operator']) ?> <?= $esc($num((float)$check['threshold'])) ?></td>
+            <td><?= $esc($check['passed'] ? 'PASS' : 'FAIL') ?></td>
+          </tr>
+        <?php endforeach; ?>
+        </tbody>
+      </table>
+    </section>
+  <?php endif; ?>
+
   <section class="panel">
     <h2>Errors</h2>
     <?php if ($report['errors'] === []): ?>

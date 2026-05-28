@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Eleload\LoadTesting\RequestOptions;
 use Eleload\LoadTesting\RequestResult;
 use Eleload\LoadTesting\RunResult;
+use Eleload\Metrics\FailureEvaluator;
 use Eleload\Metrics\StatisticsCalculator;
 
 test('StatisticsCalculator aggregates throughput, rates, and latency', function (): void {
@@ -60,4 +61,65 @@ test('StatisticsCalculator aggregates throughput, rates, and latency', function 
     assertSame(2, count($summary['errors']));
     assertSame(3, $summary['errors'][0]['request']);
     assertSame(4, $summary['errors'][1]['request']);
+});
+
+test('StatisticsCalculator excludes warmup requests from metrics', function (): void {
+    $options = new RequestOptions(
+        url: 'https://example.com',
+        requests: 3,
+        concurrency: 1,
+        method: 'GET',
+        timeout: 10,
+        warmupSec: 1.0
+    );
+
+    $result = new RunResult(
+        options: $options,
+        durationSec: 3.0,
+        requestResults: [
+            new RequestResult(1, 1000.0, 500, 128.0, 0, '', false),
+            new RequestResult(2, 100.0, 200, 128.0, 0, ''),
+            new RequestResult(3, 200.0, 200, 128.0, 0, ''),
+        ]
+    );
+
+    $summary = (new StatisticsCalculator())->summarize($result);
+
+    assertSame(2, $summary['summary']['requests']['total']);
+    assertSame(3, $summary['summary']['requests']['executed']);
+    assertSame(1, $summary['summary']['requests']['warmup']);
+    assertSame(2, $summary['summary']['requests']['success']);
+    assertSame(0, $summary['summary']['requests']['failed']);
+    assertSame(100.0, $summary['summary']['latency']['min']);
+    assertSame(200.0, $summary['summary']['latency']['max']);
+    assertSame(2.0, $summary['summary']['duration_sec']);
+});
+
+test('FailureEvaluator reports threshold violations', function (): void {
+    $parser = new Eleload\Cli\ArgvParser();
+    $options = $parser->parseRun([
+        'https://example.com',
+        '--fail-on-p95=150',
+        '--fail-on-p99=250',
+        '--fail-on-error-rate=1',
+        '--fail-on-rps-below=10',
+        '--fail-on-tps-below=5',
+    ]);
+
+    $report = [
+        'summary' => [
+            'requests' => ['error_rate' => 2.0],
+            'throughput' => ['rps' => 9.0, 'tps' => 7.0],
+            'latency' => ['p95' => 200.0, 'p99' => 240.0],
+        ],
+    ];
+
+    $result = (new FailureEvaluator())->evaluate($report, $options);
+
+    assertSame(true, $result['failed']);
+    assertSame(false, $result['checks'][0]['passed']);
+    assertSame(true, $result['checks'][1]['passed']);
+    assertSame(false, $result['checks'][2]['passed']);
+    assertSame(false, $result['checks'][3]['passed']);
+    assertSame(true, $result['checks'][4]['passed']);
 });
