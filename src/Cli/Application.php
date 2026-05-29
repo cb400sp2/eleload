@@ -96,6 +96,7 @@ final class Application
             bearerToken: $options->bearerToken,
             basicUser: $options->basicUser,
             basicPassword: $options->basicPassword,
+            cookie: $options->cookie,
             body: $options->body,
             name: $options->name,
             successStatusCodes: $options->successStatusCodes,
@@ -185,6 +186,7 @@ final class Application
         $output->writeln('  --bearer-token=TOKEN     Send Authorization: Bearer TOKEN');
         $output->writeln('  --basic-user=USER        Basic auth username');
         $output->writeln('  --basic-password=PASS    Basic auth password');
+        $output->writeln('  --cookie=TEXT            Send Cookie header value');
         $output->writeln('  --body="..."             Request body');
         $output->writeln('  --timeout=10             Timeout seconds');
         $output->writeln('  --success-status=LIST    Comma-separated success status codes (e.g. 200,201,204)');

@@ -17,6 +17,7 @@ test('ArgvParser parses minimum arguments', function (): void {
     assertSame(null, $options->bearerToken);
     assertSame(null, $options->basicUser);
     assertSame(null, $options->basicPassword);
+    assertSame(null, $options->cookie);
     assertSame(null, $options->body);
     assertSame(null, $options->successStatusCodes);
 });
@@ -39,6 +40,7 @@ test('ArgvParser parses full option set', function (): void {
         '--basic-user=user1',
         '--basic-password',
         'pass1',
+        '--cookie=session=abc123',
         '--body',
         '{"name":"eleload"}',
         '--report-json',
@@ -72,6 +74,7 @@ test('ArgvParser parses full option set', function (): void {
     assertSame('token-123', $options->bearerToken);
     assertSame('user1', $options->basicUser);
     assertSame('pass1', $options->basicPassword);
+    assertSame('session=abc123', $options->cookie);
     assertSame('{"name":"eleload"}', $options->body);
     assertSame('reports/report.json', $options->reportJsonPath);
     assertSame('reports/report.html', $options->reportHtmlPath);

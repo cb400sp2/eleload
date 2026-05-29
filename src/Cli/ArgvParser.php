@@ -26,6 +26,7 @@ final class ArgvParser
         $bearerToken = null;
         $basicUser = null;
         $basicPassword = null;
+        $cookie = null;
         $body = null;
         $reportJsonPath = null;
         $reportHtmlPath = null;
@@ -74,6 +75,9 @@ final class ArgvParser
                         break;
                     case 'basic-password':
                         $basicPassword = $value;
+                        break;
+                    case 'cookie':
+                        $cookie = $value;
                         break;
                     case 'body':
                         $body = $value;
@@ -172,6 +176,7 @@ final class ArgvParser
             bearerToken: $bearerToken,
             basicUser: $basicUser,
             basicPassword: $basicPassword,
+            cookie: $cookie,
             body: $body,
             reportJsonPath: $reportJsonPath,
             reportHtmlPath: $reportHtmlPath,

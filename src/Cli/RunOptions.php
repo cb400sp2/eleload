@@ -20,6 +20,7 @@ final class RunOptions
         public readonly ?string $bearerToken,
         public readonly ?string $basicUser,
         public readonly ?string $basicPassword,
+        public readonly ?string $cookie,
         public readonly ?string $body,
         public readonly ?string $reportJsonPath,
         public readonly ?string $reportHtmlPath,
