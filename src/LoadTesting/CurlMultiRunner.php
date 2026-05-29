@@ -12,6 +12,8 @@ final class CurlMultiRunner
 {
     private const MULTI_SELECT_TIMEOUT_SEC = 1.0;
     private const IDLE_SLEEP_USEC = 5_000;
+    private const NANOSECONDS_PER_SECOND = 1_000_000_000;
+    private const NANOSECONDS_PER_MICROSECOND = 1_000;
 
     public function run(RequestOptions $options): RunResult
     {
@@ -33,6 +35,12 @@ final class CurlMultiRunner
                 $this->canStartRequest($options, $startedAt, $nextRequest, $durationMode) &&
                 count($inFlight) < $options->concurrency
             ) {
+                $rateLimitSleepUsec = $this->getRateLimitSleepUsec($options, $startedAt, $nextRequest);
+                if ($rateLimitSleepUsec > 0) {
+                    usleep($rateLimitSleepUsec);
+                    continue;
+                }
+
                 $handle = $this->createHandle($options);
                 $handleId = spl_object_id($handle);
 
@@ -128,6 +136,31 @@ final class CurlMultiRunner
         }
 
         return $nextRequest <= $options->requests;
+    }
+
+    private function getRateLimitSleepUsec(RequestOptions $options, int $startedAt, int $nextRequest): int
+    {
+        $targetRate = $this->resolveTargetRate($options);
+        if ($targetRate === null) {
+            return 0;
+        }
+
+        $scheduledOffsetNs = (int) ceil((($nextRequest - 1) / $targetRate) * self::NANOSECONDS_PER_SECOND);
+        $remainingNs = ($startedAt + $scheduledOffsetNs) - hrtime(true);
+        if ($remainingNs <= 0) {
+            return 0;
+        }
+
+        return (int) ceil($remainingNs / self::NANOSECONDS_PER_MICROSECOND);
+    }
+
+    private function resolveTargetRate(RequestOptions $options): ?float
+    {
+        if ($options->targetRps !== null && $options->targetTps !== null) {
+            return min($options->targetRps, $options->targetTps);
+        }
+
+        return $options->targetRps ?? $options->targetTps;
     }
 
     private function isComplete(
