@@ -227,3 +227,48 @@ test('ArgvParser report command rejects unknown option', function (): void {
         'Unknown option for report command'
     );
 });
+
+test('ArgvParser parses compare command options', function (): void {
+    $parser = new ArgvParser();
+    $options = $parser->parseCompare([
+        'reports/before.json',
+        'reports/after.json',
+        '--html=reports/compare.html',
+        '--md=reports/compare.md',
+    ]);
+
+    assertSame('reports/before.json', $options->beforeJsonPath);
+    assertSame('reports/after.json', $options->afterJsonPath);
+    assertSame('reports/compare.html', $options->htmlPath);
+    assertSame('reports/compare.md', $options->markdownPath);
+});
+
+test('ArgvParser compare command requires at least one output', function (): void {
+    $parser = new ArgvParser();
+
+    assertThrows(
+        fn () => $parser->parseCompare(['reports/before.json', 'reports/after.json']),
+        InvalidArgumentException::class,
+        'At least one output path is required'
+    );
+});
+
+test('ArgvParser compare command requires two json paths', function (): void {
+    $parser = new ArgvParser();
+
+    assertThrows(
+        fn () => $parser->parseCompare(['reports/before.json', '--html=reports/compare.html']),
+        InvalidArgumentException::class,
+        'Two JSON report paths are required'
+    );
+});
+
+test('ArgvParser compare command rejects unknown option', function (): void {
+    $parser = new ArgvParser();
+
+    assertThrows(
+        fn () => $parser->parseCompare(['reports/before.json', 'reports/after.json', '--output=report.html']),
+        InvalidArgumentException::class,
+        'Unknown option for compare command'
+    );
+});

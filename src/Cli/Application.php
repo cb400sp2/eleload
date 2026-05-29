@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Eleload\Cli;
 
+use Eleload\Compare\ReportComparator;
 use Eleload\LoadTesting\CurlMultiRunner;
 use Eleload\LoadTesting\RequestOptions;
 use Eleload\Metrics\FailureEvaluator;
 use Eleload\Metrics\StatisticsCalculator;
+use Eleload\Report\CompareMarkdownReporter;
 use Eleload\Report\ConsoleReporter;
 use Eleload\Report\HtmlReporter;
 use Eleload\Report\JsonReporter;
@@ -48,6 +50,10 @@ final class Application
 
             if ($command === 'report') {
                 return $this->runReportCommand(array_slice($argv, 2), $output);
+            }
+
+            if ($command === 'compare') {
+                return $this->runCompareCommand(array_slice($argv, 2), $output);
             }
 
             $output->errorln("Unknown command: {$command}");
@@ -151,13 +157,54 @@ final class Application
         $options = $parser->parseReport($args);
         $htmlReporter = new HtmlReporter(__DIR__ . '/../../templates/report.php');
 
-        if (!is_file($options->jsonPath)) {
-            throw new RuntimeException("JSON report file not found: {$options->jsonPath}");
+        $report = $this->readJsonObjectFile($options->jsonPath);
+
+        $htmlReporter->write($report, $options->htmlPath);
+        $output->writeln('HTML report: ' . $options->htmlPath);
+
+        return 0;
+    }
+
+    /**
+     * @param list<string> $args
+     */
+    private function runCompareCommand(array $args, ConsoleOutput $output): int
+    {
+        $parser = new ArgvParser();
+        $options = $parser->parseCompare($args);
+
+        $beforeReport = $this->readJsonObjectFile($options->beforeJsonPath);
+        $afterReport = $this->readJsonObjectFile($options->afterJsonPath);
+
+        $comparison = (new ReportComparator())->compare($beforeReport, $afterReport);
+
+        if ($options->htmlPath !== null) {
+            $htmlReporter = new HtmlReporter(__DIR__ . '/../../templates/compare.php');
+            $htmlReporter->write($comparison, $options->htmlPath);
+            $output->writeln('HTML comparison report: ' . $options->htmlPath);
         }
 
-        $json = file_get_contents($options->jsonPath);
+        if ($options->markdownPath !== null) {
+            $markdownReporter = new CompareMarkdownReporter();
+            $markdownReporter->write($comparison, $options->markdownPath);
+            $output->writeln('Markdown comparison report: ' . $options->markdownPath);
+        }
+
+        return 0;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function readJsonObjectFile(string $path): array
+    {
+        if (!is_file($path)) {
+            throw new RuntimeException("JSON report file not found: {$path}");
+        }
+
+        $json = file_get_contents($path);
         if ($json === false) {
-            throw new RuntimeException("Failed to read JSON report: {$options->jsonPath}");
+            throw new RuntimeException("Failed to read JSON report: {$path}");
         }
 
         $report = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
@@ -165,10 +212,7 @@ final class Application
             throw new RuntimeException('Invalid JSON report format: root must be an object');
         }
 
-        $htmlReporter->write($report, $options->htmlPath);
-        $output->writeln('HTML report: ' . $options->htmlPath);
-
-        return 0;
+        return $report;
     }
 
     private function printHelp(ConsoleOutput $output): void
@@ -178,6 +222,7 @@ final class Application
         $output->writeln('Usage:');
         $output->writeln('  eleload run <url> [options]');
         $output->writeln('  eleload report <report.json> --html=<output.html>');
+        $output->writeln('  eleload compare <before.json> <after.json> [--html=<output.html>] [--md=<output.md>]');
         $output->writeln('  eleload help');
         $output->writeln('  eleload version');
         $output->writeln();
@@ -214,5 +259,9 @@ final class Application
         $output->writeln();
         $output->writeln('Options for report:');
         $output->writeln('  --html=FILE              Output HTML path');
+        $output->writeln();
+        $output->writeln('Options for compare:');
+        $output->writeln('  --html=FILE              Output HTML comparison path');
+        $output->writeln('  --md=FILE                Output Markdown comparison path');
     }
 }
