@@ -64,6 +64,8 @@ final class ArgvParser
         $dnsCacheTtl = -1;
         $acceptEncoding = 'gzip';
         $noDecompress = false;
+        $maxConnections = 0;
+        $tcpKeepaliveSec = 60;
         $bearerTokenEnv = null;
         $basicUserEnv = null;
         $basicPasswordEnv = null;
@@ -251,6 +253,12 @@ final class ArgvParser
                     case 'accept-encoding':
                         $acceptEncoding = $this->parseAcceptEncoding($name, $value);
                         break;
+                    case 'max-connections':
+                        $maxConnections = $this->parseNonNegativeInt($name, $value);
+                        break;
+                    case 'tcp-keepalive':
+                        $tcpKeepaliveSec = $this->parseNonNegativeInt($name, $value);
+                        break;
                     default:
                         throw new InvalidArgumentException("Unknown option: --{$name}");
                 }
@@ -400,7 +408,9 @@ final class ArgvParser
             httpVersion: $httpVersion,
             dnsCacheTtl: $dnsCacheTtl,
             acceptEncoding: $acceptEncoding,
-            noDecompress: $noDecompress
+            noDecompress: $noDecompress,
+            maxConnections: $maxConnections,
+            tcpKeepaliveSec: $tcpKeepaliveSec
         );
     }
 

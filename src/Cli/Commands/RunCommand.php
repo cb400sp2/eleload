@@ -77,7 +77,9 @@ final class RunCommand
             httpVersion: $options->httpVersion,
             dnsCacheTtl: $options->dnsCacheTtl,
             acceptEncoding: $options->acceptEncoding,
-            noDecompress: $options->noDecompress
+            noDecompress: $options->noDecompress,
+            maxConnections: $options->maxConnections,
+            tcpKeepaliveSec: $options->tcpKeepaliveSec
         ));
 
         $report = $stats->summarize($result);

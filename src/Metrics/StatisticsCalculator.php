@@ -162,6 +162,8 @@ final class StatisticsCalculator
                 'dns_cache_ttl' => $runResult->options->dnsCacheTtl,
                 'accept_encoding' => $runResult->options->acceptEncoding,
                 'no_decompress' => $runResult->options->noDecompress,
+                'max_connections' => $runResult->options->maxConnections,
+                'tcp_keepalive_sec' => $runResult->options->tcpKeepaliveSec,
                 'name' => $runResult->options->name,
                 'success_status' => $runResult->options->successStatusCodes,
                 'expect_status' => $runResult->options->expectStatusCodes,

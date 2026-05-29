@@ -358,10 +358,12 @@ final class CurlMultiRunner
             CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_SSL_VERIFYHOST => 2,
             CURLOPT_SSLVERSION => CURL_SSLVERSION_TLSv1_2,
-            CURLOPT_TCP_KEEPALIVE => 1,
+            CURLOPT_TCP_KEEPALIVE => $options->tcpKeepaliveSec > 0 ? 1 : 0,
+            CURLOPT_TCP_KEEPIDLE => $options->tcpKeepaliveSec,
             CURLOPT_HTTP_VERSION => $this->resolveCurlHttpVersion($options->httpVersion),
             CURLOPT_DNS_CACHE_TIMEOUT => $options->dnsCacheTtl,
             CURLOPT_ENCODING => $options->noDecompress ? '' : ($options->acceptEncoding === 'none' ? '' : $options->acceptEncoding),
+            CURLOPT_MAXCONNECTS => $options->maxConnections,
         ];
 
         $headers = $options->resolveHeaders();
