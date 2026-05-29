@@ -32,7 +32,7 @@ final class CsvReporter
             'error',
         ], ',', '"', '\\') !== false;
 
-        foreach ($runResult->requestResults as $result) {
+        foreach ($runResult->iterateRequestResults() as $result) {
             $ok = $ok && fputcsv($fp, $this->toRow($runResult, $result), ',', '"', '\\') !== false;
         }
 

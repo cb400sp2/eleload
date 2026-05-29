@@ -6,14 +6,24 @@ namespace Eleload\LoadTesting;
 
 use CurlHandle;
 use CurlMultiHandle;
+use InvalidArgumentException;
 use RuntimeException;
 
 final class CurlMultiRunner
 {
+    private const DEFAULT_MAX_IN_MEMORY_REQUEST_RESULTS = 10_000;
     private const MULTI_SELECT_TIMEOUT_SEC = 1.0;
     private const IDLE_SLEEP_USEC = 5_000;
     private const NANOSECONDS_PER_SECOND = 1_000_000_000;
     private const NANOSECONDS_PER_MICROSECOND = 1_000;
+
+    public function __construct(
+        private readonly int $maxInMemoryRequestResults = self::DEFAULT_MAX_IN_MEMORY_REQUEST_RESULTS
+    ) {
+        if ($this->maxInMemoryRequestResults < 1) {
+            throw new InvalidArgumentException('maxInMemoryRequestResults must be >= 1.');
+        }
+    }
 
     public function run(RequestOptions $options): RunResult
     {
@@ -27,101 +37,192 @@ final class CurlMultiRunner
         $running = 0;
         $inFlight = [];
         $results = [];
+        $resultsPath = null;
+        $resultsHandle = null;
+        $requestResultCount = 0;
         $startedAt = hrtime(true);
         $durationMode = $options->durationSec !== null;
+        $keepSpilledResultsFile = false;
 
-        while (true) {
-            while (
-                $this->canStartRequest($options, $startedAt, $nextRequest, $durationMode) &&
-                count($inFlight) < $options->concurrency
-            ) {
-                $rateLimitSleepUsec = $this->getRateLimitSleepUsec($options, $startedAt, $nextRequest);
-                if ($rateLimitSleepUsec > 0) {
-                    usleep($rateLimitSleepUsec);
-                    continue;
+        try {
+            while (true) {
+                while (
+                    $this->canStartRequest($options, $startedAt, $nextRequest, $durationMode) &&
+                    count($inFlight) < $options->concurrency
+                ) {
+                    $rateLimitSleepUsec = $this->getRateLimitSleepUsec($options, $startedAt, $nextRequest);
+                    if ($rateLimitSleepUsec > 0) {
+                        usleep($rateLimitSleepUsec);
+                        continue;
+                    }
+
+                    $handle = $this->createHandle($options);
+                    $handleId = spl_object_id($handle);
+
+                    $inFlight[$handleId] = [
+                        'request_number' => $nextRequest,
+                        'started_at' => hrtime(true),
+                        'handle' => $handle,
+                    ];
+
+                    curl_multi_add_handle($multi, $handle);
+                    $nextRequest++;
                 }
 
-                $handle = $this->createHandle($options);
-                $handleId = spl_object_id($handle);
+                do {
+                    $status = curl_multi_exec($multi, $running);
+                } while ($status === CURLM_CALL_MULTI_PERFORM);
 
-                $inFlight[$handleId] = [
-                    'request_number' => $nextRequest,
-                    'started_at' => hrtime(true),
-                    'handle' => $handle,
-                ];
+                while ($info = curl_multi_info_read($multi)) {
+                    $handle = $info['handle'];
+                    if (!$handle instanceof CurlHandle) {
+                        continue;
+                    }
 
-                curl_multi_add_handle($multi, $handle);
-                $nextRequest++;
-            }
+                    $handleId = spl_object_id($handle);
+                    $meta = $inFlight[$handleId] ?? null;
+                    if ($meta === null) {
+                        curl_multi_remove_handle($multi, $handle);
+                        continue;
+                    }
 
-            do {
-                $status = curl_multi_exec($multi, $running);
-            } while ($status === CURLM_CALL_MULTI_PERFORM);
+                    $endedAt = hrtime(true);
+                    $latencyMs = ($endedAt - $meta['started_at']) / 1_000_000;
+                    $elapsedSec = ($endedAt - $startedAt) / 1_000_000_000;
+                    $httpCode = (int) curl_getinfo($handle, CURLINFO_HTTP_CODE);
+                    $downloadBytes = (float) curl_getinfo($handle, CURLINFO_SIZE_DOWNLOAD);
+                    $errorNo = curl_errno($handle);
+                    $error = curl_error($handle);
+                    $bodyContainsExpected = null;
+                    if ($options->expectBodyContains !== null) {
+                        $responseBody = (string) curl_multi_getcontent($handle);
+                        $bodyContainsExpected = str_contains($responseBody, $options->expectBodyContains);
+                    }
 
-            while ($info = curl_multi_info_read($multi)) {
-                $handle = $info['handle'];
-                if (!$handle instanceof CurlHandle) {
-                    continue;
-                }
+                    $requestResult = new RequestResult(
+                        requestNumber: (int) $meta['request_number'],
+                        latencyMs: $latencyMs,
+                        httpCode: $httpCode,
+                        downloadBytes: $downloadBytes,
+                        errorNo: $errorNo,
+                        error: $error,
+                        includedInMetrics: $elapsedSec >= $options->warmupSec,
+                        bodyContainsExpected: $bodyContainsExpected
+                    );
 
-                $handleId = spl_object_id($handle);
-                $meta = $inFlight[$handleId] ?? null;
-                if ($meta === null) {
+                    $requestResultCount++;
+                    if ($resultsHandle !== null || $requestResultCount > $this->maxInMemoryRequestResults) {
+                        [$resultsPath, $resultsHandle] = $this->storeRequestResultToDisk(
+                            $results,
+                            $requestResult,
+                            $resultsPath,
+                            $resultsHandle
+                        );
+                    } else {
+                        $results[] = $requestResult;
+                    }
+
+                    unset($inFlight[$handleId]);
                     curl_multi_remove_handle($multi, $handle);
-                    continue;
+                    $completed++;
                 }
 
-                $endedAt = hrtime(true);
-                $latencyMs = ($endedAt - $meta['started_at']) / 1_000_000;
-                $elapsedSec = ($endedAt - $startedAt) / 1_000_000_000;
-                $httpCode = (int) curl_getinfo($handle, CURLINFO_HTTP_CODE);
-                $downloadBytes = (float) curl_getinfo($handle, CURLINFO_SIZE_DOWNLOAD);
-                $errorNo = curl_errno($handle);
-                $error = curl_error($handle);
-                $bodyContainsExpected = null;
-                if ($options->expectBodyContains !== null) {
-                    $responseBody = (string)curl_multi_getcontent($handle);
-                    $bodyContainsExpected = str_contains($responseBody, $options->expectBodyContains);
+                if ($this->isComplete($options, $startedAt, $completed, count($inFlight), $durationMode)) {
+                    break;
                 }
 
-                $results[] = new RequestResult(
-                    requestNumber: (int)$meta['request_number'],
-                    latencyMs: $latencyMs,
-                    httpCode: $httpCode,
-                    downloadBytes: $downloadBytes,
-                    errorNo: $errorNo,
-                    error: $error,
-                    includedInMetrics: $elapsedSec >= $options->warmupSec,
-                    bodyContainsExpected: $bodyContainsExpected
-                );
-
-                unset($inFlight[$handleId]);
-                curl_multi_remove_handle($multi, $handle);
-                $completed++;
-            }
-
-            if ($this->isComplete($options, $startedAt, $completed, count($inFlight), $durationMode)) {
-                break;
-            }
-
-            if ($running > 0) {
-                $selected = curl_multi_select($multi, self::MULTI_SELECT_TIMEOUT_SEC);
-                if ($selected === -1) {
+                if ($running > 0) {
+                    $selected = curl_multi_select($multi, self::MULTI_SELECT_TIMEOUT_SEC);
+                    if ($selected === -1) {
+                        usleep(self::IDLE_SLEEP_USEC);
+                    }
+                } else {
                     usleep(self::IDLE_SLEEP_USEC);
                 }
-            } else {
-                usleep(self::IDLE_SLEEP_USEC);
+            }
+
+            $durationSec = (hrtime(true) - $startedAt) / 1_000_000_000;
+            if ($resultsHandle !== null) {
+                fclose($resultsHandle);
+                $resultsHandle = null;
+            }
+
+            $keepSpilledResultsFile = true;
+
+            return new RunResult(
+                options: $options,
+                durationSec: max($durationSec, 0.000_001),
+                requestResults: $results,
+                requestResultsPath: $resultsPath,
+                requestResultCount: $requestResultCount
+            );
+        } finally {
+            if ($resultsHandle !== null) {
+                fclose($resultsHandle);
+            }
+
+            curl_multi_close($multi);
+
+            if (!$keepSpilledResultsFile && $resultsPath !== null && is_file($resultsPath)) {
+                @unlink($resultsPath);
             }
         }
+    }
 
-        $durationSec = (hrtime(true) - $startedAt) / 1_000_000_000;
-        curl_multi_close($multi);
+    /**
+     * @param list<RequestResult> $inMemoryResults
+     * @return array{0:string,1:mixed}
+     */
+    private function storeRequestResultToDisk(
+        array &$inMemoryResults,
+        RequestResult $requestResult,
+        ?string $resultsPath,
+        $resultsHandle
+    ): array {
+        if ($resultsPath === null || $resultsHandle === null) {
+            [$resultsPath, $resultsHandle] = $this->openRequestResultsFile();
 
-        return new RunResult(
-            options: $options,
-            durationSec: max($durationSec, 0.000_001),
-            requestResults: $results
+            foreach ($inMemoryResults as $storedResult) {
+                $this->writeRequestResult($resultsHandle, $storedResult);
+            }
+
+            $inMemoryResults = [];
+        }
+
+        $this->writeRequestResult($resultsHandle, $requestResult);
+
+        return [$resultsPath, $resultsHandle];
+    }
+
+    /**
+     * @return array{0:string,1:mixed}
+     */
+    private function openRequestResultsFile(): array
+    {
+        $path = tempnam(sys_get_temp_dir(), 'eleload-results-');
+        if (!is_string($path) || $path === '') {
+            throw new RuntimeException('Failed to create temporary request results file.');
+        }
+
+        $handle = fopen($path, 'wb');
+        if ($handle === false) {
+            @unlink($path);
+            throw new RuntimeException('Failed to open temporary request results file.');
+        }
+
+        return [$path, $handle];
+    }
+
+    private function writeRequestResult($resultsHandle, RequestResult $requestResult): void
+    {
+        $encoded = json_encode(
+            $requestResult->toArray(),
+            JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
         );
+
+        if (!is_string($encoded) || fwrite($resultsHandle, $encoded . PHP_EOL) === false) {
+            throw new RuntimeException('Failed to write spilled request result.');
+        }
     }
 
     private function canStartRequest(
