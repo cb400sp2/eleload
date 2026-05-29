@@ -41,4 +41,3 @@ test('run command allows high-load settings with allow-high-load override', func
     assertTrue(is_file($jsonPath), 'report should still be generated with allow-high-load');
     assertSame('', trim($output), 'silent mode should suppress output when high-load override is used');
 });
-

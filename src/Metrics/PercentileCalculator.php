@@ -25,4 +25,3 @@ final class PercentileCalculator
         return $values[$index];
     }
 }
-

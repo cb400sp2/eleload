@@ -343,3 +343,30 @@ test('StatisticsCalculator time_buckets exclude warmup requests', function (): v
     assertSame(1.0, $tb[1]['tps']);  // request 4 (500) is a failure
     assertSame(50.0, $tb[1]['error_rate']);
 });
+
+
+test('StatisticsCalculator meta includes schema_version and version', function (): void {
+    $options = new RequestOptions(
+        url: 'https://example.com',
+        requests: 1,
+        concurrency: 1,
+        method: 'GET',
+        timeout: 10,
+        name: 'schema-test'
+    );
+
+    $result = new RunResult(
+        options: $options,
+        durationSec: 0.1,
+        requestResults: [
+            new RequestResult(1, 50.0, 200, 0.0, 0, '', true, null, 0.05),
+        ]
+    );
+
+    $summary = (new StatisticsCalculator())->summarize($result);
+
+    assertSame('eleload', $summary['meta']['tool']);
+    assertSame(1, $summary['meta']['schema_version']);
+    assertSame(\Eleload\Cli\Application::VERSION, $summary['meta']['version']);
+    assertSame('schema-test', $summary['meta']['test_name']);
+});

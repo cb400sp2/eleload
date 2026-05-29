@@ -18,7 +18,7 @@ final class ScenarioRunner
     /**
      * Run a scenario definition with the given concurrency and duration settings.
      *
-     * @param positive-int $concurrency
+     * @param int $concurrency
      */
     public function run(
         ScenarioDefinition $definition,
@@ -36,6 +36,7 @@ final class ScenarioRunner
         }
 
         $multi = curl_multi_init();
+        // @phpstan-ignore-next-line (curl_multi_init always returns CurlMultiHandle in PHP 8+)
         if (!$multi instanceof CurlMultiHandle) {
             throw new RuntimeException('Failed to initialize curl multi handle.');
         }
@@ -317,6 +318,9 @@ final class ScenarioRunner
         ];
     }
 
+    /**
+     * @param array<string, string> $variables
+     */
     private function createHandle(ScenarioStep $step, array $variables): CurlHandle
     {
         $url = $this->interpolate($step->url, $variables);
@@ -351,6 +355,7 @@ final class ScenarioRunner
             $curlOptions[CURLOPT_POSTFIELDS] = $this->interpolate($step->body, $variables);
         }
 
+        // @phpstan-ignore-next-line (CURLOPT_CUSTOMREQUEST accepts any non-empty string; method is validated at parse time)
         curl_setopt_array($ch, $curlOptions);
 
         return $ch;

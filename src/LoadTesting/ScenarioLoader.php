@@ -26,11 +26,11 @@ final class ScenarioLoader
         try {
             $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException $e) {
-            throw new InvalidArgumentException("Invalid JSON in scenario file: " . $e->getMessage());
+            throw new InvalidArgumentException('Invalid JSON in scenario file: ' . $e->getMessage());
         }
 
         if (!is_array($data)) {
-            throw new InvalidArgumentException("Scenario file must be a JSON object.");
+            throw new InvalidArgumentException('Scenario file must be a JSON object.');
         }
 
         $name = isset($data['name']) && is_string($data['name']) ? $data['name'] : 'Unnamed Scenario';
@@ -52,7 +52,7 @@ final class ScenarioLoader
         }
 
         if (!isset($data['steps']) || !is_array($data['steps']) || count($data['steps']) === 0) {
-            throw new InvalidArgumentException("Scenario must have at least one step.");
+            throw new InvalidArgumentException('Scenario must have at least one step.');
         }
 
         $steps = [];

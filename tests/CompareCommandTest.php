@@ -116,4 +116,3 @@ test('compare command supports html output only', function (): void {
     assertTrue(is_file($htmlPath), 'Comparison HTML was not created');
     assertContains('HTML comparison report:', $output);
 });
-

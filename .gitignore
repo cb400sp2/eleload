@@ -1,3 +1,4 @@
 /vendor/
 /reports/
-
+/build/
+/.php-cs-fixer.cache

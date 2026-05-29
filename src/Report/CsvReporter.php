@@ -27,8 +27,7 @@ final class CsvReporter
             throw new RuntimeException("Failed to open CSV report file: {$path}");
         }
 
-        $ok = true;
-        $ok = $ok && fputcsv($fp, [
+        $ok = fputcsv($fp, [
             'request',
             'included_in_metrics',
             'success',

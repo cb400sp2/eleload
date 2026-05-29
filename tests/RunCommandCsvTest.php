@@ -27,4 +27,3 @@ test('run command writes csv report when report-csv option is provided', functio
     $csv = (string) file_get_contents($csvPath);
     assertContains('request,included_in_metrics,success,http_code,error_no,latency_ms,download_bytes,body_contains_expected,error', $csv);
 });
-
