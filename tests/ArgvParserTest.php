@@ -14,6 +14,8 @@ test('ArgvParser parses minimum arguments', function (): void {
     assertSame('GET', $options->method);
     assertSame(10, $options->timeout);
     assertSame(false, $options->silent);
+    assertSame(false, $options->yes);
+    assertSame(false, $options->allowHighLoad);
     assertSame(false, $options->followRedirects);
     assertSame([], $options->headers);
     assertSame(null, $options->bearerToken);
@@ -38,6 +40,8 @@ test('ArgvParser parses full option set', function (): void {
         'post',
         '--timeout=3',
         '--silent',
+        '--yes',
+        '--allow-high-load',
         '--follow-redirects',
         '--header',
         'Accept: application/json',
@@ -78,6 +82,8 @@ test('ArgvParser parses full option set', function (): void {
     assertSame('POST', $options->method);
     assertSame(3, $options->timeout);
     assertSame(true, $options->silent);
+    assertSame(true, $options->yes);
+    assertSame(true, $options->allowHighLoad);
     assertSame(true, $options->followRedirects);
     assertSame(
         ['Accept: application/json', 'Content-Type: application/json'],

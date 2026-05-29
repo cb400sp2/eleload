@@ -18,6 +18,8 @@ final class RunOptions
         public readonly string $method,
         public readonly int $timeout,
         public readonly bool $silent,
+        public readonly bool $yes,
+        public readonly bool $allowHighLoad,
         public readonly bool $followRedirects,
         public readonly array $headers,
         public readonly ?string $bearerToken,

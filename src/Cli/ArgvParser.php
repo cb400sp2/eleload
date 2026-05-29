@@ -23,6 +23,8 @@ final class ArgvParser
         $concurrency = self::DEFAULT_CONCURRENCY;
         $timeout = self::DEFAULT_TIMEOUT;
         $silent = false;
+        $yes = false;
+        $allowHighLoad = false;
         $followRedirects = false;
         $headers = [];
         $bearerToken = null;
@@ -61,6 +63,18 @@ final class ArgvParser
 
             if ($token === '--silent') {
                 $silent = true;
+                $i++;
+                continue;
+            }
+
+            if ($token === '--yes') {
+                $yes = true;
+                $i++;
+                continue;
+            }
+
+            if ($token === '--allow-high-load') {
+                $allowHighLoad = true;
                 $i++;
                 continue;
             }
@@ -205,6 +219,8 @@ final class ArgvParser
             method: $method,
             timeout: $timeout,
             silent: $silent,
+            yes: $yes,
+            allowHighLoad: $allowHighLoad,
             followRedirects: $followRedirects,
             headers: $headers,
             bearerToken: $bearerToken,

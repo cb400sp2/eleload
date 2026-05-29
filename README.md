@@ -4,6 +4,9 @@
 
 It uses `curl_multi` for concurrent requests and prints throughput and latency metrics.
 
+Only run load tests against systems you own or have explicit permission to test.
+自身が管理しているシステム、または明示的な許可を得たシステムに対してのみ負荷試験を実行してください。
+
 ## Features
 
 - `run/help/version` commands without Symfony Console or Laravel
@@ -51,6 +54,10 @@ It uses `curl_multi` for concurrent requests and prints throughput and latency m
   - improved/regressed highlighting for `RPS/TPS/p95/p99/error rate`
 - CI/script output control:
   - `--silent`
+- Safety controls:
+  - high-load confirmation prompt
+  - `--yes`
+  - `--allow-high-load`
 - UTF-8 report content, including multibyte text in JSON and HTML reports
 
 ## Requirements
@@ -217,6 +224,19 @@ Silent mode for CI/scripts:
   --concurrency=10 \
   --silent \
   --report-json=reports/ci-report.json
+```
+
+High-load guard and overrides:
+
+```bash
+# Prompts for confirmation when thresholds are exceeded
+./bin/eleload run https://example.com --requests=10001 --concurrency=600
+
+# Non-interactive explicit confirmation
+./bin/eleload run https://example.com --requests=10001 --yes
+
+# Explicit override for scripts
+./bin/eleload run https://example.com --concurrency=600 --allow-high-load
 ```
 
 ## Metric Definitions

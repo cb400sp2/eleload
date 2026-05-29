@@ -24,6 +24,8 @@ use Throwable;
 final class Application
 {
     public const VERSION = '0.1.0';
+    private const HIGH_LOAD_REQUESTS_MAX = 10_000;
+    private const HIGH_LOAD_CONCURRENCY_MAX = 500;
 
     /**
      * @param list<string> $argv
@@ -83,6 +85,7 @@ final class Application
     {
         $parser = new ArgvParser();
         $options = $parser->parseRun($args);
+        $this->enforceHighLoadGuard($options, $output);
 
         $runner = new CurlMultiRunner();
         $stats = new StatisticsCalculator();
@@ -259,6 +262,8 @@ final class Application
         $output->writeln('  --body="..."             Request body');
         $output->writeln('  --timeout=10             Timeout seconds');
         $output->writeln('  --silent                 Suppress normal run output');
+        $output->writeln('  --yes                    Skip high-load confirmation prompt');
+        $output->writeln('  --allow-high-load        Explicitly allow high-load settings');
         $output->writeln('  --success-status=LIST    Comma-separated success status codes (e.g. 200,201,204)');
         $output->writeln('  --expect-status=LIST     Comma-separated expected status codes');
         $output->writeln('  --expect-body-contains=T Validate response body contains text');
@@ -284,5 +289,51 @@ final class Application
         $output->writeln('Options for compare:');
         $output->writeln('  --html=FILE              Output HTML comparison path');
         $output->writeln('  --md=FILE                Output Markdown comparison path');
+    }
+
+    private function enforceHighLoadGuard(RunOptions $options, ConsoleOutput $output): void
+    {
+        $warningParts = [];
+        if ($options->requests > self::HIGH_LOAD_REQUESTS_MAX) {
+            $warningParts[] = sprintf(
+                'requests=%d exceeds default max %d',
+                $options->requests,
+                self::HIGH_LOAD_REQUESTS_MAX
+            );
+        }
+        if ($options->concurrency > self::HIGH_LOAD_CONCURRENCY_MAX) {
+            $warningParts[] = sprintf(
+                'concurrency=%d exceeds default max %d',
+                $options->concurrency,
+                self::HIGH_LOAD_CONCURRENCY_MAX
+            );
+        }
+
+        if ($warningParts === [] || $options->allowHighLoad || $options->yes) {
+            return;
+        }
+
+        $detail = implode('; ', $warningParts);
+        $message = 'High-load settings detected (' . $detail . ').';
+
+        if (!$this->isInteractiveInput()) {
+            throw new RuntimeException(
+                $message . ' Re-run with --yes to confirm or --allow-high-load to explicitly override.'
+            );
+        }
+
+        $output->writeln($message);
+        $output->writeln('Continue? [y/N]');
+
+        $line = fgets(STDIN);
+        $answer = strtolower(trim($line === false ? '' : $line));
+        if ($answer !== 'y' && $answer !== 'yes') {
+            throw new RuntimeException('Aborted by user.');
+        }
+    }
+
+    private function isInteractiveInput(): bool
+    {
+        return function_exists('stream_isatty') && stream_isatty(STDIN);
     }
 }
