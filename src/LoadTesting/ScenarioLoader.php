@@ -261,7 +261,59 @@ final class ScenarioLoader
             waitMs: $waitMs,
             name: $stepName,
             followRedirects: $followRedirects,
-            extract: $extract
+            extract: $extract,
+            if: $this->parseIf($data['if'] ?? null, $label),
         );
+    }
+
+    private function parseIf(mixed $data, string $parentLabel): ?ScenarioBranch
+    {
+        if ($data === null) {
+            return null;
+        }
+
+        if (!is_array($data)) {
+            throw new InvalidArgumentException("{$parentLabel}: 'if' must be an object.");
+        }
+
+        // Parse condition
+        if (!isset($data['field']) || !is_string($data['field'])) {
+            throw new InvalidArgumentException("{$parentLabel}: 'if.field' is required and must be a string.");
+        }
+        if (!isset($data['op']) || !is_string($data['op'])) {
+            throw new InvalidArgumentException("{$parentLabel}: 'if.op' is required and must be a string.");
+        }
+        if (!isset($data['value']) || (!is_string($data['value']) && !is_int($data['value']))) {
+            throw new InvalidArgumentException("{$parentLabel}: 'if.value' is required and must be a string or integer.");
+        }
+
+        $condition = new ScenarioCondition(
+            field: $data['field'],
+            op: $data['op'],
+            value: $data['value']
+        );
+
+        // Parse then/else branch steps
+        $thenSteps = [];
+        if (isset($data['then'])) {
+            if (!is_array($data['then'])) {
+                throw new InvalidArgumentException("{$parentLabel}: 'if.then' must be an array of steps.");
+            }
+            foreach ($data['then'] as $i => $stepData) {
+                $thenSteps[] = $this->parseStep($stepData, (int) $i);
+            }
+        }
+
+        $elseSteps = [];
+        if (isset($data['else'])) {
+            if (!is_array($data['else'])) {
+                throw new InvalidArgumentException("{$parentLabel}: 'if.else' must be an array of steps.");
+            }
+            foreach ($data['else'] as $i => $stepData) {
+                $elseSteps[] = $this->parseStep($stepData, (int) $i);
+            }
+        }
+
+        return new ScenarioBranch(condition: $condition, then: $thenSteps, else: $elseSteps);
     }
 }

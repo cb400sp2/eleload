@@ -41,14 +41,13 @@ final class ScenarioRunner
             throw new RuntimeException('Failed to initialize curl multi handle.');
         }
 
-        $stepCount = count($definition->steps);
         $durationMode = $durationSec !== null;
         $startedAt = hrtime(true);
 
         // Initialize VU states
         $vus = [];
         for ($i = 0; $i < $concurrency; $i++) {
-            $vus[$i] = $this->newVuState($i, $definition->variables, $startedAt);
+            $vus[$i] = $this->newVuState($i, $definition->variables, $definition->steps, $startedAt);
         }
 
         /** @var array<int, int> handleObjectId => vuId */
@@ -74,8 +73,8 @@ final class ScenarioRunner
                     }
                     $vu['wait_until_ns'] = 0;
 
-                    // If all steps done, record completed iteration
-                    if ($vu['step_index'] >= $stepCount) {
+                    // If step queue empty, record completed iteration
+                    if (count($vu['step_queue']) === 0) {
                         $iterDurationMs = ($now - $vu['iteration_started_at_ns']) / 1_000_000;
                         $allSuccess = true;
                         foreach ($vu['step_results'] as $sr) {
@@ -113,7 +112,8 @@ final class ScenarioRunner
 
                         // Reset VU for next iteration (variables carry over for auth token reuse)
                         $vu['iteration']++;
-                        $vu['step_index'] = 0;
+                        $vu['step_queue'] = $definition->steps;
+                        $vu['step_counter'] = 0;
                         $vu['step_results'] = [];
                         $vu['iteration_started_at_ns'] = hrtime(true);
                     }
@@ -124,8 +124,9 @@ final class ScenarioRunner
                         continue;
                     }
 
-                    // Start next step
-                    $step = $definition->steps[$vu['step_index']];
+                    // Pop next step from queue and start it
+                    $step = array_shift($vu['step_queue']);
+                    $vu['current_step'] = $step;
                     $handle = $this->createHandle($step, $vu['variables']);
                     $handleId = spl_object_id($handle);
 
@@ -165,7 +166,8 @@ final class ScenarioRunner
                     $error = curl_error($handle);
                     $responseBody = (string) curl_multi_getcontent($handle);
 
-                    $step = $definition->steps[$vus[$vuId]['step_index']];
+                    /** @var ScenarioStep $step */
+                    $step = $vus[$vuId]['current_step'];
                     $stepSuccess = $errorNo === 0 && $httpCode >= 200 && $httpCode < 300;
 
                     // Extract variables from response body
@@ -174,9 +176,10 @@ final class ScenarioRunner
                         $vus[$vuId]['variables'] = array_merge($vus[$vuId]['variables'], $extracted);
                     }
 
-                    $stepName = $step->name ?? 'Step ' . ($vus[$vuId]['step_index'] + 1);
+                    $stepIndex = $vus[$vuId]['step_counter'];
+                    $stepName = $step->name ?? 'Step ' . ($stepIndex + 1);
                     $vus[$vuId]['step_results'][] = new ScenarioStepResult(
-                        stepIndex: $vus[$vuId]['step_index'],
+                        stepIndex: $stepIndex,
                         stepName: $stepName,
                         latencyMs: $latencyMs,
                         httpCode: $httpCode,
@@ -184,15 +187,24 @@ final class ScenarioRunner
                         error: $error,
                         success: $stepSuccess
                     );
+                    $vus[$vuId]['step_counter']++;
+
+                    // Evaluate if/then/else branch and prepend branch steps to queue
+                    if ($step->if !== null) {
+                        $branch = $step->if->condition->evaluate($httpCode, $responseBody)
+                            ? $step->if->then
+                            : $step->if->else;
+                        $vus[$vuId]['step_queue'] = array_merge($branch, $vus[$vuId]['step_queue']);
+                    }
 
                     // Apply post-step wait
                     if ($step->waitMs > 0) {
                         $vus[$vuId]['wait_until_ns'] = hrtime(true) + (int) ($step->waitMs * self::NANOSECONDS_PER_MILLISECOND);
                     }
 
-                    $vus[$vuId]['step_index']++;
                     $vus[$vuId]['in_flight'] = false;
                     $vus[$vuId]['handle'] = null;
+                    $vus[$vuId]['current_step'] = null;
 
                     unset($handleToVu[$handleId]);
                     curl_multi_remove_handle($multi, $handle);
@@ -299,14 +311,17 @@ final class ScenarioRunner
 
     /**
      * @param array<string, string> $variables
+     * @param list<ScenarioStep> $steps
      * @return array<string, mixed>
      */
-    private function newVuState(int $vuId, array $variables, int $startedAt): array
+    private function newVuState(int $vuId, array $variables, array $steps, int $startedAt): array
     {
         return [
             'id' => $vuId,
             'iteration' => 1,
-            'step_index' => 0,
+            'step_queue' => $steps,
+            'step_counter' => 0,
+            'current_step' => null,
             'variables' => $variables,
             'handle' => null,
             'in_flight' => false,
