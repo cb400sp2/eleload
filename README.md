@@ -41,6 +41,7 @@ It uses `curl_multi` for concurrent requests and prints throughput and latency m
   - `--report-json`
   - `--report-html`
   - `--report-md`
+  - `--report-csv`
   - `--output-dir`
   - `--name`
   - `report` command to regenerate HTML from saved JSON
@@ -181,7 +182,8 @@ Output JSON + HTML reports:
   --target-tps=95 \
   --report-json=reports/report.json \
   --report-html=reports/report.html \
-  --report-md=reports/report.md
+  --report-md=reports/report.md \
+  --report-csv=reports/report.csv
 ```
 
 Output timestamped reports to a directory:
