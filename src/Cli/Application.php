@@ -92,6 +92,7 @@ final class Application
             concurrency: $options->concurrency,
             method: $options->method,
             timeout: $options->timeout,
+            followRedirects: $options->followRedirects,
             headers: $options->headers,
             bearerToken: $options->bearerToken,
             basicUser: $options->basicUser,
@@ -187,6 +188,8 @@ final class Application
         $output->writeln('  --basic-user=USER        Basic auth username');
         $output->writeln('  --basic-password=PASS    Basic auth password');
         $output->writeln('  --cookie=TEXT            Send Cookie header value');
+        $output->writeln('  --follow-redirects       Follow HTTP redirects');
+        $output->writeln('  --no-follow-redirects    Disable redirect following (default)');
         $output->writeln('  --body="..."             Request body');
         $output->writeln('  --timeout=10             Timeout seconds');
         $output->writeln('  --success-status=LIST    Comma-separated success status codes (e.g. 200,201,204)');

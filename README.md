@@ -32,6 +32,9 @@ It uses `curl_multi` for concurrent requests and prints throughput and latency m
   - `--basic-user`
   - `--basic-password`
   - `--cookie`
+- Redirect control:
+  - `--follow-redirects`
+  - `--no-follow-redirects`
 - Report output:
   - `--report-json`
   - `--report-html`
@@ -123,6 +126,15 @@ Cookie example:
 ```bash
 ./bin/eleload run https://example.com \
   --cookie="session=abc123" \
+  --requests=500 \
+  --concurrency=20
+```
+
+Redirect control example:
+
+```bash
+./bin/eleload run https://example.com \
+  --follow-redirects \
   --requests=500 \
   --concurrency=20
 ```

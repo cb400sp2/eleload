@@ -16,6 +16,7 @@ final class RunOptions
         public readonly int $concurrency,
         public readonly string $method,
         public readonly int $timeout,
+        public readonly bool $followRedirects,
         public readonly array $headers,
         public readonly ?string $bearerToken,
         public readonly ?string $basicUser,

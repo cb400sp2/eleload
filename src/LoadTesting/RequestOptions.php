@@ -16,6 +16,7 @@ final class RequestOptions
         public readonly int $concurrency,
         public readonly string $method,
         public readonly int $timeout,
+        public readonly bool $followRedirects = false,
         public readonly array $headers = [],
         public readonly ?string $bearerToken = null,
         public readonly ?string $basicUser = null,

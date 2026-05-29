@@ -13,6 +13,7 @@ test('ArgvParser parses minimum arguments', function (): void {
     assertSame(10, $options->concurrency);
     assertSame('GET', $options->method);
     assertSame(10, $options->timeout);
+    assertSame(false, $options->followRedirects);
     assertSame([], $options->headers);
     assertSame(null, $options->bearerToken);
     assertSame(null, $options->basicUser);
@@ -32,6 +33,7 @@ test('ArgvParser parses full option set', function (): void {
         '--method',
         'post',
         '--timeout=3',
+        '--follow-redirects',
         '--header',
         'Accept: application/json',
         '--header=Content-Type: application/json',
@@ -67,6 +69,7 @@ test('ArgvParser parses full option set', function (): void {
     assertSame(25, $options->concurrency);
     assertSame('POST', $options->method);
     assertSame(3, $options->timeout);
+    assertSame(true, $options->followRedirects);
     assertSame(
         ['Accept: application/json', 'Content-Type: application/json'],
         $options->headers
@@ -101,6 +104,16 @@ test('ArgvParser rejects warmup greater than duration', function (): void {
         InvalidArgumentException::class,
         'Option --warmup must be lower than --duration'
     );
+});
+
+test('ArgvParser applies last redirect control flag', function (): void {
+    $parser = new ArgvParser();
+
+    $options1 = $parser->parseRun(['https://example.com', '--follow-redirects', '--no-follow-redirects']);
+    assertSame(false, $options1->followRedirects);
+
+    $options2 = $parser->parseRun(['https://example.com', '--no-follow-redirects', '--follow-redirects']);
+    assertSame(true, $options2->followRedirects);
 });
 
 test('ArgvParser rejects invalid success status list', function (): void {

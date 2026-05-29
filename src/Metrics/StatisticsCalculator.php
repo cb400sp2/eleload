@@ -91,6 +91,7 @@ final class StatisticsCalculator
                 'requests' => $runResult->options->requests,
                 'concurrency' => $runResult->options->concurrency,
                 'timeout' => $runResult->options->timeout,
+                'follow_redirects' => $runResult->options->followRedirects,
                 'name' => $runResult->options->name,
                 'success_status' => $runResult->options->successStatusCodes,
                 'duration' => $runResult->options->durationSec,
