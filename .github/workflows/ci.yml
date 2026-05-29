@@ -106,3 +106,60 @@ jobs:
 
       - name: Lint Markdown files
         run: markdownlint '**/*.md' --ignore node_modules --ignore vendor
+
+  coverage:
+    name: Code Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP with PCOV
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: curl, pcov
+          tools: composer:v2
+          coverage: pcov
+
+      - name: Resolve Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Composer downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-php-8.2-composer-${{ hashFiles('composer.json') }}
+          restore-keys: |
+            ${{ runner.os }}-php-8.2-composer-
+            ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Run tests with coverage
+        run: composer coverage
+
+      - name: Enforce minimum coverage threshold (70%)
+        run: |
+          LINES_VALID=$(grep -oP 'lines-valid="\K[0-9]+' build/coverage/clover.xml | head -1)
+          LINES_COVERED=$(grep -oP 'lines-covered="\K[0-9]+' build/coverage/clover.xml | head -1)
+          if [ -z "$LINES_VALID" ] || [ "$LINES_VALID" -eq 0 ]; then
+            echo "Could not parse coverage data"
+            exit 1
+          fi
+          PCT=$(echo "scale=2; $LINES_COVERED * 100 / $LINES_VALID" | bc)
+          echo "Line coverage: ${PCT}% (${LINES_COVERED}/${LINES_VALID})"
+          PASS=$(echo "$PCT >= 70" | bc -l)
+          if [ "$PASS" -ne 1 ]; then
+            echo "Coverage ${PCT}% is below the required 70% threshold"
+            exit 1
+          fi
+
+      - name: Upload coverage report to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: build/coverage/clover.xml
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
