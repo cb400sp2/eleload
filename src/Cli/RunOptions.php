@@ -53,7 +53,8 @@ final class RunOptions
         public readonly ?float $targetRps,
         public readonly ?float $targetTps,
         public readonly float $rampUpSec,
-        public readonly int $memoryBufferSize = 10_000
+        public readonly int $memoryBufferSize = 10_000,
+        public readonly bool $blockPrivateNetworks = false
     ) {
     }
 }

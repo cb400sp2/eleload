@@ -357,6 +357,7 @@ final class CurlMultiRunner
             CURLOPT_FOLLOWLOCATION => $options->followRedirects,
             CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_SSL_VERIFYHOST => 2,
+            CURLOPT_SSLVERSION => CURL_SSLVERSION_TLSv1_2,
             CURLOPT_TCP_KEEPALIVE => 1,
         ];
 

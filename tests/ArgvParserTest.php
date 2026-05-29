@@ -466,3 +466,127 @@ test('ArgvParser parseScenario rejects unexpected positional argument', function
         'Unexpected argument'
     );
 });
+
+// ---------------------------------------------------------------------------
+// Security: URL scheme validation
+// ---------------------------------------------------------------------------
+
+test('ArgvParser rejects non-http/https URL scheme', function (): void {
+    $parser = new ArgvParser();
+
+    assertThrows(
+        fn () => $parser->parseRun(['ftp://example.com']),
+        InvalidArgumentException::class,
+        'http or https'
+    );
+});
+
+test('ArgvParser accepts http scheme', function (): void {
+    $parser = new ArgvParser();
+    $options = $parser->parseRun(['http://example.com']);
+    assertSame('http://example.com', $options->url);
+});
+
+test('ArgvParser accepts https scheme', function (): void {
+    $parser = new ArgvParser();
+    $options = $parser->parseRun(['https://example.com']);
+    assertSame('https://example.com', $options->url);
+});
+
+// ---------------------------------------------------------------------------
+// Security: CRLF injection prevention in headers
+// ---------------------------------------------------------------------------
+
+test('ArgvParser rejects header with CR character', function (): void {
+    $parser = new ArgvParser();
+
+    assertThrows(
+        fn () => $parser->parseRun(['https://example.com', '--header=X-Evil: bad' . "\r" . 'value']),
+        InvalidArgumentException::class,
+        'CR'
+    );
+});
+
+test('ArgvParser rejects header with LF character', function (): void {
+    $parser = new ArgvParser();
+
+    assertThrows(
+        fn () => $parser->parseRun(['https://example.com', '--header=X-Evil: bad' . "\n" . 'value']),
+        InvalidArgumentException::class,
+        'LF'
+    );
+});
+
+// ---------------------------------------------------------------------------
+// Security: --block-private-networks
+// ---------------------------------------------------------------------------
+
+test('ArgvParser rejects localhost with --block-private-networks', function (): void {
+    $parser = new ArgvParser();
+
+    assertThrows(
+        fn () => $parser->parseRun(['http://localhost/api', '--block-private-networks']),
+        InvalidArgumentException::class,
+        'block-private-networks'
+    );
+});
+
+test('ArgvParser rejects private IP with --block-private-networks', function (): void {
+    $parser = new ArgvParser();
+
+    assertThrows(
+        fn () => $parser->parseRun(['http://192.168.1.1/api', '--block-private-networks']),
+        InvalidArgumentException::class,
+        'block-private-networks'
+    );
+});
+
+test('ArgvParser allows public IP with --block-private-networks', function (): void {
+    $parser = new ArgvParser();
+    $options = $parser->parseRun(['http://1.1.1.1/api', '--block-private-networks']);
+    assertSame('http://1.1.1.1/api', $options->url);
+    assertSame(true, $options->blockPrivateNetworks);
+});
+
+// ---------------------------------------------------------------------------
+// Security: credential env vars
+// ---------------------------------------------------------------------------
+
+test('ArgvParser resolves --bearer-token-env from environment', function (): void {
+    $envVar = 'ELELOAD_TEST_TOKEN_' . getmypid();
+    putenv($envVar . '=secret-token');
+
+    $parser = new ArgvParser();
+    $options = $parser->parseRun(['https://example.com', "--bearer-token-env={$envVar}"]);
+    assertSame('secret-token', $options->bearerToken);
+
+    putenv($envVar);
+});
+
+test('ArgvParser rejects --bearer-token-env for unset variable', function (): void {
+    $envVar = 'ELELOAD_TEST_UNSET_' . getmypid();
+    putenv($envVar); // ensure unset
+
+    $parser = new ArgvParser();
+
+    assertThrows(
+        fn () => $parser->parseRun(['https://example.com', "--bearer-token-env={$envVar}"]),
+        InvalidArgumentException::class,
+        'not set or empty'
+    );
+});
+
+test('ArgvParser rejects combining --bearer-token and --bearer-token-env', function (): void {
+    $envVar = 'ELELOAD_TEST_BOTH_' . getmypid();
+    putenv($envVar . '=val');
+
+    $parser = new ArgvParser();
+
+    assertThrows(
+        fn () => $parser->parseRun(['https://example.com', '--bearer-token=tok', "--bearer-token-env={$envVar}"]),
+        InvalidArgumentException::class,
+        'together'
+    );
+
+    putenv($envVar);
+});

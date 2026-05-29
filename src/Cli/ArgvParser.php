@@ -59,6 +59,11 @@ final class ArgvParser
         $targetTps = null;
         $rampUpSec = 0.0;
         $memoryBufferSize = 10_000;
+        $blockPrivateNetworks = false;
+        $bearerTokenEnv = null;
+        $basicUserEnv = null;
+        $basicPasswordEnv = null;
+        $cookieEnv = null;
 
         $i = 0;
         while ($i < count($args)) {
@@ -100,6 +105,12 @@ final class ArgvParser
                 continue;
             }
 
+            if ($token === '--block-private-networks') {
+                $blockPrivateNetworks = true;
+                $i++;
+                continue;
+            }
+
             if ($token === '--no-follow-redirects') {
                 $followRedirects = false;
                 $i++;
@@ -126,19 +137,34 @@ final class ArgvParser
                         $connectTimeout = $this->parsePositiveInt($name, $value);
                         break;
                     case 'header':
+                        if (str_contains($value, "\r") || str_contains($value, "\n")) {
+                            throw new InvalidArgumentException('Option --header value must not contain CR (\\r) or LF (\\n) characters.');
+                        }
                         $headers[] = $value;
                         break;
                     case 'bearer-token':
                         $bearerToken = $value;
                         break;
+                    case 'bearer-token-env':
+                        $bearerTokenEnv = $value;
+                        break;
                     case 'basic-user':
                         $basicUser = $value;
+                        break;
+                    case 'basic-user-env':
+                        $basicUserEnv = $value;
                         break;
                     case 'basic-password':
                         $basicPassword = $value;
                         break;
+                    case 'basic-password-env':
+                        $basicPasswordEnv = $value;
+                        break;
                     case 'cookie':
                         $cookie = $value;
+                        break;
+                    case 'cookie-env':
+                        $cookieEnv = $value;
                         break;
                     case 'body':
                         $body = $value;
@@ -230,6 +256,60 @@ final class ArgvParser
             throw new InvalidArgumentException("Invalid URL: {$url}");
         }
 
+        $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
+        if ($scheme !== 'http' && $scheme !== 'https') {
+            throw new InvalidArgumentException("URL must use http or https scheme: {$url}");
+        }
+
+        if ($blockPrivateNetworks) {
+            $this->validateNoPrivateHost($url);
+        }
+
+        // Resolve credential env vars
+        if ($bearerTokenEnv !== null) {
+            $resolved = getenv($bearerTokenEnv);
+            if ($resolved === false || $resolved === '') {
+                throw new InvalidArgumentException("Environment variable '{$bearerTokenEnv}' is not set or empty (--bearer-token-env).");
+            }
+            if ($bearerToken !== null) {
+                throw new InvalidArgumentException('Cannot use --bearer-token and --bearer-token-env together.');
+            }
+            $bearerToken = $resolved;
+        }
+
+        if ($basicUserEnv !== null) {
+            $resolved = getenv($basicUserEnv);
+            if ($resolved === false) {
+                throw new InvalidArgumentException("Environment variable '{$basicUserEnv}' is not set (--basic-user-env).");
+            }
+            if ($basicUser !== null) {
+                throw new InvalidArgumentException('Cannot use --basic-user and --basic-user-env together.');
+            }
+            $basicUser = $resolved;
+        }
+
+        if ($basicPasswordEnv !== null) {
+            $resolved = getenv($basicPasswordEnv);
+            if ($resolved === false) {
+                throw new InvalidArgumentException("Environment variable '{$basicPasswordEnv}' is not set (--basic-password-env).");
+            }
+            if ($basicPassword !== null) {
+                throw new InvalidArgumentException('Cannot use --basic-password and --basic-password-env together.');
+            }
+            $basicPassword = $resolved;
+        }
+
+        if ($cookieEnv !== null) {
+            $resolved = getenv($cookieEnv);
+            if ($resolved === false || $resolved === '') {
+                throw new InvalidArgumentException("Environment variable '{$cookieEnv}' is not set or empty (--cookie-env).");
+            }
+            if ($cookie !== null) {
+                throw new InvalidArgumentException('Cannot use --cookie and --cookie-env together.');
+            }
+            $cookie = $resolved;
+        }
+
         $allowedMethods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
         if (!in_array($method, $allowedMethods, true)) {
             throw new InvalidArgumentException(
@@ -296,7 +376,8 @@ final class ArgvParser
             targetRps: $targetRps,
             targetTps: $targetTps,
             rampUpSec: $rampUpSec,
-            memoryBufferSize: $memoryBufferSize
+            memoryBufferSize: $memoryBufferSize,
+            blockPrivateNetworks: $blockPrivateNetworks
         );
     }
 
@@ -682,5 +763,33 @@ final class ArgvParser
         }
 
         return $parsedCodes;
+    }
+
+    /**
+     * Rejects URLs whose host resolves to a private or loopback address.
+     * Only checks literal hostnames and IP addresses; does not perform DNS resolution.
+     *
+     * @throws \InvalidArgumentException
+     */
+    private function validateNoPrivateHost(string $url): void
+    {
+        $host = (string) parse_url($url, PHP_URL_HOST);
+        $host = trim($host, '[]'); // strip IPv6 brackets
+
+        $blockedNames = ['localhost', 'ip6-localhost', 'ip6-loopback'];
+        if (in_array(strtolower($host), $blockedNames, true)) {
+            throw new InvalidArgumentException(
+                "Host '{$host}' is not allowed with --block-private-networks."
+            );
+        }
+
+        if (filter_var($host, FILTER_VALIDATE_IP) !== false) {
+            $publicIp = filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
+            if ($publicIp === false) {
+                throw new InvalidArgumentException(
+                    "IP address '{$host}' is in a private or reserved range and is not allowed with --block-private-networks."
+                );
+            }
+        }
     }
 }
