@@ -27,6 +27,8 @@ It uses `curl_multi` for concurrent requests and prints throughput and latency m
   - `--fail-on-tps-below`
 - Success criteria customization:
   - `--success-status`
+- Auth options:
+  - `--bearer-token`
 - Report output:
   - `--report-json`
   - `--report-html`
@@ -90,6 +92,15 @@ Custom success status example:
 ./bin/eleload run https://example.com/api/items \
   --method=POST \
   --success-status=200,201,204 \
+  --requests=500 \
+  --concurrency=20
+```
+
+Bearer token example:
+
+```bash
+./bin/eleload run https://example.com/api/items \
+  --bearer-token=xxxxx \
   --requests=500 \
   --concurrency=20
 ```

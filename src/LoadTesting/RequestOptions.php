@@ -17,6 +17,7 @@ final class RequestOptions
         public readonly string $method,
         public readonly int $timeout,
         public readonly array $headers = [],
+        public readonly ?string $bearerToken = null,
         public readonly ?string $body = null,
         public readonly ?string $name = null,
         public readonly ?array $successStatusCodes = null,
@@ -25,5 +26,26 @@ final class RequestOptions
         public readonly ?float $targetRps = null,
         public readonly ?float $targetTps = null
     ) {
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function resolveHeaders(): array
+    {
+        $headers = $this->headers;
+
+        if ($this->bearerToken === null || $this->bearerToken === '') {
+            return $headers;
+        }
+
+        foreach ($headers as $header) {
+            if (str_starts_with(strtolower($header), 'authorization:')) {
+                return $headers;
+            }
+        }
+
+        $headers[] = 'Authorization: Bearer ' . $this->bearerToken;
+        return $headers;
     }
 }

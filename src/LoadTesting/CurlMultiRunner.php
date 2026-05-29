@@ -154,8 +154,9 @@ final class CurlMultiRunner
             CURLOPT_SSL_VERIFYHOST => 2,
         ];
 
-        if (!empty($options->headers)) {
-            $curlOptions[CURLOPT_HTTPHEADER] = $options->headers;
+        $headers = $options->resolveHeaders();
+        if (!empty($headers)) {
+            $curlOptions[CURLOPT_HTTPHEADER] = $headers;
         }
 
         if ($options->body !== null) {

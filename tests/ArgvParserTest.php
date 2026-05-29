@@ -14,6 +14,7 @@ test('ArgvParser parses minimum arguments', function (): void {
     assertSame('GET', $options->method);
     assertSame(10, $options->timeout);
     assertSame([], $options->headers);
+    assertSame(null, $options->bearerToken);
     assertSame(null, $options->body);
     assertSame(null, $options->successStatusCodes);
 });
@@ -31,6 +32,8 @@ test('ArgvParser parses full option set', function (): void {
         '--header',
         'Accept: application/json',
         '--header=Content-Type: application/json',
+        '--bearer-token',
+        'token-123',
         '--body',
         '{"name":"eleload"}',
         '--report-json',
@@ -61,6 +64,7 @@ test('ArgvParser parses full option set', function (): void {
         ['Accept: application/json', 'Content-Type: application/json'],
         $options->headers
     );
+    assertSame('token-123', $options->bearerToken);
     assertSame('{"name":"eleload"}', $options->body);
     assertSame('reports/report.json', $options->reportJsonPath);
     assertSame('reports/report.html', $options->reportHtmlPath);

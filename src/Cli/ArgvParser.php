@@ -23,6 +23,7 @@ final class ArgvParser
         $concurrency = self::DEFAULT_CONCURRENCY;
         $timeout = self::DEFAULT_TIMEOUT;
         $headers = [];
+        $bearerToken = null;
         $body = null;
         $reportJsonPath = null;
         $reportHtmlPath = null;
@@ -62,6 +63,9 @@ final class ArgvParser
                         break;
                     case 'header':
                         $headers[] = $value;
+                        break;
+                    case 'bearer-token':
+                        $bearerToken = $value;
                         break;
                     case 'body':
                         $body = $value;
@@ -153,6 +157,7 @@ final class ArgvParser
             method: $method,
             timeout: $timeout,
             headers: $headers,
+            bearerToken: $bearerToken,
             body: $body,
             reportJsonPath: $reportJsonPath,
             reportHtmlPath: $reportHtmlPath,
