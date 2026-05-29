@@ -29,6 +29,8 @@ It uses `curl_multi` for concurrent requests and prints throughput and latency m
   - `--success-status`
 - Auth options:
   - `--bearer-token`
+  - `--basic-user`
+  - `--basic-password`
 - Report output:
   - `--report-json`
   - `--report-html`
@@ -101,6 +103,16 @@ Bearer token example:
 ```bash
 ./bin/eleload run https://example.com/api/items \
   --bearer-token=xxxxx \
+  --requests=500 \
+  --concurrency=20
+```
+
+Basic auth example:
+
+```bash
+./bin/eleload run https://example.com/api/items \
+  --basic-user=user \
+  --basic-password=pass \
   --requests=500 \
   --concurrency=20
 ```
