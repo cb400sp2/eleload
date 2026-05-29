@@ -71,6 +71,20 @@ function assertSame(mixed $expected, mixed $actual, string $message = 'Values ar
     }
 }
 
+function assertFalse(bool $condition, string $message = 'Assertion failed: expected false'): void
+{
+    if ($condition) {
+        throw new RuntimeException($message);
+    }
+}
+
+function assertNotNull(mixed $value, string $message = 'Assertion failed: expected non-null'): void
+{
+    if ($value === null) {
+        throw new RuntimeException($message);
+    }
+}
+
 function assertContains(string $needle, string $haystack, string $message = 'Expected substring not found'): void
 {
     if (!str_contains($haystack, $needle)) {
