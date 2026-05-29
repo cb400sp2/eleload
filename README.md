@@ -1,5 +1,7 @@
 # eleload
 
+[![CI](https://github.com/cb400sp2/eleload/actions/workflows/ci.yml/badge.svg)](https://github.com/cb400sp2/eleload/actions/workflows/ci.yml)
+
 `eleload` is a lightweight HTTP load testing CLI tool written in PHP.
 
 It uses `curl_multi` for concurrent requests and prints throughput and latency metrics.
