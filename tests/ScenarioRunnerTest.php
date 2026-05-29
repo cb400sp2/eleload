@@ -44,6 +44,48 @@ test('ScenarioRunner interpolate handles empty string', function (): void {
 });
 
 // -----------------------------------------------------------------------
+// interpolate() – ${var} syntax (#83)
+// -----------------------------------------------------------------------
+
+test('ScenarioRunner interpolate supports ${varName} syntax', function (): void {
+    $runner = new ScenarioRunner();
+
+    $result = $runner->interpolate(
+        'https://${host}/api/${version}/users',
+        ['host' => 'example.com', 'version' => 'v2']
+    );
+
+    assertSame('https://example.com/api/v2/users', $result);
+});
+
+test('ScenarioRunner interpolate ${varName} leaves unknown placeholders intact', function (): void {
+    $runner = new ScenarioRunner();
+
+    assertSame('Bearer ${token}', $runner->interpolate('Bearer ${token}', []));
+});
+
+test('ScenarioRunner interpolate merges global and per-VU variables', function (): void {
+    $runner = new ScenarioRunner();
+
+    // per-VU takes precedence over global
+    $result = $runner->interpolate(
+        '{{a}}-${b}',
+        ['a' => 'vu-a', 'b' => 'vu-b'],
+        ['a' => 'global-a', 'b' => 'global-b']
+    );
+
+    assertSame('vu-a-vu-b', $result);
+});
+
+test('ScenarioRunner interpolate falls back to global when per-VU missing', function (): void {
+    $runner = new ScenarioRunner();
+
+    $result = $runner->interpolate('${token}', [], ['token' => 'global-token']);
+
+    assertSame('global-token', $result);
+});
+
+// -----------------------------------------------------------------------
 // run() – argument validation
 // -----------------------------------------------------------------------
 

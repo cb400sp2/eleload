@@ -235,19 +235,44 @@ final class ScenarioLoader
                 throw new InvalidArgumentException("{$label}: 'extract' must be an object.");
             }
 
-            foreach ($data['extract'] as $varName => $expression) {
-                if (!is_string($varName) || !is_string($expression)) {
+            foreach ($data['extract'] as $varName => $entry) {
+                if (!is_string($varName)) {
+                    throw new InvalidArgumentException("{$label}: Extract variable names must be strings.");
+                }
+
+                // Shorthand: "varName": "json:$.path"  → scope defaults to 'vu'
+                if (is_string($entry)) {
+                    $expr = $entry;
+                    $scope = 'vu';
+                } elseif (is_array($entry)) {
+                    // Long form: "varName": {"expr": "json:$.path", "scope": "global"}
+                    if (!isset($entry['expr']) || !is_string($entry['expr'])) {
+                        throw new InvalidArgumentException(
+                            "{$label}: Extract entry for '{$varName}' must have a string 'expr' key."
+                        );
+                    }
+                    $expr = $entry['expr'];
+                    $scope = 'vu';
+                    if (isset($entry['scope'])) {
+                        if ($entry['scope'] !== 'vu' && $entry['scope'] !== 'global') {
+                            throw new InvalidArgumentException(
+                                "{$label}: Extract scope for '{$varName}' must be 'vu' or 'global'."
+                            );
+                        }
+                        $scope = $entry['scope'];
+                    }
+                } else {
                     throw new InvalidArgumentException(
-                        "{$label}: Extract entries must be string key-value pairs."
+                        "{$label}: Extract entry for '{$varName}' must be a string or object."
                     );
                 }
 
-                if (!str_starts_with($expression, 'json:') && !str_starts_with($expression, 'regex:')) {
+                if (!str_starts_with($expr, 'json:') && !str_starts_with($expr, 'regex:')) {
                     throw new InvalidArgumentException(
                         "{$label}: Extract expression for '{$varName}' must start with 'json:' or 'regex:'."
                     );
                 }
-                $extract[$varName] = $expression;
+                $extract[$varName] = ['expr' => $expr, 'scope' => $scope];
             }
         }
 

@@ -101,8 +101,10 @@ test('ScenarioLoader parses valid extract expressions', function (): void {
     ]);
 
     $def = (new ScenarioLoader())->load($file);
-    assertSame('json:$.data.id', $def->steps[0]->extract['userId']);
-    assertSame('regex:"token":"([^"]+)"', $def->steps[0]->extract['token']);
+    assertSame('json:$.data.id', $def->steps[0]->extract['userId']['expr']);
+    assertSame('vu', $def->steps[0]->extract['userId']['scope']);
+    assertSame('regex:"token":"([^"]+)"', $def->steps[0]->extract['token']['expr']);
+    assertSame('vu', $def->steps[0]->extract['token']['scope']);
 });
 
 test('ScenarioLoader parses step headers array', function (): void {
@@ -196,6 +198,69 @@ test('ScenarioLoader throws when JSON is invalid', function (): void {
         fn () => (new ScenarioLoader())->load($file),
         InvalidArgumentException::class,
         'Invalid JSON'
+    );
+});
+
+// -----------------------------------------------------------------------
+// extract scope (#83)
+// -----------------------------------------------------------------------
+
+test('ScenarioLoader parses extract with explicit global scope', function (): void {
+    $file = scenarioJson([
+        'steps' => [
+            [
+                'url' => 'https://example.com/login',
+                'method' => 'POST',
+                'extract' => [
+                    'token' => ['expr' => 'json:$.token', 'scope' => 'global'],
+                    'userId' => 'json:$.id',
+                ],
+            ],
+        ],
+    ]);
+
+    $def = (new ScenarioLoader())->load($file);
+    assertSame('json:$.token', $def->steps[0]->extract['token']['expr']);
+    assertSame('global', $def->steps[0]->extract['token']['scope']);
+    assertSame('json:$.id', $def->steps[0]->extract['userId']['expr']);
+    assertSame('vu', $def->steps[0]->extract['userId']['scope']);
+});
+
+test('ScenarioLoader throws on extract scope value other than vu or global', function (): void {
+    $file = scenarioJson([
+        'steps' => [
+            [
+                'url' => 'https://example.com',
+                'extract' => [
+                    'token' => ['expr' => 'json:$.token', 'scope' => 'thread'],
+                ],
+            ],
+        ],
+    ]);
+
+    assertThrows(
+        fn () => (new ScenarioLoader())->load($file),
+        InvalidArgumentException::class,
+        "'vu' or 'global'"
+    );
+});
+
+test('ScenarioLoader throws when extract object entry is missing expr key', function (): void {
+    $file = scenarioJson([
+        'steps' => [
+            [
+                'url' => 'https://example.com',
+                'extract' => [
+                    'token' => ['scope' => 'global'],
+                ],
+            ],
+        ],
+    ]);
+
+    assertThrows(
+        fn () => (new ScenarioLoader())->load($file),
+        InvalidArgumentException::class,
+        "'expr'"
     );
 });
 
