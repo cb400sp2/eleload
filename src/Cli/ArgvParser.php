@@ -35,6 +35,7 @@ final class ArgvParser
         $outputDir = null;
         $testName = null;
         $successStatusCodes = null;
+        $expectStatusCodes = null;
         $durationSec = null;
         $warmupSec = 0.0;
         $failOnP95 = null;
@@ -112,6 +113,9 @@ final class ArgvParser
                         break;
                     case 'success-status':
                         $successStatusCodes = $this->parseStatusCodeList($name, $value);
+                        break;
+                    case 'expect-status':
+                        $expectStatusCodes = $this->parseStatusCodeList($name, $value);
                         break;
                     case 'duration':
                         $durationSec = $this->parsePositiveFloat($name, $value);
@@ -198,6 +202,7 @@ final class ArgvParser
             outputDir: $outputDir,
             name: $testName,
             successStatusCodes: $successStatusCodes,
+            expectStatusCodes: $expectStatusCodes,
             durationSec: $durationSec,
             warmupSec: $warmupSec,
             failOnP95: $failOnP95,

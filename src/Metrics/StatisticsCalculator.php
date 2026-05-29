@@ -31,13 +31,19 @@ final class StatisticsCalculator
         $latencies = [];
         $errors = [];
         $successStatusCodes = $runResult->options->successStatusCodes;
+        $expectStatusCodes = $runResult->options->expectStatusCodes;
 
         foreach ($metricResults as $result) {
             $latencies[] = $result->latencyMs;
             $statusKey = (string)$result->httpCode;
             $statusCounts[$statusKey] = ($statusCounts[$statusKey] ?? 0) + 1;
 
-            if ($result->isSuccess($successStatusCodes)) {
+            $isSuccess = $result->isSuccess($successStatusCodes);
+            if ($isSuccess && $expectStatusCodes !== null) {
+                $isSuccess = in_array($result->httpCode, $expectStatusCodes, true);
+            }
+
+            if ($isSuccess) {
                 $success++;
             } else {
                 $errors[] = $this->formatError($result);
@@ -94,6 +100,7 @@ final class StatisticsCalculator
                 'follow_redirects' => $runResult->options->followRedirects,
                 'name' => $runResult->options->name,
                 'success_status' => $runResult->options->successStatusCodes,
+                'expect_status' => $runResult->options->expectStatusCodes,
                 'duration' => $runResult->options->durationSec,
                 'warmup' => $runResult->options->warmupSec,
                 'target_rps' => $runResult->options->targetRps,

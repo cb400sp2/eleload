@@ -9,6 +9,7 @@ final class RequestOptions
     /**
      * @param list<string> $headers
      * @param list<int>|null $successStatusCodes
+     * @param list<int>|null $expectStatusCodes
      */
     public function __construct(
         public readonly string $url,
@@ -25,6 +26,7 @@ final class RequestOptions
         public readonly ?string $body = null,
         public readonly ?string $name = null,
         public readonly ?array $successStatusCodes = null,
+        public readonly ?array $expectStatusCodes = null,
         public readonly ?float $durationSec = null,
         public readonly float $warmupSec = 0.0,
         public readonly ?float $targetRps = null,

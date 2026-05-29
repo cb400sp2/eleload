@@ -21,6 +21,7 @@ test('ArgvParser parses minimum arguments', function (): void {
     assertSame(null, $options->cookie);
     assertSame(null, $options->body);
     assertSame(null, $options->successStatusCodes);
+    assertSame(null, $options->expectStatusCodes);
 });
 
 test('ArgvParser parses full option set', function (): void {
@@ -52,6 +53,7 @@ test('ArgvParser parses full option set', function (): void {
         '--output-dir=reports',
         '--name=top page smoke load',
         '--success-status=200,201,204',
+        '--expect-status=200,201',
         '--duration=60',
         '--warmup=5',
         '--fail-on-p95=500',
@@ -85,6 +87,7 @@ test('ArgvParser parses full option set', function (): void {
     assertSame('reports', $options->outputDir);
     assertSame('top page smoke load', $options->name);
     assertSame([200, 201, 204], $options->successStatusCodes);
+    assertSame([200, 201], $options->expectStatusCodes);
     assertSame(60.0, $options->durationSec);
     assertSame(5.0, $options->warmupSec);
     assertSame(500.0, $options->failOnP95);
@@ -127,6 +130,22 @@ test('ArgvParser rejects invalid success status list', function (): void {
 
     assertThrows(
         fn () => $parser->parseRun(['https://example.com', '--success-status=99']),
+        InvalidArgumentException::class,
+        'between 100 and 599'
+    );
+});
+
+test('ArgvParser rejects invalid expect status list', function (): void {
+    $parser = new ArgvParser();
+
+    assertThrows(
+        fn () => $parser->parseRun(['https://example.com', '--expect-status=200,abc']),
+        InvalidArgumentException::class,
+        'comma-separated integers'
+    );
+
+    assertThrows(
+        fn () => $parser->parseRun(['https://example.com', '--expect-status=700']),
         InvalidArgumentException::class,
         'between 100 and 599'
     );
