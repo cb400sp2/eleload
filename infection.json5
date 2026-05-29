@@ -1,0 +1,19 @@
+{
+    "source": {
+        "directories": ["src/Metrics"],
+        "excludes": ["StreamingLatencySummary.php", "StreamingPercentileEstimator.php"]
+    },
+    "testFramework": "phpunit",
+    "testFrameworkOptions": "--stop-on-failure",
+    "minMsi": 38,
+    "minCoveredMsi": 42,
+    "mutators": {
+        "@default": true,
+        "CastFloat": {
+            "ignore": ["Eleload\\Metrics\\FailureEvaluator"]
+        }
+    },
+    "phpUnit": {
+        "configDir": "."
+    }
+}

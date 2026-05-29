@@ -2,3 +2,4 @@
 /reports/
 /build/
 /.php-cs-fixer.cache
+/.phpunit.cache/
