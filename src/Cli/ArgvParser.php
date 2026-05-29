@@ -22,6 +22,7 @@ final class ArgvParser
         $requests = self::DEFAULT_REQUESTS;
         $concurrency = self::DEFAULT_CONCURRENCY;
         $timeout = self::DEFAULT_TIMEOUT;
+        $connectTimeout = null;
         $silent = false;
         $followRedirects = false;
         $headers = [];
@@ -86,6 +87,9 @@ final class ArgvParser
                         break;
                     case 'timeout':
                         $timeout = $this->parsePositiveInt($name, $value);
+                        break;
+                    case 'connect-timeout':
+                        $connectTimeout = $this->parsePositiveInt($name, $value);
                         break;
                     case 'header':
                         $headers[] = $value;
@@ -204,6 +208,7 @@ final class ArgvParser
             concurrency: $concurrency,
             method: $method,
             timeout: $timeout,
+            connectTimeout: $connectTimeout,
             silent: $silent,
             followRedirects: $followRedirects,
             headers: $headers,

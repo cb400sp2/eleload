@@ -100,6 +100,7 @@ final class Application
             concurrency: $options->concurrency,
             method: $options->method,
             timeout: $options->timeout,
+            connectTimeout: $options->connectTimeout,
             followRedirects: $options->followRedirects,
             headers: $options->headers,
             bearerToken: $options->bearerToken,
@@ -258,6 +259,7 @@ final class Application
         $output->writeln('  --no-follow-redirects    Disable redirect following (default)');
         $output->writeln('  --body="..."             Request body');
         $output->writeln('  --timeout=10             Timeout seconds');
+        $output->writeln('  --connect-timeout=NUM    Connection timeout seconds (default: min(--timeout, 5))');
         $output->writeln('  --silent                 Suppress normal run output');
         $output->writeln('  --success-status=LIST    Comma-separated success status codes (e.g. 200,201,204)');
         $output->writeln('  --expect-status=LIST     Comma-separated expected status codes');

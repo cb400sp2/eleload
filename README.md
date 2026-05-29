@@ -37,6 +37,9 @@ It uses `curl_multi` for concurrent requests and prints throughput and latency m
 - Redirect control:
   - `--follow-redirects`
   - `--no-follow-redirects`
+- Timeout control:
+  - `--timeout`
+  - `--connect-timeout`
 - Report output:
   - `--report-json`
   - `--report-html`
@@ -170,6 +173,16 @@ Redirect control example:
 ```bash
 ./bin/eleload run https://example.com \
   --follow-redirects \
+  --requests=500 \
+  --concurrency=20
+```
+
+Connect timeout example:
+
+```bash
+./bin/eleload run https://example.com \
+  --timeout=10 \
+  --connect-timeout=2 \
   --requests=500 \
   --concurrency=20
 ```
