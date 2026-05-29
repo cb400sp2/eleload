@@ -22,6 +22,7 @@ final class ArgvParser
         $requests = self::DEFAULT_REQUESTS;
         $concurrency = self::DEFAULT_CONCURRENCY;
         $timeout = self::DEFAULT_TIMEOUT;
+        $followRedirects = false;
         $headers = [];
         $bearerToken = null;
         $basicUser = null;
@@ -47,6 +48,18 @@ final class ArgvParser
         $i = 0;
         while ($i < count($args)) {
             $token = $args[$i];
+
+            if ($token === '--follow-redirects') {
+                $followRedirects = true;
+                $i++;
+                continue;
+            }
+
+            if ($token === '--no-follow-redirects') {
+                $followRedirects = false;
+                $i++;
+                continue;
+            }
 
             if ($this->isOption($token)) {
                 [$name, $value, $i] = $this->parseOptionToken($args, $i);
@@ -172,6 +185,7 @@ final class ArgvParser
             concurrency: $concurrency,
             method: $method,
             timeout: $timeout,
+            followRedirects: $followRedirects,
             headers: $headers,
             bearerToken: $bearerToken,
             basicUser: $basicUser,
