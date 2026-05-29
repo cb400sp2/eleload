@@ -118,7 +118,7 @@ test('ScenarioRunner run extracts json variable from response', function () use 
             url:     $_baseUrl . '/token',
             method:  'POST',
             timeout: 5,
-            extract: ['tok' => 'json:$.access_token']
+            extract: ['tok' => ['expr' => 'json:$.access_token', 'scope' => 'vu']]
         ),
     ]);
     $result = (new ScenarioRunner())->run($def, 1, null, 1);
@@ -133,7 +133,7 @@ test('ScenarioRunner run carries extracted variable to subsequent step header', 
             url:     $_baseUrl . '/token',
             method:  'POST',
             timeout: 5,
-            extract: ['myToken' => 'json:$.access_token']
+            extract: ['myToken' => ['expr' => 'json:$.access_token', 'scope' => 'vu']]
         ),
         new ScenarioStep(
             url:     $_baseUrl . '/data',
@@ -154,7 +154,7 @@ test('ScenarioRunner run extracts variable via regex expression', function () us
         new ScenarioStep(
             url:     $_baseUrl . '/text',
             timeout: 5,
-            extract: ['tok' => 'regex:token=([a-z0-9]+)']
+            extract: ['tok' => ['expr' => 'regex:token=([a-z0-9]+)', 'scope' => 'vu']]
         ),
     ]);
     $result = (new ScenarioRunner())->run($def, 1, null, 1);
