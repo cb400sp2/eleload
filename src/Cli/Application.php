@@ -102,6 +102,7 @@ final class Application
             name: $options->name,
             successStatusCodes: $options->successStatusCodes,
             expectStatusCodes: $options->expectStatusCodes,
+            expectBodyContains: $options->expectBodyContains,
             durationSec: $options->durationSec,
             warmupSec: $options->warmupSec,
             targetRps: $options->targetRps,
@@ -195,6 +196,7 @@ final class Application
         $output->writeln('  --timeout=10             Timeout seconds');
         $output->writeln('  --success-status=LIST    Comma-separated success status codes (e.g. 200,201,204)');
         $output->writeln('  --expect-status=LIST     Comma-separated expected status codes');
+        $output->writeln('  --expect-body-contains=T Validate response body contains text');
         $output->writeln('  --duration=SECONDS       Run for a fixed duration instead of request count');
         $output->writeln('  --warmup=SECONDS         Exclude initial seconds from metrics');
         $output->writeln('  --report-json=FILE       Write JSON report');

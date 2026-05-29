@@ -28,6 +28,7 @@ It uses `curl_multi` for concurrent requests and prints throughput and latency m
 - Success criteria customization:
   - `--success-status`
   - `--expect-status`
+  - `--expect-body-contains`
 - Auth options:
   - `--bearer-token`
   - `--basic-user`
@@ -108,6 +109,15 @@ Expected status validation example:
 ```bash
 ./bin/eleload run https://example.com/api/items \
   --expect-status=200 \
+  --requests=500 \
+  --concurrency=20
+```
+
+Expected body text validation example:
+
+```bash
+./bin/eleload run https://example.com \
+  --expect-body-contains="Welcome" \
   --requests=500 \
   --concurrency=20
 ```

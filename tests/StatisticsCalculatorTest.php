@@ -39,6 +39,7 @@ test('StatisticsCalculator aggregates throughput, rates, and latency', function 
     assertSame('top page smoke load', $summary['config']['name']);
     assertSame(null, $summary['config']['success_status']);
     assertSame(null, $summary['config']['expect_status']);
+    assertSame(null, $summary['config']['expect_body_contains']);
     assertSame('top page smoke load', $summary['meta']['test_name']);
     assertSame(2, $summary['summary']['requests']['success']);
     assertSame(2, $summary['summary']['requests']['failed']);
@@ -174,6 +175,37 @@ test('StatisticsCalculator applies expect status filter', function (): void {
     $summary = (new StatisticsCalculator())->summarize($result);
 
     assertSame([200], $summary['config']['expect_status']);
+    assertSame(1, $summary['summary']['requests']['success']);
+    assertSame(2, $summary['summary']['requests']['failed']);
+    assertSame(33.33, $summary['summary']['requests']['success_rate']);
+    assertSame(66.67, $summary['summary']['requests']['error_rate']);
+    assertSame(2, $summary['errors'][0]['request']);
+    assertSame(3, $summary['errors'][1]['request']);
+});
+
+test('StatisticsCalculator applies expect body contains filter', function (): void {
+    $options = new RequestOptions(
+        url: 'https://example.com',
+        requests: 3,
+        concurrency: 1,
+        method: 'GET',
+        timeout: 10,
+        expectBodyContains: 'Welcome'
+    );
+
+    $result = new RunResult(
+        options: $options,
+        durationSec: 1.0,
+        requestResults: [
+            new RequestResult(1, 100.0, 200, 128.0, 0, '', true, true),
+            new RequestResult(2, 110.0, 200, 128.0, 0, '', true, false),
+            new RequestResult(3, 120.0, 500, 128.0, 0, '', true, false),
+        ]
+    );
+
+    $summary = (new StatisticsCalculator())->summarize($result);
+
+    assertSame('Welcome', $summary['config']['expect_body_contains']);
     assertSame(1, $summary['summary']['requests']['success']);
     assertSame(2, $summary['summary']['requests']['failed']);
     assertSame(33.33, $summary['summary']['requests']['success_rate']);

@@ -27,6 +27,7 @@ final class RequestOptions
         public readonly ?string $name = null,
         public readonly ?array $successStatusCodes = null,
         public readonly ?array $expectStatusCodes = null,
+        public readonly ?string $expectBodyContains = null,
         public readonly ?float $durationSec = null,
         public readonly float $warmupSec = 0.0,
         public readonly ?float $targetRps = null,

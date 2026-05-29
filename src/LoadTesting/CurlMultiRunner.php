@@ -67,6 +67,11 @@ final class CurlMultiRunner
                 $downloadBytes = (float) curl_getinfo($handle, CURLINFO_SIZE_DOWNLOAD);
                 $errorNo = curl_errno($handle);
                 $error = curl_error($handle);
+                $bodyContainsExpected = null;
+                if ($options->expectBodyContains !== null) {
+                    $responseBody = (string)curl_multi_getcontent($handle);
+                    $bodyContainsExpected = str_contains($responseBody, $options->expectBodyContains);
+                }
 
                 $results[] = new RequestResult(
                     requestNumber: (int)$meta['request_number'],
@@ -75,7 +80,8 @@ final class CurlMultiRunner
                     downloadBytes: $downloadBytes,
                     errorNo: $errorNo,
                     error: $error,
-                    includedInMetrics: $elapsedSec >= $options->warmupSec
+                    includedInMetrics: $elapsedSec >= $options->warmupSec,
+                    bodyContainsExpected: $bodyContainsExpected
                 );
 
                 unset($inFlight[$handleId]);

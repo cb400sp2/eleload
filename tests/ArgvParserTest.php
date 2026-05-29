@@ -22,6 +22,7 @@ test('ArgvParser parses minimum arguments', function (): void {
     assertSame(null, $options->body);
     assertSame(null, $options->successStatusCodes);
     assertSame(null, $options->expectStatusCodes);
+    assertSame(null, $options->expectBodyContains);
 });
 
 test('ArgvParser parses full option set', function (): void {
@@ -54,6 +55,7 @@ test('ArgvParser parses full option set', function (): void {
         '--name=top page smoke load',
         '--success-status=200,201,204',
         '--expect-status=200,201',
+        '--expect-body-contains=Welcome',
         '--duration=60',
         '--warmup=5',
         '--fail-on-p95=500',
@@ -88,6 +90,7 @@ test('ArgvParser parses full option set', function (): void {
     assertSame('top page smoke load', $options->name);
     assertSame([200, 201, 204], $options->successStatusCodes);
     assertSame([200, 201], $options->expectStatusCodes);
+    assertSame('Welcome', $options->expectBodyContains);
     assertSame(60.0, $options->durationSec);
     assertSame(5.0, $options->warmupSec);
     assertSame(500.0, $options->failOnP95);
