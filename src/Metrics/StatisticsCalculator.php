@@ -41,6 +41,8 @@ final class StatisticsCalculator
         $successStatusCodes = $runResult->options->successStatusCodes;
         $expectStatusCodes = $runResult->options->expectStatusCodes;
         $expectBodyContains = $runResult->options->expectBodyContains;
+        /** @var array<int, array{count: int, success: int, latency_sum: float}> $buckets */
+        $buckets = [];
 
         foreach ($runResult->iterateRequestResults() as $result) {
             if (!$result->includedInMetrics) {
@@ -71,9 +73,33 @@ final class StatisticsCalculator
             }
 
             $this->trackSlowestRequest($slowestRequests, $result, $isSuccess);
+
+            $bucketIdx = max(0, (int) floor($result->elapsedSec - $runResult->options->warmupSec));
+            if (!isset($buckets[$bucketIdx])) {
+                $buckets[$bucketIdx] = ['count' => 0, 'success' => 0, 'latency_sum' => 0.0];
+            }
+            $buckets[$bucketIdx]['count']++;
+            if ($isSuccess) {
+                $buckets[$bucketIdx]['success']++;
+            }
+            $buckets[$bucketIdx]['latency_sum'] += $result->latencyMs;
         }
 
         ksort($statusCounts, SORT_NATURAL);
+
+        ksort($buckets, SORT_NUMERIC);
+        $timeBuckets = [];
+        foreach ($buckets as $t => $bucket) {
+            $count = $bucket['count'];
+            $bucketSuccess = $bucket['success'];
+            $timeBuckets[] = [
+                't' => $t,
+                'rps' => (float) $count,
+                'tps' => (float) $bucketSuccess,
+                'error_rate' => $count > 0 ? $this->round2((($count - $bucketSuccess) / $count) * 100.0) : 0.0,
+                'avg_latency_ms' => $count > 0 ? $this->round2($bucket['latency_sum'] / $count) : 0.0,
+            ];
+        }
 
         $failed = $total - $success;
         $durationSec = max($runResult->durationSec - min($runResult->options->warmupSec, $runResult->durationSec), 0.000_001);
@@ -171,6 +197,7 @@ final class StatisticsCalculator
                 ),
             ],
             'errors' => $errors,
+            'time_buckets' => $timeBuckets,
             'meta' => [
                 'tool' => 'eleload',
                 'version' => self::TOOL_VERSION,
