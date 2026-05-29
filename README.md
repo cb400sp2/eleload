@@ -31,6 +31,7 @@ It uses `curl_multi` for concurrent requests and prints throughput and latency m
   - `--bearer-token`
   - `--basic-user`
   - `--basic-password`
+  - `--cookie`
 - Report output:
   - `--report-json`
   - `--report-html`
@@ -113,6 +114,15 @@ Basic auth example:
 ./bin/eleload run https://example.com/api/items \
   --basic-user=user \
   --basic-password=pass \
+  --requests=500 \
+  --concurrency=20
+```
+
+Cookie example:
+
+```bash
+./bin/eleload run https://example.com \
+  --cookie="session=abc123" \
   --requests=500 \
   --concurrency=20
 ```

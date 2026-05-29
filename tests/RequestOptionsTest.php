@@ -87,3 +87,54 @@ test('RequestOptions resolveHeaders prefers bearer token over basic credentials'
         $options->resolveHeaders()
     );
 });
+
+test('RequestOptions resolveHeaders adds cookie header when provided', function (): void {
+    $options = new RequestOptions(
+        url: 'https://example.com',
+        requests: 1,
+        concurrency: 1,
+        method: 'GET',
+        timeout: 10,
+        headers: ['Accept: application/json'],
+        cookie: 'session=abc123'
+    );
+
+    assertSame(
+        ['Accept: application/json', 'Cookie: session=abc123'],
+        $options->resolveHeaders()
+    );
+});
+
+test('RequestOptions resolveHeaders does not duplicate explicit cookie header', function (): void {
+    $options = new RequestOptions(
+        url: 'https://example.com',
+        requests: 1,
+        concurrency: 1,
+        method: 'GET',
+        timeout: 10,
+        headers: ['Cookie: theme=dark', 'Accept: application/json'],
+        cookie: 'session=abc123'
+    );
+
+    assertSame(
+        ['Cookie: theme=dark', 'Accept: application/json'],
+        $options->resolveHeaders()
+    );
+});
+
+test('RequestOptions resolveHeaders adds cookie even when authorization header is explicit', function (): void {
+    $options = new RequestOptions(
+        url: 'https://example.com',
+        requests: 1,
+        concurrency: 1,
+        method: 'GET',
+        timeout: 10,
+        headers: ['Authorization: Basic xyz', 'Accept: application/json'],
+        cookie: 'session=abc123'
+    );
+
+    assertSame(
+        ['Authorization: Basic xyz', 'Accept: application/json', 'Cookie: session=abc123'],
+        $options->resolveHeaders()
+    );
+});

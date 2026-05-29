@@ -20,6 +20,7 @@ final class RequestOptions
         public readonly ?string $bearerToken = null,
         public readonly ?string $basicUser = null,
         public readonly ?string $basicPassword = null,
+        public readonly ?string $cookie = null,
         public readonly ?string $body = null,
         public readonly ?string $name = null,
         public readonly ?array $successStatusCodes = null,
@@ -36,21 +37,26 @@ final class RequestOptions
     public function resolveHeaders(): array
     {
         $headers = $this->headers;
+        $hasAuthorizationHeader = false;
+        $hasCookieHeader = false;
 
         foreach ($headers as $header) {
-            if (str_starts_with(strtolower($header), 'authorization:')) {
-                return $headers;
+            $lower = strtolower($header);
+            $hasAuthorizationHeader = $hasAuthorizationHeader || str_starts_with($lower, 'authorization:');
+            $hasCookieHeader = $hasCookieHeader || str_starts_with($lower, 'cookie:');
+        }
+
+        if (!$hasAuthorizationHeader) {
+            if ($this->bearerToken !== null && $this->bearerToken !== '') {
+                $headers[] = 'Authorization: Bearer ' . $this->bearerToken;
+            } elseif ($this->basicUser !== null && $this->basicPassword !== null) {
+                $token = base64_encode($this->basicUser . ':' . $this->basicPassword);
+                $headers[] = 'Authorization: Basic ' . $token;
             }
         }
 
-        if ($this->bearerToken !== null && $this->bearerToken !== '') {
-            $headers[] = 'Authorization: Bearer ' . $this->bearerToken;
-            return $headers;
-        }
-
-        if ($this->basicUser !== null && $this->basicPassword !== null) {
-            $token = base64_encode($this->basicUser . ':' . $this->basicPassword);
-            $headers[] = 'Authorization: Basic ' . $token;
+        if (!$hasCookieHeader && $this->cookie !== null && $this->cookie !== '') {
+            $headers[] = 'Cookie: ' . $this->cookie;
         }
 
         return $headers;
