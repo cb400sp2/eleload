@@ -160,6 +160,8 @@ final class StatisticsCalculator
                 'follow_redirects' => $runResult->options->followRedirects,
                 'http_version' => $runResult->options->httpVersion,
                 'dns_cache_ttl' => $runResult->options->dnsCacheTtl,
+                'accept_encoding' => $runResult->options->acceptEncoding,
+                'no_decompress' => $runResult->options->noDecompress,
                 'name' => $runResult->options->name,
                 'success_status' => $runResult->options->successStatusCodes,
                 'expect_status' => $runResult->options->expectStatusCodes,

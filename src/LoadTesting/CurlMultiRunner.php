@@ -361,6 +361,7 @@ final class CurlMultiRunner
             CURLOPT_TCP_KEEPALIVE => 1,
             CURLOPT_HTTP_VERSION => $this->resolveCurlHttpVersion($options->httpVersion),
             CURLOPT_DNS_CACHE_TIMEOUT => $options->dnsCacheTtl,
+            CURLOPT_ENCODING => $options->noDecompress ? '' : ($options->acceptEncoding === 'none' ? '' : $options->acceptEncoding),
         ];
 
         $headers = $options->resolveHeaders();

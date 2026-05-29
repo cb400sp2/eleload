@@ -249,4 +249,25 @@ final class JsonSchemaContractTest extends TestCase
         self::assertSame(30, $report['config']['dns_cache_ttl']);
         $this->validate($report);
     }
+
+    public function testAcceptEncodingAndNoDecompressConformToSchema(): void
+    {
+        $opts = new \Eleload\LoadTesting\RequestOptions(
+            url: 'https://example.com',
+            requests: 1,
+            concurrency: 1,
+            method: 'GET',
+            timeout: 10,
+            acceptEncoding: 'br',
+            noDecompress: true,
+        );
+        $run = $this->makeResult($opts, 0.5, [
+            new RequestResult(requestNumber: 1, latencyMs: 50.0, httpCode: 200, downloadBytes: 0.0, errorNo: 0, error: ''),
+        ]);
+        $report = $this->calc->summarize($run);
+
+        self::assertSame('br', $report['config']['accept_encoding']);
+        self::assertTrue($report['config']['no_decompress']);
+        $this->validate($report);
+    }
 }

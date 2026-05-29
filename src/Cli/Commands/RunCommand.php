@@ -75,7 +75,9 @@ final class RunCommand
             targetTps: $options->targetTps,
             rampUpSec: $options->rampUpSec,
             httpVersion: $options->httpVersion,
-            dnsCacheTtl: $options->dnsCacheTtl
+            dnsCacheTtl: $options->dnsCacheTtl,
+            acceptEncoding: $options->acceptEncoding,
+            noDecompress: $options->noDecompress
         ));
 
         $report = $stats->summarize($result);
