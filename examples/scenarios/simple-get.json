@@ -1,0 +1,14 @@
+{
+  "name": "Simple GET",
+  "variables": {
+    "base_url": "https://httpbin.org"
+  },
+  "steps": [
+    {
+      "name": "GET homepage",
+      "url": "{{base_url}}/get",
+      "method": "GET",
+      "timeout": 10
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "name": "Login Then Fetch",
+  "variables": {
+    "base_url": "https://api.example.com",
+    "username": "testuser",
+    "password": "testpass"
+  },
+  "steps": [
+    {
+      "name": "Login",
+      "url": "{{base_url}}/auth/login",
+      "method": "POST",
+      "headers": [
+        "Content-Type: application/json"
+      ],
+      "body": {
+        "username": "{{username}}",
+        "password": "{{password}}"
+      },
+      "timeout": 10,
+      "extract": {
+        "token": "json:$.token"
+      }
+    },
+    {
+      "name": "Fetch protected resource",
+      "url": "{{base_url}}/api/profile",
+      "method": "GET",
+      "headers": [
+        "Authorization: Bearer {{token}}"
+      ],
+      "timeout": 10
+    }
+  ]
+}

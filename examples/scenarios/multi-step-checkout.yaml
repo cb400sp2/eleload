@@ -1,0 +1,39 @@
+name: Multi-step Checkout
+variables:
+  base_url: https://shop.example.com
+  search_query: laptop
+
+steps:
+  - name: Search products
+    url: "{{base_url}}/api/products?q={{search_query}}"
+    method: GET
+    timeout: 10
+    extract:
+      product_id: "json:$.results[0].id"
+
+  - name: View product detail
+    url: "{{base_url}}/api/products/{{product_id}}"
+    method: GET
+    timeout: 10
+
+  - name: Add to cart
+    url: "{{base_url}}/api/cart/items"
+    method: POST
+    headers:
+      - "Content-Type: application/json"
+    body:
+      product_id: "{{product_id}}"
+      quantity: 1
+    timeout: 10
+    extract:
+      cart_id: "json:$.cart_id"
+
+  - name: Checkout
+    url: "{{base_url}}/api/checkout"
+    method: POST
+    headers:
+      - "Content-Type: application/json"
+    body:
+      cart_id: "{{cart_id}}"
+      payment_method: credit_card
+    timeout: 15

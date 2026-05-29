@@ -11,20 +11,51 @@ use RuntimeException;
 final class ScenarioLoader
 {
     private const ALLOWED_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
+    private const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 
     public function load(string $path): ScenarioDefinition
     {
-        if (!is_file($path)) {
+        // Path traversal guard: resolve and validate
+        $real = realpath($path);
+        if ($real === false) {
             throw new RuntimeException("Scenario file not found: {$path}");
         }
 
-        $json = file_get_contents($path);
-        if ($json === false) {
+        if (!is_file($real)) {
+            throw new RuntimeException("Scenario file not found: {$path}");
+        }
+
+        $size = filesize($real);
+        if ($size === false || $size > self::MAX_FILE_SIZE_BYTES) {
+            throw new RuntimeException(
+                'Scenario file exceeds maximum allowed size (' . (self::MAX_FILE_SIZE_BYTES / 1024 / 1024) . " MB): {$path}"
+            );
+        }
+
+        $ext = strtolower(pathinfo($real, PATHINFO_EXTENSION));
+
+        if ($ext === 'json') {
+            return $this->loadJson($real);
+        }
+
+        if ($ext === 'yaml' || $ext === 'yml') {
+            return $this->loadYaml($real);
+        }
+
+        throw new InvalidArgumentException(
+            "Unsupported scenario file extension '.{$ext}'. Supported: .json, .yaml, .yml"
+        );
+    }
+
+    private function loadJson(string $path): ScenarioDefinition
+    {
+        $content = file_get_contents($path);
+        if ($content === false) {
             throw new RuntimeException("Failed to read scenario file: {$path}");
         }
 
         try {
-            $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+            $data = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException $e) {
             throw new InvalidArgumentException('Invalid JSON in scenario file: ' . $e->getMessage());
         }
@@ -33,6 +64,44 @@ final class ScenarioLoader
             throw new InvalidArgumentException('Scenario file must be a JSON object.');
         }
 
+        return $this->parseDefinition($data);
+    }
+
+    private function loadYaml(string $path): ScenarioDefinition
+    {
+        $content = file_get_contents($path);
+        if ($content === false) {
+            throw new RuntimeException("Failed to read scenario file: {$path}");
+        }
+
+        if (extension_loaded('yaml')) {
+            /** @var mixed $data */
+            $data = yaml_parse($content);
+            if ($data === false) {
+                throw new InvalidArgumentException("Failed to parse YAML scenario file: {$path}");
+            }
+        } elseif (class_exists('Symfony\Component\Yaml\Yaml')) {
+            /** @var mixed $data */
+            $data = \Symfony\Component\Yaml\Yaml::parse($content);
+        } else {
+            throw new RuntimeException(
+                'YAML scenario files require either the ext-yaml PHP extension or the symfony/yaml package. ' .
+                'Install one: `pecl install yaml` or `composer require symfony/yaml`.'
+            );
+        }
+
+        if (!is_array($data)) {
+            throw new InvalidArgumentException('Scenario YAML file must be a mapping (object).');
+        }
+
+        return $this->parseDefinition($data);
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    private function parseDefinition(array $data): ScenarioDefinition
+    {
         $name = isset($data['name']) && is_string($data['name']) ? $data['name'] : 'Unnamed Scenario';
 
         $variables = [];
