@@ -211,4 +211,23 @@ final class JsonSchemaContractTest extends TestCase
         self::assertSame(2, $req['success'], '200 responses are success');
         self::assertSame(2, $req['failed'], '500+404 are failures');
     }
+
+    public function testHttpVersionAppearsInConfigAndConformsToSchema(): void
+    {
+        $opts = new \Eleload\LoadTesting\RequestOptions(
+            url: 'https://example.com',
+            requests: 1,
+            concurrency: 1,
+            method: 'GET',
+            timeout: 10,
+            httpVersion: '1.1',
+        );
+        $run = $this->makeResult($opts, 0.5, [
+            new RequestResult(requestNumber: 1, latencyMs: 50.0, httpCode: 200, downloadBytes: 0.0, errorNo: 0, error: ''),
+        ]);
+        $report = $this->calc->summarize($run);
+
+        self::assertSame('1.1', $report['config']['http_version']);
+        $this->validate($report);
+    }
 }
