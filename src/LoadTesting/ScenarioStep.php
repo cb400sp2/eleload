@@ -8,7 +8,8 @@ final class ScenarioStep
 {
     /**
      * @param list<string> $headers
-     * @param array<string, string> $extract  varName => "json:$.path" | "regex:pattern"
+     * @param array<string, array{expr: string, scope: 'vu'|'global'}> $extract
+     *        varName => ['expr' => 'json:$.path'|'regex:pattern', 'scope' => 'vu'|'global']
      */
     public function __construct(
         public readonly string $url,

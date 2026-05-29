@@ -12,6 +12,9 @@ use RuntimeException;
 final class ScenarioRunner
 {
     private const MULTI_SELECT_TIMEOUT_SEC = 0.1;
+
+    /** @var array<string, string> Variables shared across all VUs (global scope) */
+    private array $globalVariables = [];
     private const IDLE_SLEEP_USEC = 5_000;
     private const NANOSECONDS_PER_MILLISECOND = 1_000_000;
 
@@ -41,6 +44,7 @@ final class ScenarioRunner
             throw new RuntimeException('Failed to initialize curl multi handle.');
         }
 
+        $this->globalVariables = [];
         $durationMode = $durationSec !== null;
         $startedAt = hrtime(true);
 
@@ -172,8 +176,17 @@ final class ScenarioRunner
 
                     // Extract variables from response body
                     if (!empty($step->extract)) {
-                        $extracted = $this->extractVariables($responseBody, $step->extract);
-                        $vus[$vuId]['variables'] = array_merge($vus[$vuId]['variables'], $extracted);
+                        foreach ($step->extract as $varName => $config) {
+                            $extracted = $this->extractVariables($responseBody, [$varName => $config['expr']]);
+                            if (!array_key_exists($varName, $extracted)) {
+                                continue;
+                            }
+                            if ($config['scope'] === 'global') {
+                                $this->globalVariables[$varName] = $extracted[$varName];
+                            } else {
+                                $vus[$vuId]['variables'][$varName] = $extracted[$varName];
+                            }
+                        }
                     }
 
                     $stepIndex = $vus[$vuId]['step_counter'];
@@ -250,16 +263,19 @@ final class ScenarioRunner
     }
 
     /**
-     * Interpolate {{varName}} placeholders in a string.
+     * Interpolate {{varName}} and ${varName} placeholders in a string.
+     * Per-VU variables take precedence over globals.
      *
      * @param array<string, string> $variables
+     * @param array<string, string> $globals
      */
-    public function interpolate(string $template, array $variables): string
+    public function interpolate(string $template, array $variables, array $globals = []): string
     {
         return (string) preg_replace_callback(
-            '/\{\{(\w+)\}\}/',
-            static function (array $m) use ($variables): string {
-                return $variables[$m[1]] ?? $m[0];
+            '/\{\{(\w+)\}\}|\$\{(\w+)\}/',
+            static function (array $m) use ($variables, $globals): string {
+                $key = $m[1] !== '' ? $m[1] : $m[2];
+                return $variables[$key] ?? $globals[$key] ?? $m[0];
             },
             $template
         );
@@ -268,7 +284,7 @@ final class ScenarioRunner
     /**
      * Extract variables from a response body using json: or regex: expressions.
      *
-     * @param array<string, string> $extractConfig
+     * @param array<string, string> $extractConfig  map of varName => expression
      * @return array<string, string>
      */
     private function extractVariables(string $body, array $extractConfig): array
@@ -338,7 +354,7 @@ final class ScenarioRunner
      */
     private function createHandle(ScenarioStep $step, array $variables): CurlHandle
     {
-        $url = $this->interpolate($step->url, $variables);
+        $url = $this->interpolate($step->url, $variables, $this->globalVariables);
 
         $ch = curl_init($url);
         if (!$ch instanceof CurlHandle) {
@@ -359,7 +375,7 @@ final class ScenarioRunner
 
         $headers = [];
         foreach ($step->headers as $header) {
-            $headers[] = $this->interpolate($header, $variables);
+            $headers[] = $this->interpolate($header, $variables, $this->globalVariables);
         }
 
         if (!empty($headers)) {
@@ -367,7 +383,7 @@ final class ScenarioRunner
         }
 
         if ($step->body !== null) {
-            $curlOptions[CURLOPT_POSTFIELDS] = $this->interpolate($step->body, $variables);
+            $curlOptions[CURLOPT_POSTFIELDS] = $this->interpolate($step->body, $variables, $this->globalVariables);
         }
 
         // @phpstan-ignore-next-line (CURLOPT_CUSTOMREQUEST accepts any non-empty string; method is validated at parse time)
