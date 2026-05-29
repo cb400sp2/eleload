@@ -18,6 +18,8 @@ final class RequestOptions
         public readonly int $timeout,
         public readonly array $headers = [],
         public readonly ?string $bearerToken = null,
+        public readonly ?string $basicUser = null,
+        public readonly ?string $basicPassword = null,
         public readonly ?string $body = null,
         public readonly ?string $name = null,
         public readonly ?array $successStatusCodes = null,
@@ -35,17 +37,22 @@ final class RequestOptions
     {
         $headers = $this->headers;
 
-        if ($this->bearerToken === null || $this->bearerToken === '') {
-            return $headers;
-        }
-
         foreach ($headers as $header) {
             if (str_starts_with(strtolower($header), 'authorization:')) {
                 return $headers;
             }
         }
 
-        $headers[] = 'Authorization: Bearer ' . $this->bearerToken;
+        if ($this->bearerToken !== null && $this->bearerToken !== '') {
+            $headers[] = 'Authorization: Bearer ' . $this->bearerToken;
+            return $headers;
+        }
+
+        if ($this->basicUser !== null && $this->basicPassword !== null) {
+            $token = base64_encode($this->basicUser . ':' . $this->basicPassword);
+            $headers[] = 'Authorization: Basic ' . $token;
+        }
+
         return $headers;
     }
 }

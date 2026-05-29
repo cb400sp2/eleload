@@ -24,6 +24,8 @@ final class ArgvParser
         $timeout = self::DEFAULT_TIMEOUT;
         $headers = [];
         $bearerToken = null;
+        $basicUser = null;
+        $basicPassword = null;
         $body = null;
         $reportJsonPath = null;
         $reportHtmlPath = null;
@@ -66,6 +68,12 @@ final class ArgvParser
                         break;
                     case 'bearer-token':
                         $bearerToken = $value;
+                        break;
+                    case 'basic-user':
+                        $basicUser = $value;
+                        break;
+                    case 'basic-password':
+                        $basicPassword = $value;
                         break;
                     case 'body':
                         $body = $value;
@@ -150,6 +158,10 @@ final class ArgvParser
             throw new InvalidArgumentException('Option --warmup must be lower than --duration.');
         }
 
+        if (($basicUser === null) !== ($basicPassword === null)) {
+            throw new InvalidArgumentException('Options --basic-user and --basic-password must be provided together.');
+        }
+
         return new RunOptions(
             url: $url,
             requests: $requests,
@@ -158,6 +170,8 @@ final class ArgvParser
             timeout: $timeout,
             headers: $headers,
             bearerToken: $bearerToken,
+            basicUser: $basicUser,
+            basicPassword: $basicPassword,
             body: $body,
             reportJsonPath: $reportJsonPath,
             reportHtmlPath: $reportHtmlPath,
