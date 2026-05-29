@@ -280,16 +280,32 @@ final class ScenarioLoader
         if (!isset($data['field']) || !is_string($data['field'])) {
             throw new InvalidArgumentException("{$parentLabel}: 'if.field' is required and must be a string.");
         }
+        if (!in_array($data['field'], ScenarioCondition::ALLOWED_FIELDS, true)) {
+            throw new InvalidArgumentException(
+                "{$parentLabel}: 'if.field' must be one of: " . implode(', ', ScenarioCondition::ALLOWED_FIELDS)
+            );
+        }
+        /** @var 'status'|'body' $field */
+        $field = $data['field'];
+
         if (!isset($data['op']) || !is_string($data['op'])) {
             throw new InvalidArgumentException("{$parentLabel}: 'if.op' is required and must be a string.");
         }
+        if (!in_array($data['op'], ScenarioCondition::ALLOWED_OPS, true)) {
+            throw new InvalidArgumentException(
+                "{$parentLabel}: 'if.op' must be one of: " . implode(', ', ScenarioCondition::ALLOWED_OPS)
+            );
+        }
+        /** @var '=='|'!='|'<'|'>'|'contains'|'regex_match' $op */
+        $op = $data['op'];
+
         if (!isset($data['value']) || (!is_string($data['value']) && !is_int($data['value']))) {
             throw new InvalidArgumentException("{$parentLabel}: 'if.value' is required and must be a string or integer.");
         }
 
         $condition = new ScenarioCondition(
-            field: $data['field'],
-            op: $data['op'],
+            field: $field,
+            op:    $op,
             value: $data['value']
         );
 
