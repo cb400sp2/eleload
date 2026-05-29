@@ -7,6 +7,10 @@
     "php": "^8.2",
     "ext-curl": "*"
   },
+  "suggest": {
+    "ext-yaml": "Required for loading scenario files in YAML format (.yaml/.yml)",
+    "symfony/yaml": "Alternative YAML parser if ext-yaml is not available"
+  },
   "autoload": {
     "psr-4": {
       "Eleload\\": "src/"

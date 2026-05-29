@@ -198,3 +198,47 @@ test('ScenarioLoader throws when JSON is invalid', function (): void {
         'Invalid JSON'
     );
 });
+
+// ---------------------------------------------------------------------------
+// YAML / extension detection
+// ---------------------------------------------------------------------------
+
+test('ScenarioLoader rejects unsupported file extension', function (): void {
+    $file = sys_get_temp_dir() . '/eleload_test_' . uniqid() . '.toml';
+    file_put_contents($file, '[scenario]');
+
+    assertThrows(
+        fn () => (new ScenarioLoader())->load($file),
+        InvalidArgumentException::class,
+        'Unsupported scenario file extension'
+    );
+
+    @unlink($file);
+});
+
+test('ScenarioLoader rejects file that does not exist', function (): void {
+    assertThrows(
+        fn () => (new ScenarioLoader())->load('/nonexistent/path/scenario.json'),
+        RuntimeException::class,
+        'not found'
+    );
+});
+
+test('ScenarioLoader loads JSON via examples/scenarios/simple-get.json', function (): void {
+    $loader = new ScenarioLoader();
+    $def = $loader->load(__DIR__ . '/../examples/scenarios/simple-get.json');
+
+    assertSame('Simple GET', $def->name);
+    assertSame(1, count($def->steps));
+    assertSame('GET', $def->steps[0]->method);
+});
+
+test('ScenarioLoader loads JSON via examples/scenarios/login-then-fetch.json', function (): void {
+    $loader = new ScenarioLoader();
+    $def = $loader->load(__DIR__ . '/../examples/scenarios/login-then-fetch.json');
+
+    assertSame('Login Then Fetch', $def->name);
+    assertSame(2, count($def->steps));
+    assertSame('POST', $def->steps[0]->method);
+    assertSame('GET', $def->steps[1]->method);
+});
