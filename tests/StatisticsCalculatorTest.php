@@ -64,6 +64,11 @@ test('StatisticsCalculator aggregates throughput, rates, and latency', function 
     assertSame(2, count($summary['errors']));
     assertSame(3, $summary['errors'][0]['request']);
     assertSame(4, $summary['errors'][1]['request']);
+    assertSame(false, $summary['errors'][0]['success']);
+    assertSame(128.0, $summary['errors'][0]['download_bytes']);
+    assertSame(4, count($summary['summary']['slowest_requests']));
+    assertSame(3, $summary['summary']['slowest_requests'][0]['request']);
+    assertSame(300.0, $summary['summary']['slowest_requests'][0]['latency_ms']);
 });
 
 test('StatisticsCalculator excludes warmup requests from metrics', function (): void {

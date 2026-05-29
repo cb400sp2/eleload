@@ -59,6 +59,7 @@ Only run load tests against systems you own or have explicit permission to test.
   - improved/regressed highlighting for `RPS/TPS/p95/p99/error rate`
 - CI/script output control:
   - `--silent`
+  - `--verbose`
   - `--debug`
 - Safety controls:
   - high-load confirmation prompt
@@ -240,6 +241,15 @@ Silent mode for CI/scripts:
   --concurrency=10 \
   --silent \
   --report-json=reports/ci-report.json
+```
+
+Verbose mode for richer diagnostics:
+
+```bash
+./bin/eleload run https://example.com \
+  --requests=100 \
+  --concurrency=10 \
+  --verbose
 ```
 
 Debug mode to inspect parsed options and execution plan:
