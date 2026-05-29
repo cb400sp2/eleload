@@ -159,6 +159,7 @@ final class StatisticsCalculator
                 'timeout' => $runResult->options->timeout,
                 'follow_redirects' => $runResult->options->followRedirects,
                 'http_version' => $runResult->options->httpVersion,
+                'dns_cache_ttl' => $runResult->options->dnsCacheTtl,
                 'name' => $runResult->options->name,
                 'success_status' => $runResult->options->successStatusCodes,
                 'expect_status' => $runResult->options->expectStatusCodes,

@@ -360,6 +360,7 @@ final class CurlMultiRunner
             CURLOPT_SSLVERSION => CURL_SSLVERSION_TLSv1_2,
             CURLOPT_TCP_KEEPALIVE => 1,
             CURLOPT_HTTP_VERSION => $this->resolveCurlHttpVersion($options->httpVersion),
+            CURLOPT_DNS_CACHE_TIMEOUT => $options->dnsCacheTtl,
         ];
 
         $headers = $options->resolveHeaders();

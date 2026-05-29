@@ -55,7 +55,8 @@ final class RunOptions
         public readonly float $rampUpSec,
         public readonly int $memoryBufferSize = 10_000,
         public readonly bool $blockPrivateNetworks = false,
-        public readonly string $httpVersion = '2.0'
+        public readonly string $httpVersion = '2.0',
+        public readonly int $dnsCacheTtl = -1
     ) {
     }
 }

@@ -74,7 +74,8 @@ final class RunCommand
             targetRps: $options->targetRps,
             targetTps: $options->targetTps,
             rampUpSec: $options->rampUpSec,
-            httpVersion: $options->httpVersion
+            httpVersion: $options->httpVersion,
+            dnsCacheTtl: $options->dnsCacheTtl
         ));
 
         $report = $stats->summarize($result);
