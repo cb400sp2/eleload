@@ -24,4 +24,3 @@ test('run command with silent flag suppresses normal output and still writes rep
     assertTrue(is_file($jsonPath), 'JSON report should be generated in silent mode');
     assertSame('', trim($output), 'silent mode should suppress normal output');
 });
-

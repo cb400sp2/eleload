@@ -55,4 +55,3 @@ test('ReportComparator validates expected metric paths', function (): void {
         'missing'
     );
 });
-

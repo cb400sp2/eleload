@@ -21,4 +21,3 @@ test('run command with verbose flag prints detailed errors and slowest requests'
     assertContains('body_match=n/a', $output);
     assertContains('Slowest Requests', $output);
 });
-

@@ -76,16 +76,64 @@ Only run load tests against systems you own or have explicit permission to test.
 
 ## Install
 
+### From source
+
 ```bash
 composer install
 chmod +x bin/eleload
 ```
 
+### Global install via Composer
+
+```bash
+composer global require cb400sp2/eleload
+# Make sure ~/.composer/vendor/bin (or equivalent) is in your $PATH
+eleload version
+```
+
+### PHAR
+
+Pre-built `eleload.phar` is attached to each [GitHub Release](https://github.com/cb400sp2/eleload/releases).
+
+```bash
+curl -L -o eleload.phar https://github.com/cb400sp2/eleload/releases/latest/download/eleload.phar
+chmod +x eleload.phar
+./eleload.phar version
+```
+
 ## Test
 
 ```bash
-composer test
+composer test         # unit tests
+composer analyse      # PHPStan level 8
+composer cs-check     # PHP-CS-Fixer dry-run
+composer cs-fix       # PHP-CS-Fixer auto-fix
 ```
+
+## Exit Codes
+
+| Code | Meaning |
+| ---- | ------- |
+| `0`  | Success (no threshold violations) |
+| `1`  | Generic failure (invalid options, runtime error, threshold violation) |
+| `2`  | Reserved for unrecoverable engine errors |
+
+## JSON Report Schema
+
+JSON reports include a `meta` block describing the producer:
+
+```json
+{
+  "meta": {
+    "tool": "eleload",
+    "version": "1.0.0",
+    "schema_version": 1,
+    "test_name": "..."
+  }
+}
+```
+
+`schema_version` is bumped only on breaking JSON layout changes.
 
 ## Usage
 

@@ -20,17 +20,17 @@ final class StreamingPercentileEstimator
     private array $initialValues = [];
 
     /**
-     * @var list<float>|null
+     * @var array<int, float>|null
      */
     private ?array $markerHeights = null;
 
     /**
-     * @var list<int>
+     * @var array<int, int>
      */
     private array $markerPositions = [1, 2, 3, 4, 5];
 
     /**
-     * @var list<float>
+     * @var array<int, float>
      */
     private array $desiredMarkerPositions = [];
 
@@ -63,7 +63,7 @@ final class StreamingPercentileEstimator
             }
 
             sort($this->initialValues, SORT_NUMERIC);
-            $this->markerHeights = array_values($this->initialValues);
+            $this->markerHeights = $this->initialValues;
             $this->desiredMarkerPositions = [
                 1.0,
                 1.0 + (2.0 * $this->quantile),
@@ -146,7 +146,7 @@ final class StreamingPercentileEstimator
     }
 
     /**
-     * @param list<float> $markerHeights
+     * @param array<int, float> $markerHeights
      */
     private function parabolic(array $markerHeights, int $index, int $direction): float
     {
@@ -161,7 +161,7 @@ final class StreamingPercentileEstimator
     }
 
     /**
-     * @param list<float> $markerHeights
+     * @param array<int, float> $markerHeights
      */
     private function linear(array $markerHeights, int $index, int $direction): float
     {

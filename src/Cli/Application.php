@@ -31,7 +31,7 @@ use Throwable;
  */
 final class Application
 {
-    public const VERSION = '0.1.0';
+    public const VERSION = '1.0.0';
     private const HIGH_LOAD_REQUESTS_MAX = 10_000;
     private const HIGH_LOAD_CONCURRENCY_MAX = 500;
 
@@ -369,7 +369,7 @@ final class Application
         return [
             'scenario' => [
                 'name' => $result->definition->name,
-                'steps' => array_map(static fn($s) => [
+                'steps' => array_map(static fn ($s) => [
                     'name' => $s->name,
                     'url' => $s->url,
                     'method' => $s->method,
@@ -469,7 +469,7 @@ final class Application
     /**
  * Prints help text to STDOUT and routes commands.
  */
-private function printHelp(ConsoleOutput $output): void
+    private function printHelp(ConsoleOutput $output): void
     {
         $output->writeln('eleload ' . self::VERSION);
         $output->writeln();
@@ -546,7 +546,7 @@ private function printHelp(ConsoleOutput $output): void
     /**
  * Warns the user (or throws) when request / concurrency counts exceed safe defaults.
  */
-private function enforceHighLoadGuard(RunOptions $options, ConsoleOutput $output): void
+    private function enforceHighLoadGuard(RunOptions $options, ConsoleOutput $output): void
     {
         $warningParts = [];
         if ($options->requests > self::HIGH_LOAD_REQUESTS_MAX) {
@@ -590,7 +590,7 @@ private function enforceHighLoadGuard(RunOptions $options, ConsoleOutput $output
     /**
  * Returns true when STDIN is connected to an interactive TTY.
  */
-private function isInteractiveInput(): bool
+    private function isInteractiveInput(): bool
     {
         return function_exists('stream_isatty') && stream_isatty(STDIN);
     }
@@ -598,7 +598,7 @@ private function isInteractiveInput(): bool
     /**
  * Dumps parsed options and the execution plan to STDOUT when --debug is set.
  */
-private function printDebugRunContext(RunOptions $options, ConsoleOutput $output): void
+    private function printDebugRunContext(RunOptions $options, ConsoleOutput $output): void
     {
         if (!$options->debug) {
             return;

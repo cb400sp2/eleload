@@ -118,4 +118,3 @@ final class CompareMarkdownReporter
         return '0.00';
     }
 }
-

@@ -571,7 +571,7 @@ final class ArgvParser
     /**
  * Returns true when the token starts with `--`.
  */
-private function isOption(string $token): bool
+    private function isOption(string $token): bool
     {
         return str_starts_with($token, '--');
     }
@@ -581,7 +581,7 @@ private function isOption(string $token): bool
  *
  * @throws \InvalidArgumentException
  */
-private function parsePositiveInt(string $name, string $value): int
+    private function parsePositiveInt(string $name, string $value): int
     {
         if (!preg_match('/^\d+$/', $value)) {
             throw new InvalidArgumentException("Option --{$name} must be a positive integer.");
@@ -600,7 +600,7 @@ private function parsePositiveInt(string $name, string $value): int
  *
  * @throws \InvalidArgumentException
  */
-private function parsePositiveFloat(string $name, string $value): float
+    private function parsePositiveFloat(string $name, string $value): float
     {
         if (!is_numeric($value)) {
             throw new InvalidArgumentException("Option --{$name} must be numeric.");
@@ -619,7 +619,7 @@ private function parsePositiveFloat(string $name, string $value): float
  *
  * @throws \InvalidArgumentException
  */
-private function parseNonNegativeFloat(string $name, string $value): float
+    private function parseNonNegativeFloat(string $name, string $value): float
     {
         if (!is_numeric($value)) {
             throw new InvalidArgumentException("Option --{$name} must be numeric.");
@@ -638,7 +638,7 @@ private function parseNonNegativeFloat(string $name, string $value): float
  *
  * @throws \InvalidArgumentException
  */
-private function parsePercent(string $name, string $value): float
+    private function parsePercent(string $name, string $value): float
     {
         $parsed = $this->parseNonNegativeFloat($name, $value);
         if ($parsed > 100.0) {

@@ -12,7 +12,7 @@ final class ConsoleOutput
     /**
  * Writes a line to STDOUT.
  */
-public function writeln(string $message = ''): void
+    public function writeln(string $message = ''): void
     {
         fwrite(STDOUT, $message . PHP_EOL);
     }
@@ -20,9 +20,8 @@ public function writeln(string $message = ''): void
     /**
  * Writes a line to STDERR.
  */
-public function errorln(string $message): void
+    public function errorln(string $message): void
     {
         fwrite(STDERR, $message . PHP_EOL);
     }
 }
-

@@ -42,6 +42,7 @@ final class CurlMultiRunner
     public function run(RequestOptions $options): RunResult
     {
         $multi = curl_multi_init();
+        // @phpstan-ignore-next-line (curl_multi_init always returns CurlMultiHandle in PHP 8+)
         if (!$multi instanceof CurlMultiHandle) {
             throw new RuntimeException('Failed to initialize curl multi handle.');
         }
@@ -194,7 +195,7 @@ final class CurlMultiRunner
         array &$inMemoryResults,
         RequestResult $requestResult,
         ?string $resultsPath,
-        $resultsHandle
+        mixed $resultsHandle
     ): array {
         if ($resultsPath === null || $resultsHandle === null) {
             [$resultsPath, $resultsHandle] = $this->openRequestResultsFile();
@@ -219,7 +220,7 @@ final class CurlMultiRunner
     private function openRequestResultsFile(): array
     {
         $path = tempnam(sys_get_temp_dir(), 'eleload-results-');
-        if (!is_string($path) || $path === '') {
+        if (!is_string($path)) {
             throw new RuntimeException('Failed to create temporary request results file.');
         }
 
@@ -244,7 +245,7 @@ final class CurlMultiRunner
             JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
         );
 
-        if (!is_string($encoded) || fwrite($resultsHandle, $encoded . PHP_EOL) === false) {
+        if (fwrite($resultsHandle, $encoded . PHP_EOL) === false) {
             throw new RuntimeException('Failed to write spilled request result.');
         }
     }
@@ -368,6 +369,7 @@ final class CurlMultiRunner
             $curlOptions[CURLOPT_POSTFIELDS] = $options->body;
         }
 
+        // @phpstan-ignore-next-line (CURLOPT_CUSTOMREQUEST accepts any non-empty string; method is validated at parse time)
         curl_setopt_array($ch, $curlOptions);
 
         return $ch;

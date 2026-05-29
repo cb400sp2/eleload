@@ -178,9 +178,8 @@ final class ReportComparator
     /**
  * Rounds a value to 2 decimal places.
  */
-private function round2(float $value): float
+    private function round2(float $value): float
     {
         return round($value, 2);
     }
 }
-

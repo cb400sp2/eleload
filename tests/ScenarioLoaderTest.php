@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Eleload\LoadTesting\ScenarioDefinition;
 use Eleload\LoadTesting\ScenarioLoader;
 
 // -----------------------------------------------------------------------

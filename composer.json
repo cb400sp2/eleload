@@ -13,9 +13,16 @@
     }
   },
   "scripts": {
-    "test": "php tests/run.php < /dev/null"
+    "test": "php tests/run.php < /dev/null",
+    "analyse": "phpstan analyse --memory-limit=512M",
+    "cs-check": "php-cs-fixer fix --dry-run --diff",
+    "cs-fix": "php-cs-fixer fix"
   },
   "bin": [
     "bin/eleload"
-  ]
+  ],
+  "require-dev": {
+    "phpstan/phpstan": "^2.2",
+    "php-cs-fixer/shim": "^3.95"
+  }
 }

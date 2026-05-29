@@ -91,4 +91,3 @@ foreach ($tests as [$name, $fn]) {
 
 fwrite(STDOUT, PHP_EOL . sprintf('Tests: %d passed, %d failed', $passed, $failed) . PHP_EOL);
 exit($failed === 0 ? 0 : 1);
-

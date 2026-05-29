@@ -43,3 +43,27 @@ jobs:
 
       - name: Run test suite
         run: composer test
+
+  static-analysis:
+    name: Static Analysis and Code Style
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: curl
+          tools: composer:v2
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Run PHPStan
+        run: composer analyse
+
+      - name: Run PHP-CS-Fixer
+        run: composer cs-check

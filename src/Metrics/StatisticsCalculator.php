@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Eleload\Metrics;
 
+use Eleload\Cli\Application;
 use Eleload\LoadTesting\RequestResult;
 use Eleload\LoadTesting\RunResult;
 
@@ -12,8 +13,6 @@ use Eleload\LoadTesting\RunResult;
  */
 final class StatisticsCalculator
 {
-    private const TOOL_VERSION = '0.1.0';
-
     private PercentileCalculator $percentile;
 
     /**
@@ -200,7 +199,8 @@ final class StatisticsCalculator
             'time_buckets' => $timeBuckets,
             'meta' => [
                 'tool' => 'eleload',
-                'version' => self::TOOL_VERSION,
+                'version' => Application::VERSION,
+                'schema_version' => 1,
                 'test_name' => $runResult->options->name,
             ],
         ];
