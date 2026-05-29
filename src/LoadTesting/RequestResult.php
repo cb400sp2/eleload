@@ -18,6 +18,7 @@ final class RequestResult
      * @param string $error                cURL error message (empty string on success).
      * @param bool   $includedInMetrics    False for requests excluded by the warmup window.
      * @param bool|null $bodyContainsExpected Whether the response body matched the expected string, or null if not checked.
+     * @param float  $elapsedSec           Seconds elapsed from test start when this request completed.
      */
     public function __construct(
         public readonly int $requestNumber,
@@ -27,7 +28,8 @@ final class RequestResult
         public readonly int $errorNo,
         public readonly string $error,
         public readonly bool $includedInMetrics = true,
-        public readonly ?bool $bodyContainsExpected = null
+        public readonly ?bool $bodyContainsExpected = null,
+        public readonly float $elapsedSec = 0.0
     ) {
     }
 
@@ -61,6 +63,7 @@ final class RequestResult
             'error' => $this->error,
             'included_in_metrics' => $this->includedInMetrics,
             'body_contains_expected' => $this->bodyContainsExpected,
+            'elapsed_sec' => $this->elapsedSec,
         ];
     }
 
@@ -77,7 +80,8 @@ final class RequestResult
             errorNo: (int) $payload['error_no'],
             error: (string) $payload['error'],
             includedInMetrics: (bool) $payload['included_in_metrics'],
-            bodyContainsExpected: is_bool($payload['body_contains_expected']) ? $payload['body_contains_expected'] : null
+            bodyContainsExpected: is_bool($payload['body_contains_expected']) ? $payload['body_contains_expected'] : null,
+            elapsedSec: (float) ($payload['elapsed_sec'] ?? 0.0)
         );
     }
 }

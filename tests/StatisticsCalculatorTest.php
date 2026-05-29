@@ -252,3 +252,94 @@ test('FailureEvaluator reports threshold violations', function (): void {
     assertSame(false, $result['checks'][3]['passed']);
     assertSame(true, $result['checks'][4]['passed']);
 });
+
+test('StatisticsCalculator builds time_buckets from elapsedSec', function (): void {
+    $options = new RequestOptions(
+        url: 'https://example.com',
+        requests: 6,
+        concurrency: 2,
+        method: 'GET',
+        timeout: 10
+    );
+
+    // Two requests complete at ~0.5 s (bucket 0), two at ~1.5 s (bucket 1), two at ~2.5 s (bucket 2).
+    $result = new RunResult(
+        options: $options,
+        durationSec: 3.0,
+        requestResults: [
+            new RequestResult(1, 100.0, 200, 0.0, 0, '', true, null, 0.4),
+            new RequestResult(2, 200.0, 500, 0.0, 0, '', true, null, 0.6),
+            new RequestResult(3, 150.0, 200, 0.0, 0, '', true, null, 1.3),
+            new RequestResult(4, 250.0, 200, 0.0, 0, '', true, null, 1.7),
+            new RequestResult(5, 120.0, 200, 0.0, 0, '', true, null, 2.2),
+            new RequestResult(6, 180.0, 200, 0.0, 0, '', true, null, 2.9),
+        ]
+    );
+
+    $summary = (new StatisticsCalculator())->summarize($result);
+    $tb = $summary['time_buckets'];
+
+    assertSame(3, count($tb));
+
+    // Bucket 0: requests 1 & 2 — 1 success, 1 failure
+    assertSame(0, $tb[0]['t']);
+    assertSame(2.0, $tb[0]['rps']);
+    assertSame(1.0, $tb[0]['tps']);
+    assertSame(50.0, $tb[0]['error_rate']);
+    assertSame(150.0, $tb[0]['avg_latency_ms']);
+
+    // Bucket 1: requests 3 & 4 — both success
+    assertSame(1, $tb[1]['t']);
+    assertSame(2.0, $tb[1]['rps']);
+    assertSame(2.0, $tb[1]['tps']);
+    assertSame(0.0, $tb[1]['error_rate']);
+    assertSame(200.0, $tb[1]['avg_latency_ms']);
+
+    // Bucket 2: requests 5 & 6 — both success
+    assertSame(2, $tb[2]['t']);
+    assertSame(2.0, $tb[2]['rps']);
+    assertSame(2.0, $tb[2]['tps']);
+    assertSame(0.0, $tb[2]['error_rate']);
+    assertSame(150.0, $tb[2]['avg_latency_ms']);
+});
+
+test('StatisticsCalculator time_buckets exclude warmup requests', function (): void {
+    $options = new RequestOptions(
+        url: 'https://example.com',
+        requests: 4,
+        concurrency: 1,
+        method: 'GET',
+        timeout: 10,
+        warmupSec: 1.0
+    );
+
+    $result = new RunResult(
+        options: $options,
+        durationSec: 3.0,
+        requestResults: [
+            // warmup (includedInMetrics=false)
+            new RequestResult(1, 500.0, 200, 0.0, 0, '', false, null, 0.5),
+            // after warmup: elapsedSec=1.2 → bucket index = floor(1.2 - 1.0) = 0
+            new RequestResult(2, 100.0, 200, 0.0, 0, '', true, null, 1.2),
+            // elapsedSec=2.1 → bucket index = floor(2.1 - 1.0) = 1
+            new RequestResult(3, 200.0, 200, 0.0, 0, '', true, null, 2.1),
+            // elapsedSec=2.8 → bucket index = floor(2.8 - 1.0) = 1
+            new RequestResult(4, 300.0, 500, 0.0, 0, '', true, null, 2.8),
+        ]
+    );
+
+    $summary = (new StatisticsCalculator())->summarize($result);
+    $tb = $summary['time_buckets'];
+
+    // Only 2 buckets (warmup request excluded)
+    assertSame(2, count($tb));
+
+    assertSame(0, $tb[0]['t']);
+    assertSame(1.0, $tb[0]['rps']);
+    assertSame(1.0, $tb[0]['tps']);
+
+    assertSame(1, $tb[1]['t']);
+    assertSame(2.0, $tb[1]['rps']);
+    assertSame(1.0, $tb[1]['tps']);  // request 4 (500) is a failure
+    assertSame(50.0, $tb[1]['error_rate']);
+});

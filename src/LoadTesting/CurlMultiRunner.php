@@ -121,7 +121,8 @@ final class CurlMultiRunner
                         errorNo: $errorNo,
                         error: $error,
                         includedInMetrics: $elapsedSec >= $options->warmupSec,
-                        bodyContainsExpected: $bodyContainsExpected
+                        bodyContainsExpected: $bodyContainsExpected,
+                        elapsedSec: $elapsedSec
                     );
 
                     $requestResultCount++;
