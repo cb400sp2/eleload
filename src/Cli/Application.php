@@ -119,7 +119,8 @@ final class Application
             durationSec: $options->durationSec,
             warmupSec: $options->warmupSec,
             targetRps: $options->targetRps,
-            targetTps: $options->targetTps
+            targetTps: $options->targetTps,
+            rampUpSec: $options->rampUpSec
         ));
 
         $report = $stats->summarize($result);
@@ -282,6 +283,7 @@ final class Application
         $output->writeln('  --name=TEXT              Test name shown in reports');
         $output->writeln('  --target-rps=NUM         Target RPS');
         $output->writeln('  --target-tps=NUM         Target TPS');
+        $output->writeln('  --ramp-up=SECONDS        Linearly increase concurrency over this duration (0 = no ramp)');
         $output->writeln('  --fail-on-p95=MS         Fail if p95 exceeds this latency');
         $output->writeln('  --fail-on-p99=MS         Fail if p99 exceeds this latency');
         $output->writeln('  --fail-on-error-rate=PCT Fail if error rate exceeds this percent');
@@ -379,6 +381,7 @@ final class Application
             'name' => $options->name,
             'target_rps' => $options->targetRps,
             'target_tps' => $options->targetTps,
+            'ramp_up' => $options->rampUpSec > 0.0 ? $options->rampUpSec : null,
             'fail_on_p95' => $options->failOnP95,
             'fail_on_p99' => $options->failOnP99,
             'fail_on_error_rate' => $options->failOnErrorRate,

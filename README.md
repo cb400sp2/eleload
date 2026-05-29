@@ -22,6 +22,7 @@ Only run load tests against systems you own or have explicit permission to test.
 - Optional target metrics:
   - `--target-rps`
   - `--target-tps`
+  - `--ramp-up`
 - Duration and CI threshold options:
   - `--duration`
   - `--warmup`
@@ -250,6 +251,15 @@ Verbose mode for richer diagnostics:
   --requests=100 \
   --concurrency=10 \
   --verbose
+```
+
+Ramp-up concurrency gradually over 30 seconds:
+
+```bash
+./bin/eleload run https://example.com \
+  --duration=120 \
+  --concurrency=50 \
+  --ramp-up=30
 ```
 
 Debug mode to inspect parsed options and execution plan:
