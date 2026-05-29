@@ -6,6 +6,9 @@ namespace Eleload\Report;
 
 use RuntimeException;
 
+/**
+ * Renders a load-test report to a Markdown file.
+ */
 final class MarkdownReporter
 {
     /**
@@ -126,6 +129,11 @@ final class MarkdownReporter
         return implode(PHP_EOL, $lines) . PHP_EOL;
     }
 
+    /**
+     * Creates parent directories for $path if they do not already exist.
+     *
+     * @throws \RuntimeException
+     */
     private function ensureParentDirectory(string $path): void
     {
         $dir = dirname($path);
@@ -138,21 +146,33 @@ final class MarkdownReporter
         }
     }
 
+    /**
+     * Escapes pipe characters in Markdown table cells.
+     */
     private function escape(string $value): string
     {
         return str_replace('|', '\\|', $value);
     }
 
+    /**
+     * Formats a float as a fixed-precision decimal string.
+     */
     private function number(float $value): string
     {
         return number_format($value, 2);
     }
 
+    /**
+     * Formats a float as a percentage string (e.g. "12.34%").
+     */
     private function percent(float $value): string
     {
         return number_format($value, 2) . '%';
     }
 
+    /**
+     * Returns a human-readable label for the configured success status codes.
+     */
     private function formatSuccessStatus(mixed $value): string
     {
         if (!is_array($value) || $value === []) {

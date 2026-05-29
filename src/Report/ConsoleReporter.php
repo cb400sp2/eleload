@@ -6,6 +6,9 @@ namespace Eleload\Report;
 
 use Eleload\Cli\ConsoleOutput;
 
+/**
+ * Renders a load-test report to the console in a human-readable format.
+ */
 final class ConsoleReporter
 {
     /**
@@ -165,21 +168,33 @@ final class ConsoleReporter
         }
     }
 
+    /**
+     * Formats a float as a percentage string (e.g. "12.34%").
+     */
     private function formatPercent(float $value): string
     {
         return number_format($value, 2) . '%';
     }
 
+    /**
+     * Formats a throughput rate with its unit (e.g. "10.00 req/sec").
+     */
     private function formatRate(float $value, string $unit): string
     {
         return number_format($value, 2) . ' ' . $unit;
     }
 
+    /**
+     * Formats a latency value in milliseconds (e.g. "12.34 ms").
+     */
     private function formatMs(float $value): string
     {
         return number_format($value, 2) . ' ms';
     }
 
+    /**
+     * Converts a nullable bool to "yes" / "no" / "n/a".
+     */
     private function formatBoolFlag(mixed $value): string
     {
         if ($value === null) {
@@ -189,6 +204,9 @@ final class ConsoleReporter
         return $value ? 'yes' : 'no';
     }
 
+    /**
+     * Returns a human-readable label for the configured success status codes.
+     */
     private function formatSuccessStatus(mixed $value): string
     {
         if (!is_array($value) || $value === []) {

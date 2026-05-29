@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Eleload\Cli;
 
+/**
+ * Parsed options for the `run` sub-command.
+ */
 final class RunOptions
 {
     /**

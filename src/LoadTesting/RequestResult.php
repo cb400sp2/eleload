@@ -4,8 +4,21 @@ declare(strict_types=1);
 
 namespace Eleload\LoadTesting;
 
+/**
+ * Immutable value object that stores the outcome of a single HTTP request.
+ */
 final class RequestResult
 {
+    /**
+     * @param int    $requestNumber        Sequential request number (1-based).
+     * @param float  $latencyMs            Round-trip latency in milliseconds.
+     * @param int    $httpCode             HTTP response status code (0 on curl error).
+     * @param float  $downloadBytes        Number of bytes downloaded.
+     * @param int    $errorNo              cURL error number (0 on success).
+     * @param string $error                cURL error message (empty string on success).
+     * @param bool   $includedInMetrics    False for requests excluded by the warmup window.
+     * @param bool|null $bodyContainsExpected Whether the response body matched the expected string, or null if not checked.
+     */
     public function __construct(
         public readonly int $requestNumber,
         public readonly float $latencyMs,

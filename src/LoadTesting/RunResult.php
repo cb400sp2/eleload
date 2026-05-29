@@ -7,6 +7,12 @@ namespace Eleload\LoadTesting;
 use JsonException;
 use RuntimeException;
 
+/**
+ * Holds the aggregated outcome of a complete load-test run, including per-request results.
+ *
+ * When the number of results exceeds the in-memory limit they are spilled to a temporary
+ * file; {@see iterateRequestResults()} transparently handles both cases.
+ */
 final class RunResult
 {
     /**
@@ -21,11 +27,17 @@ final class RunResult
     ) {
     }
 
+    /**
+     * Returns the total number of request results (including spilled results).
+     */
     public function countRequestResults(): int
     {
         return $this->requestResultCount ?? count($this->requestResults);
     }
 
+    /**
+     * Returns true when results were spilled to a temporary file on disk.
+     */
     public function hasSpilledRequestResults(): bool
     {
         return $this->requestResultsPath !== null;
@@ -66,6 +78,9 @@ final class RunResult
         }
     }
 
+    /**
+     * Removes the temporary spill file, if one was created.
+     */
     public function __destruct()
     {
         if ($this->requestResultsPath !== null && is_file($this->requestResultsPath)) {

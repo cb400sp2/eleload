@@ -6,6 +6,9 @@ namespace Eleload\Metrics;
 
 use Eleload\Cli\RunOptions;
 
+/**
+ * Evaluates configured failure thresholds against a report and returns pass/fail results.
+ */
 final class FailureEvaluator
 {
     /**

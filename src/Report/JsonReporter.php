@@ -7,6 +7,9 @@ namespace Eleload\Report;
 use RuntimeException;
 use stdClass;
 
+/**
+ * Serialises a report array to a pretty-printed JSON file.
+ */
 final class JsonReporter
 {
     /**
@@ -27,6 +30,11 @@ final class JsonReporter
         }
     }
 
+    /**
+     * Creates parent directories for $path if they do not already exist.
+     *
+     * @throws \RuntimeException
+     */
     private function ensureParentDirectory(string $path): void
     {
         $dir = dirname($path);

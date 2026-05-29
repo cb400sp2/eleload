@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Eleload\Metrics;
 
+/**
+ * Calculates exact percentile values from a sorted list of numbers.
+ */
 final class PercentileCalculator
 {
     /**

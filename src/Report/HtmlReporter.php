@@ -6,8 +6,14 @@ namespace Eleload\Report;
 
 use RuntimeException;
 
+/**
+ * Renders a report array into an HTML file using a PHP template.
+ */
 final class HtmlReporter
 {
+    /**
+     * @param string $templatePath Absolute path to the PHP template file.
+     */
     public function __construct(private readonly string $templatePath)
     {
     }
@@ -34,6 +40,11 @@ final class HtmlReporter
         }
     }
 
+    /**
+     * Creates parent directories for $path if they do not already exist.
+     *
+     * @throws \RuntimeException
+     */
     private function ensureParentDirectory(string $path): void
     {
         $dir = dirname($path);

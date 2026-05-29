@@ -6,6 +6,12 @@ namespace Eleload\Metrics;
 
 use InvalidArgumentException;
 
+/**
+ * Online single-pass quantile estimator using the P² algorithm.
+ *
+ * Estimates a single quantile incrementally without storing all observed values.
+ * Accuracy degrades for very small sample sizes (< 5 values use exact calculation).
+ */
 final class StreamingPercentileEstimator
 {
     /**
@@ -33,6 +39,11 @@ final class StreamingPercentileEstimator
      */
     private array $positionIncrements = [];
 
+    /**
+     * @param float $quantile Target quantile in the range (0, 1) exclusive.
+     *
+     * @throws \InvalidArgumentException When $quantile is not in (0, 1).
+     */
     public function __construct(private readonly float $quantile)
     {
         if ($quantile <= 0.0 || $quantile >= 1.0) {
@@ -40,6 +51,9 @@ final class StreamingPercentileEstimator
         }
     }
 
+    /**
+     * Feeds a new observation into the estimator.
+     */
     public function add(float $value): void
     {
         if ($this->markerHeights === null) {
@@ -118,6 +132,10 @@ final class StreamingPercentileEstimator
         $this->markerHeights = $markerHeights;
     }
 
+    /**
+     * Returns the current quantile estimate.
+     * Returns 0.0 if no values have been added yet.
+     */
     public function estimate(): float
     {
         if ($this->markerHeights === null) {
