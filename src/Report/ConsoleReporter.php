@@ -11,7 +11,7 @@ final class ConsoleReporter
     /**
      * @param array<string, mixed> $report
      */
-    public function render(array $report, ConsoleOutput $output): void
+    public function render(array $report, ConsoleOutput $output, bool $verbose = false): void
     {
         $summary = $report['summary'];
         $requests = $summary['requests'];
@@ -106,8 +106,27 @@ final class ConsoleReporter
 
         if (!empty($report['errors'])) {
             $output->writeln();
-            $output->writeln('Errors');
-            foreach (array_slice($report['errors'], 0, 10) as $error) {
+            $output->writeln($verbose ? 'Errors (detailed)' : 'Errors');
+            $errorRows = $verbose ? $report['errors'] : array_slice($report['errors'], 0, 10);
+
+            foreach ($errorRows as $error) {
+                if ($verbose) {
+                    $output->writeln(
+                        sprintf(
+                            '  #%d success=%s code=%d errno=%d latency=%sms bytes=%s body_match=%s message=%s',
+                            $error['request'],
+                            $this->formatBoolFlag($error['success'] ?? null),
+                            $error['http_code'],
+                            $error['error_no'],
+                            number_format((float)$error['latency_ms'], 2),
+                            number_format((float)($error['download_bytes'] ?? 0.0), 0),
+                            $this->formatBoolFlag($error['body_contains_expected'] ?? null),
+                            $error['error'] !== '' ? $error['error'] : '(no message)'
+                        )
+                    );
+                    continue;
+                }
+
                 $output->writeln(
                     sprintf(
                         '  #%d code=%d errno=%d latency=%sms message=%s',
@@ -120,8 +139,28 @@ final class ConsoleReporter
                 );
             }
 
-            if (count($report['errors']) > 10) {
+            if (!$verbose && count($report['errors']) > 10) {
                 $output->writeln('  ... and ' . (count($report['errors']) - 10) . ' more');
+            }
+        }
+
+        if ($verbose && !empty($summary['slowest_requests'])) {
+            $output->writeln();
+            $output->writeln('Slowest Requests');
+            foreach ($summary['slowest_requests'] as $request) {
+                $output->writeln(
+                    sprintf(
+                        '  #%d success=%s code=%d errno=%d latency=%sms bytes=%s body_match=%s message=%s',
+                        $request['request'],
+                        $this->formatBoolFlag($request['success'] ?? null),
+                        $request['http_code'],
+                        $request['error_no'],
+                        number_format((float)$request['latency_ms'], 2),
+                        number_format((float)($request['download_bytes'] ?? 0.0), 0),
+                        $this->formatBoolFlag($request['body_contains_expected'] ?? null),
+                        $request['error'] !== '' ? $request['error'] : '(no message)'
+                    )
+                );
             }
         }
     }
@@ -139,6 +178,15 @@ final class ConsoleReporter
     private function formatMs(float $value): string
     {
         return number_format($value, 2) . ' ms';
+    }
+
+    private function formatBoolFlag(mixed $value): string
+    {
+        if ($value === null) {
+            return 'n/a';
+        }
+
+        return $value ? 'yes' : 'no';
     }
 
     private function formatSuccessStatus(mixed $value): string

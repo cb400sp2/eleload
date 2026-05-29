@@ -39,18 +39,17 @@ final class StatisticsCalculator
             $statusKey = (string)$result->httpCode;
             $statusCounts[$statusKey] = ($statusCounts[$statusKey] ?? 0) + 1;
 
-            $isSuccess = $result->isSuccess($successStatusCodes);
-            if ($isSuccess && $expectStatusCodes !== null) {
-                $isSuccess = in_array($result->httpCode, $expectStatusCodes, true);
-            }
-            if ($isSuccess && $expectBodyContains !== null) {
-                $isSuccess = $result->bodyContainsExpected === true;
-            }
+            $isSuccess = $this->isRequestSuccess(
+                $result,
+                $successStatusCodes,
+                $expectStatusCodes,
+                $expectBodyContains
+            );
 
             if ($isSuccess) {
                 $success++;
             } else {
-                $errors[] = $this->formatError($result);
+                $errors[] = $this->formatRequestDetail($result, false);
             }
         }
 
@@ -133,6 +132,12 @@ final class StatisticsCalculator
                     'max' => $this->round2($this->max($latencies)),
                 ],
                 'status_codes' => $statusCodeStats,
+                'slowest_requests' => $this->collectSlowestRequests(
+                    $metricResults,
+                    $successStatusCodes,
+                    $expectStatusCodes,
+                    $expectBodyContains
+                ),
             ],
             'errors' => $errors,
             'meta' => [
@@ -144,9 +149,30 @@ final class StatisticsCalculator
     }
 
     /**
-     * @return array<string, int|float|string>
+     * @param list<int>|null $successStatusCodes
+     * @param list<int>|null $expectStatusCodes
      */
-    private function formatError(RequestResult $result): array
+    private function isRequestSuccess(
+        RequestResult $result,
+        ?array $successStatusCodes,
+        ?array $expectStatusCodes,
+        ?string $expectBodyContains
+    ): bool {
+        $isSuccess = $result->isSuccess($successStatusCodes);
+        if ($isSuccess && $expectStatusCodes !== null) {
+            $isSuccess = in_array($result->httpCode, $expectStatusCodes, true);
+        }
+        if ($isSuccess && $expectBodyContains !== null) {
+            $isSuccess = $result->bodyContainsExpected === true;
+        }
+
+        return $isSuccess;
+    }
+
+    /**
+     * @return array<string, int|float|string|bool|null>
+     */
+    private function formatRequestDetail(RequestResult $result, bool $isSuccess): array
     {
         return [
             'request' => $result->requestNumber,
@@ -154,7 +180,42 @@ final class StatisticsCalculator
             'error_no' => $result->errorNo,
             'error' => $result->error,
             'latency_ms' => $this->round2($result->latencyMs),
+            'download_bytes' => $this->round2($result->downloadBytes),
+            'body_contains_expected' => $result->bodyContainsExpected,
+            'success' => $isSuccess,
         ];
+    }
+
+    /**
+     * @param list<RequestResult> $results
+     * @param list<int>|null $successStatusCodes
+     * @param list<int>|null $expectStatusCodes
+     * @return list<array<string, int|float|string|bool|null>>
+     */
+    private function collectSlowestRequests(
+        array $results,
+        ?array $successStatusCodes,
+        ?array $expectStatusCodes,
+        ?string $expectBodyContains
+    ): array {
+        if ($results === []) {
+            return [];
+        }
+
+        usort(
+            $results,
+            static fn (RequestResult $a, RequestResult $b): int => $b->latencyMs <=> $a->latencyMs
+        );
+
+        $slowest = [];
+        foreach (array_slice($results, 0, 5) as $result) {
+            $slowest[] = $this->formatRequestDetail(
+                $result,
+                $this->isRequestSuccess($result, $successStatusCodes, $expectStatusCodes, $expectBodyContains)
+            );
+        }
+
+        return $slowest;
     }
 
     /**

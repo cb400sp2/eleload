@@ -126,7 +126,7 @@ final class Application
         $report['thresholds'] = $failureEvaluator->evaluate($report, $options);
 
         if (!$options->silent) {
-            $consoleReporter->render($report, $output);
+            $consoleReporter->render($report, $output, $options->verbose);
         }
 
         if ($options->reportJsonPath !== null) {
@@ -265,6 +265,7 @@ final class Application
         $output->writeln('  --timeout=10             Timeout seconds');
         $output->writeln('  --connect-timeout=NUM    Connection timeout seconds (default: min(--timeout, 5))');
         $output->writeln('  --silent                 Suppress normal run output');
+        $output->writeln('  --verbose                Show richer error and slowest request details');
         $output->writeln('  --debug                  Print parsed options and execution plan');
         $output->writeln('  --yes                    Skip high-load confirmation prompt');
         $output->writeln('  --allow-high-load        Explicitly allow high-load settings');
@@ -356,6 +357,7 @@ final class Application
             'connect_timeout' => $options->connectTimeout,
             'follow_redirects' => $options->followRedirects,
             'silent' => $options->silent,
+            'verbose' => $options->verbose,
             'debug' => $options->debug,
             'yes' => $options->yes,
             'allow_high_load' => $options->allowHighLoad,
