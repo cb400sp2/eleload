@@ -335,6 +335,7 @@ final class ScenarioRunner
             CURLOPT_FOLLOWLOCATION => $step->followRedirects,
             CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_SSL_VERIFYHOST => 2,
+            CURLOPT_TCP_KEEPALIVE => 1,
         ];
 
         $headers = [];
