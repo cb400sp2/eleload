@@ -56,7 +56,9 @@ final class RunOptions
         public readonly int $memoryBufferSize = 10_000,
         public readonly bool $blockPrivateNetworks = false,
         public readonly string $httpVersion = '2.0',
-        public readonly int $dnsCacheTtl = -1
+        public readonly int $dnsCacheTtl = -1,
+        public readonly string $acceptEncoding = 'gzip',
+        public readonly bool $noDecompress = false
     ) {
     }
 }

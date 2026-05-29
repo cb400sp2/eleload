@@ -18,7 +18,8 @@
         },
         "config": {
             "type": "object",
-            "required": ["requests", "concurrency", "timeout", "follow_redirects", "http_version", "dns_cache_ttl", "name",
+            "required": ["requests", "concurrency", "timeout", "follow_redirects", "http_version", "dns_cache_ttl",
+                         "accept_encoding", "no_decompress", "name",
                          "success_status", "expect_status", "expect_body_contains",
                          "duration", "warmup", "ramp_up", "rate", "target_rps", "target_tps"],
             "additionalProperties": false,
@@ -29,6 +30,8 @@
                 "follow_redirects":     { "type": "boolean" },
                 "http_version":         { "type": "string", "enum": ["1.0", "1.1", "2.0", "3.0"] },
                 "dns_cache_ttl":        { "type": "integer", "minimum": -1 },
+                "accept_encoding":      { "type": "string", "enum": ["none", "gzip", "br", "deflate"] },
+                "no_decompress":        { "type": "boolean" },
                 "name":                 { "type": ["string", "null"] },
                 "success_status":       { "type": ["array", "null"], "items": { "type": "integer" } },
                 "expect_status":        { "type": ["array", "null"], "items": { "type": "integer" } },

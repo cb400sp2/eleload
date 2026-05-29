@@ -62,6 +62,8 @@ final class ArgvParser
         $blockPrivateNetworks = false;
         $httpVersion = '2.0';
         $dnsCacheTtl = -1;
+        $acceptEncoding = 'gzip';
+        $noDecompress = false;
         $bearerTokenEnv = null;
         $basicUserEnv = null;
         $basicPasswordEnv = null;
@@ -109,6 +111,12 @@ final class ArgvParser
 
             if ($token === '--block-private-networks') {
                 $blockPrivateNetworks = true;
+                $i++;
+                continue;
+            }
+
+            if ($token === '--no-decompress') {
+                $noDecompress = true;
                 $i++;
                 continue;
             }
@@ -239,6 +247,9 @@ final class ArgvParser
                         break;
                     case 'dns-cache-ttl':
                         $dnsCacheTtl = $this->parseNonNegativeInt($name, $value);
+                        break;
+                    case 'accept-encoding':
+                        $acceptEncoding = $this->parseAcceptEncoding($name, $value);
                         break;
                     default:
                         throw new InvalidArgumentException("Unknown option: --{$name}");
@@ -387,7 +398,9 @@ final class ArgvParser
             memoryBufferSize: $memoryBufferSize,
             blockPrivateNetworks: $blockPrivateNetworks,
             httpVersion: $httpVersion,
-            dnsCacheTtl: $dnsCacheTtl
+            dnsCacheTtl: $dnsCacheTtl,
+            acceptEncoding: $acceptEncoding,
+            noDecompress: $noDecompress
         );
     }
 
@@ -773,6 +786,18 @@ final class ArgvParser
         }
 
         return $parsedCodes;
+    }
+
+    private function parseAcceptEncoding(string $name, string $value): string
+    {
+        $allowed = ['none', 'gzip', 'br', 'deflate'];
+        if (!in_array($value, $allowed, true)) {
+            throw new InvalidArgumentException(
+                "Option --{$name} must be one of: " . implode(', ', $allowed) . '.'
+            );
+        }
+
+        return $value;
     }
 
     private function parseNonNegativeInt(string $name, string $value): int

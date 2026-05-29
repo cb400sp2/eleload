@@ -39,7 +39,9 @@ final class RequestOptions
         public readonly ?float $targetTps = null,
         public readonly float $rampUpSec = 0.0,
         public readonly string $httpVersion = '2.0',
-        public readonly int $dnsCacheTtl = -1
+        public readonly int $dnsCacheTtl = -1,
+        public readonly string $acceptEncoding = 'gzip',
+        public readonly bool $noDecompress = false
     ) {
     }
 
