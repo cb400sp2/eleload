@@ -333,3 +333,113 @@ test('ArgvParser rejects negative --ramp-up', function (): void {
         'ramp-up'
     );
 });
+
+// -----------------------------------------------------------------------
+// parseScenario
+// -----------------------------------------------------------------------
+
+test('ArgvParser parseScenario parses minimum arguments', function (): void {
+    $parser = new ArgvParser();
+    $options = $parser->parseScenario(['scenario.json']);
+
+    assertSame('scenario.json', $options->scenarioPath);
+    assertSame(10, $options->concurrency);
+    assertSame(null, $options->durationSec);
+    assertSame(100, $options->iterations);
+    assertSame(0.0, $options->warmupSec);
+    assertSame(false, $options->silent);
+    assertSame(false, $options->verbose);
+    assertSame(false, $options->debug);
+    assertSame(false, $options->yes);
+    assertSame(false, $options->allowHighLoad);
+    assertSame(null, $options->reportJsonPath);
+    assertSame(null, $options->outputDir);
+    assertSame(null, $options->name);
+});
+
+test('ArgvParser parseScenario parses all options', function (): void {
+    $parser = new ArgvParser();
+    $options = $parser->parseScenario([
+        'my-scenario.json',
+        '--concurrency=20',
+        '--duration=60',
+        '--warmup=5',
+        '--silent',
+        '--verbose',
+        '--debug',
+        '--yes',
+        '--allow-high-load',
+        '--report-json=out/report.json',
+        '--output-dir=out',
+        '--name=My Perf Test',
+    ]);
+
+    assertSame('my-scenario.json', $options->scenarioPath);
+    assertSame(20, $options->concurrency);
+    assertSame(60.0, $options->durationSec);
+    assertSame(5.0, $options->warmupSec);
+    assertSame(true, $options->silent);
+    assertSame(true, $options->verbose);
+    assertSame(true, $options->debug);
+    assertSame(true, $options->yes);
+    assertSame(true, $options->allowHighLoad);
+    assertSame('out/report.json', $options->reportJsonPath);
+    assertSame('out', $options->outputDir);
+    assertSame('My Perf Test', $options->name);
+});
+
+test('ArgvParser parseScenario parses --iterations option', function (): void {
+    $parser = new ArgvParser();
+    $options = $parser->parseScenario(['scenario.json', '--iterations=250']);
+
+    assertSame(250, $options->iterations);
+});
+
+test('ArgvParser parseScenario boolean flags work without value', function (): void {
+    $parser = new ArgvParser();
+    $options = $parser->parseScenario(['scenario.json', '--silent', '--yes']);
+
+    assertSame(true, $options->silent);
+    assertSame(true, $options->yes);
+    assertSame(false, $options->verbose);
+});
+
+test('ArgvParser parseScenario rejects warmup >= duration', function (): void {
+    $parser = new ArgvParser();
+
+    assertThrows(
+        fn () => $parser->parseScenario(['scenario.json', '--duration=10', '--warmup=10']),
+        InvalidArgumentException::class,
+        '--warmup must be lower than --duration'
+    );
+});
+
+test('ArgvParser parseScenario requires scenario path', function (): void {
+    $parser = new ArgvParser();
+
+    assertThrows(
+        fn () => $parser->parseScenario([]),
+        InvalidArgumentException::class,
+        'Scenario file path is required'
+    );
+});
+
+test('ArgvParser parseScenario rejects unknown option', function (): void {
+    $parser = new ArgvParser();
+
+    assertThrows(
+        fn () => $parser->parseScenario(['scenario.json', '--unknown=1']),
+        InvalidArgumentException::class,
+        'Unknown option for scenario'
+    );
+});
+
+test('ArgvParser parseScenario rejects unexpected positional argument', function (): void {
+    $parser = new ArgvParser();
+
+    assertThrows(
+        fn () => $parser->parseScenario(['scenario.json', 'extra-arg']),
+        InvalidArgumentException::class,
+        'Unexpected argument'
+    );
+});

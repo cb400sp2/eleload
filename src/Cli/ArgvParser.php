@@ -392,6 +392,126 @@ final class ArgvParser
 
     /**
      * @param list<string> $args
+     */
+    public function parseScenario(array $args): ScenarioOptions
+    {
+        $scenarioPath = null;
+        $concurrency = self::DEFAULT_CONCURRENCY;
+        $durationSec = null;
+        $iterations = self::DEFAULT_REQUESTS;
+        $warmupSec = 0.0;
+        $silent = false;
+        $verbose = false;
+        $debug = false;
+        $yes = false;
+        $allowHighLoad = false;
+        $reportJsonPath = null;
+        $outputDir = null;
+        $name = null;
+
+        $i = 0;
+        while ($i < count($args)) {
+            $token = $args[$i];
+
+            if ($token === '--silent') {
+                $silent = true;
+                $i++;
+                continue;
+            }
+
+            if ($token === '--verbose') {
+                $verbose = true;
+                $i++;
+                continue;
+            }
+
+            if ($token === '--debug') {
+                $debug = true;
+                $i++;
+                continue;
+            }
+
+            if ($token === '--yes') {
+                $yes = true;
+                $i++;
+                continue;
+            }
+
+            if ($token === '--allow-high-load') {
+                $allowHighLoad = true;
+                $i++;
+                continue;
+            }
+
+            if ($this->isOption($token)) {
+                [$optName, $value, $i] = $this->parseOptionToken($args, $i);
+
+                switch ($optName) {
+                    case 'concurrency':
+                        $concurrency = $this->parsePositiveInt($optName, $value);
+                        break;
+                    case 'duration':
+                        $durationSec = $this->parsePositiveFloat($optName, $value);
+                        break;
+                    case 'iterations':
+                        $iterations = $this->parsePositiveInt($optName, $value);
+                        break;
+                    case 'warmup':
+                        $warmupSec = $this->parseNonNegativeFloat($optName, $value);
+                        break;
+                    case 'report-json':
+                        $reportJsonPath = $value;
+                        break;
+                    case 'output-dir':
+                        $outputDir = $value;
+                        break;
+                    case 'name':
+                        $name = $value;
+                        break;
+                    default:
+                        throw new InvalidArgumentException("Unknown option for scenario command: --{$optName}");
+                }
+                continue;
+            }
+
+            if ($scenarioPath === null) {
+                $scenarioPath = $token;
+                $i++;
+                continue;
+            }
+
+            throw new InvalidArgumentException("Unexpected argument for scenario command: {$token}");
+        }
+
+        if ($scenarioPath === null) {
+            throw new InvalidArgumentException(
+                'Scenario file path is required. Usage: eleload scenario <scenario.json> [options]'
+            );
+        }
+
+        if ($durationSec !== null && $warmupSec >= $durationSec) {
+            throw new InvalidArgumentException('Option --warmup must be lower than --duration.');
+        }
+
+        return new ScenarioOptions(
+            scenarioPath: $scenarioPath,
+            concurrency: $concurrency,
+            durationSec: $durationSec,
+            iterations: $iterations,
+            warmupSec: $warmupSec,
+            silent: $silent,
+            verbose: $verbose,
+            debug: $debug,
+            yes: $yes,
+            allowHighLoad: $allowHighLoad,
+            reportJsonPath: $reportJsonPath,
+            outputDir: $outputDir,
+            name: $name
+        );
+    }
+
+    /**
+     * @param list<string> $args
      * @return array{0:string, 1:string, 2:int}
      */
     private function parseOptionToken(array $args, int $index): array
