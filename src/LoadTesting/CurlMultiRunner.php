@@ -10,6 +10,9 @@ use RuntimeException;
 
 final class CurlMultiRunner
 {
+    private const MULTI_SELECT_TIMEOUT_SEC = 1.0;
+    private const IDLE_SLEEP_USEC = 5_000;
+
     public function run(RequestOptions $options): RunResult
     {
         $multi = curl_multi_init();
@@ -94,12 +97,12 @@ final class CurlMultiRunner
             }
 
             if ($running > 0) {
-                $selected = curl_multi_select($multi, 1.0);
+                $selected = curl_multi_select($multi, self::MULTI_SELECT_TIMEOUT_SEC);
                 if ($selected === -1) {
-                    usleep(1_000);
+                    usleep(self::IDLE_SLEEP_USEC);
                 }
             } else {
-                usleep(1_000);
+                usleep(self::IDLE_SLEEP_USEC);
             }
         }
 
