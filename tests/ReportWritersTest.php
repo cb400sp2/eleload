@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use Eleload\LoadTesting\RequestOptions;
+use Eleload\LoadTesting\RequestResult;
+use Eleload\LoadTesting\RunResult;
+use Eleload\Report\CsvReporter;
 use Eleload\Report\HtmlReporter;
 use Eleload\Report\JsonReporter;
 use Eleload\Report\MarkdownReporter;
@@ -124,4 +128,53 @@ test('ReportPathGenerator creates timestamped report paths', function (): void {
     assertSame('reports/eleload-20260529-153000.json', $paths['json']);
     assertSame('reports/eleload-20260529-153000.html', $paths['html']);
     assertSame('reports/eleload-20260529-153000.md', $paths['md']);
+});
+
+test('CsvReporter writes per-request rows and preserves multibyte text', function (): void {
+    $runResult = new RunResult(
+        options: new RequestOptions(
+            url: 'https://example.com',
+            requests: 2,
+            concurrency: 1,
+            method: 'GET',
+            timeout: 10,
+            expectBodyContains: 'ようこそ'
+        ),
+        durationSec: 1.0,
+        requestResults: [
+            new RequestResult(
+                requestNumber: 1,
+                latencyMs: 12.345,
+                httpCode: 200,
+                downloadBytes: 120.0,
+                errorNo: 0,
+                error: '',
+                includedInMetrics: true,
+                bodyContainsExpected: true
+            ),
+            new RequestResult(
+                requestNumber: 2,
+                latencyMs: 20.5,
+                httpCode: 500,
+                downloadBytes: 90.0,
+                errorNo: 7,
+                error: '接続失敗',
+                includedInMetrics: false,
+                bodyContainsExpected: false
+            ),
+        ]
+    );
+
+    $tmpDir = sys_get_temp_dir() . '/eleload-tests-csv-' . uniqid('', true);
+    assertTrue(mkdir($tmpDir, 0775, true), 'Failed to create temp directory');
+    $csvPath = $tmpDir . '/report.csv';
+
+    (new CsvReporter())->write($runResult, $csvPath);
+
+    assertTrue(is_file($csvPath), 'CSV report was not created');
+
+    $csv = (string) file_get_contents($csvPath);
+    assertContains('request,included_in_metrics,success,http_code,error_no,latency_ms,download_bytes,body_contains_expected,error', $csv);
+    assertContains('1,1,1,200,0,12.35,120,1,', $csv);
+    assertContains('2,0,0,500,7,20.50,90,0,接続失敗', $csv);
 });

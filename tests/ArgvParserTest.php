@@ -23,6 +23,7 @@ test('ArgvParser parses minimum arguments', function (): void {
     assertSame(null, $options->successStatusCodes);
     assertSame(null, $options->expectStatusCodes);
     assertSame(null, $options->expectBodyContains);
+    assertSame(null, $options->reportCsvPath);
 });
 
 test('ArgvParser parses full option set', function (): void {
@@ -51,6 +52,7 @@ test('ArgvParser parses full option set', function (): void {
         'reports/report.json',
         '--report-html=reports/report.html',
         '--report-md=reports/report.md',
+        '--report-csv=reports/report.csv',
         '--output-dir=reports',
         '--name=top page smoke load',
         '--success-status=200,201,204',
@@ -86,6 +88,7 @@ test('ArgvParser parses full option set', function (): void {
     assertSame('reports/report.json', $options->reportJsonPath);
     assertSame('reports/report.html', $options->reportHtmlPath);
     assertSame('reports/report.md', $options->reportMdPath);
+    assertSame('reports/report.csv', $options->reportCsvPath);
     assertSame('reports', $options->outputDir);
     assertSame('top page smoke load', $options->name);
     assertSame([200, 201, 204], $options->successStatusCodes);

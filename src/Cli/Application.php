@@ -11,6 +11,7 @@ use Eleload\Metrics\FailureEvaluator;
 use Eleload\Metrics\StatisticsCalculator;
 use Eleload\Report\CompareMarkdownReporter;
 use Eleload\Report\ConsoleReporter;
+use Eleload\Report\CsvReporter;
 use Eleload\Report\HtmlReporter;
 use Eleload\Report\JsonReporter;
 use Eleload\Report\MarkdownReporter;
@@ -90,6 +91,7 @@ final class Application
         $jsonReporter = new JsonReporter();
         $htmlReporter = new HtmlReporter(__DIR__ . '/../../templates/report.php');
         $markdownReporter = new MarkdownReporter();
+        $csvReporter = new CsvReporter();
         $pathGenerator = new ReportPathGenerator();
 
         $result = $runner->run(new RequestOptions(
@@ -133,6 +135,11 @@ final class Application
         if ($options->reportMdPath !== null) {
             $markdownReporter->write($report, $options->reportMdPath);
             $output->writeln('Markdown report: ' . $options->reportMdPath);
+        }
+
+        if ($options->reportCsvPath !== null) {
+            $csvReporter->write($result, $options->reportCsvPath);
+            $output->writeln('CSV report: ' . $options->reportCsvPath);
         }
 
         if ($options->outputDir !== null) {
@@ -247,6 +254,7 @@ final class Application
         $output->writeln('  --report-json=FILE       Write JSON report');
         $output->writeln('  --report-html=FILE       Write HTML report');
         $output->writeln('  --report-md=FILE         Write Markdown report');
+        $output->writeln('  --report-csv=FILE        Write CSV report');
         $output->writeln('  --output-dir=DIR         Write timestamped JSON/HTML/Markdown reports');
         $output->writeln('  --name=TEXT              Test name shown in reports');
         $output->writeln('  --target-rps=NUM         Target RPS');
