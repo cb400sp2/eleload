@@ -73,7 +73,8 @@ final class RunCommand
             rate: $options->rate,
             targetRps: $options->targetRps,
             targetTps: $options->targetTps,
-            rampUpSec: $options->rampUpSec
+            rampUpSec: $options->rampUpSec,
+            httpVersion: $options->httpVersion
         ));
 
         $report = $stats->summarize($result);

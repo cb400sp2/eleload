@@ -359,6 +359,7 @@ final class CurlMultiRunner
             CURLOPT_SSL_VERIFYHOST => 2,
             CURLOPT_SSLVERSION => CURL_SSLVERSION_TLSv1_2,
             CURLOPT_TCP_KEEPALIVE => 1,
+            CURLOPT_HTTP_VERSION => $this->resolveCurlHttpVersion($options->httpVersion),
         ];
 
         $headers = $options->resolveHeaders();
@@ -374,5 +375,16 @@ final class CurlMultiRunner
         curl_setopt_array($ch, $curlOptions);
 
         return $ch;
+    }
+
+    private function resolveCurlHttpVersion(string $version): int
+    {
+        return match ($version) {
+            '1.0' => CURL_HTTP_VERSION_1_0,
+            '1.1' => CURL_HTTP_VERSION_1_1,
+            '2.0' => CURL_HTTP_VERSION_2_0,
+            '3.0' => defined('CURL_HTTP_VERSION_3') ? CURL_HTTP_VERSION_3 : CURL_HTTP_VERSION_2_0,
+            default => CURL_HTTP_VERSION_2_0,
+        };
     }
 }

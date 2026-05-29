@@ -60,6 +60,7 @@ final class ArgvParser
         $rampUpSec = 0.0;
         $memoryBufferSize = 10_000;
         $blockPrivateNetworks = false;
+        $httpVersion = '2.0';
         $bearerTokenEnv = null;
         $basicUserEnv = null;
         $basicPasswordEnv = null;
@@ -232,6 +233,9 @@ final class ArgvParser
                     case 'memory-buffer-size':
                         $memoryBufferSize = $this->parsePositiveInt($name, $value);
                         break;
+                    case 'http-version':
+                        $httpVersion = $this->parseHttpVersion($name, $value);
+                        break;
                     default:
                         throw new InvalidArgumentException("Unknown option: --{$name}");
                 }
@@ -377,7 +381,8 @@ final class ArgvParser
             targetTps: $targetTps,
             rampUpSec: $rampUpSec,
             memoryBufferSize: $memoryBufferSize,
-            blockPrivateNetworks: $blockPrivateNetworks
+            blockPrivateNetworks: $blockPrivateNetworks,
+            httpVersion: $httpVersion
         );
     }
 
@@ -763,6 +768,18 @@ final class ArgvParser
         }
 
         return $parsedCodes;
+    }
+
+    private function parseHttpVersion(string $name, string $value): string
+    {
+        $allowed = ['1.0', '1.1', '2.0', '3.0'];
+        if (!in_array($value, $allowed, true)) {
+            throw new InvalidArgumentException(
+                "Option --{$name} must be one of: " . implode(', ', $allowed) . '.'
+            );
+        }
+
+        return $value;
     }
 
     /**

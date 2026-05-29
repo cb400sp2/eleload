@@ -158,6 +158,7 @@ final class StatisticsCalculator
                 'concurrency' => $runResult->options->concurrency,
                 'timeout' => $runResult->options->timeout,
                 'follow_redirects' => $runResult->options->followRedirects,
+                'http_version' => $runResult->options->httpVersion,
                 'name' => $runResult->options->name,
                 'success_status' => $runResult->options->successStatusCodes,
                 'expect_status' => $runResult->options->expectStatusCodes,
