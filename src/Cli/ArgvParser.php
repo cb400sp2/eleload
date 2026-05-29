@@ -58,6 +58,7 @@ final class ArgvParser
         $targetRps = null;
         $targetTps = null;
         $rampUpSec = 0.0;
+        $memoryBufferSize = 10_000;
 
         $i = 0;
         while ($i < count($args)) {
@@ -202,6 +203,9 @@ final class ArgvParser
                     case 'ramp-up':
                         $rampUpSec = $this->parseNonNegativeFloat($name, $value);
                         break;
+                    case 'memory-buffer-size':
+                        $memoryBufferSize = $this->parsePositiveInt($name, $value);
+                        break;
                     default:
                         throw new InvalidArgumentException("Unknown option: --{$name}");
                 }
@@ -291,7 +295,8 @@ final class ArgvParser
             rate: $rate,
             targetRps: $targetRps,
             targetTps: $targetTps,
-            rampUpSec: $rampUpSec
+            rampUpSec: $rampUpSec,
+            memoryBufferSize: $memoryBufferSize
         );
     }
 

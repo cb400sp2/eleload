@@ -40,7 +40,7 @@ final class RunCommand
             $output
         );
 
-        $runner = new CurlMultiRunner();
+        $runner = new CurlMultiRunner($options->memoryBufferSize);
         $stats = new StatisticsCalculator();
         $failureEvaluator = new FailureEvaluator();
         $consoleReporter = new ConsoleReporter();
@@ -123,7 +123,13 @@ final class RunCommand
             }
         }
 
-        return $report['summary']['requests']['failed'] > 0 || $report['thresholds']['failed'] ? 1 : 0;
+        $exitCode = $report['summary']['requests']['failed'] > 0 || $report['thresholds']['failed'] ? 1 : 0;
+
+        if ($options->debug) {
+            $output->writeln(sprintf('[debug] peak_memory_after_run=%d bytes', memory_get_peak_usage(true)));
+        }
+
+        return $exitCode;
     }
 
     private function printDebugContext(RunOptions $options, ConsoleOutput $output): void
@@ -170,6 +176,7 @@ final class RunCommand
             'fail_on_error_rate' => $options->failOnErrorRate,
             'fail_on_rps_below' => $options->failOnRpsBelow,
             'fail_on_tps_below' => $options->failOnTpsBelow,
+            'memory_buffer_size' => $options->memoryBufferSize,
         ];
 
         $executionPlan = [
@@ -200,5 +207,6 @@ final class RunCommand
         $flags = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR;
         $output->writeln('[debug] parsed_options=' . json_encode($parsedOptions, $flags));
         $output->writeln('[debug] execution_plan=' . json_encode($executionPlan, $flags));
+        $output->writeln(sprintf('[debug] peak_memory_before_run=%d bytes', memory_get_peak_usage(true)));
     }
 }

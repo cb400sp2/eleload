@@ -123,6 +123,7 @@ final class Application
         $output->writeln('  --target-rps=NUM         Target RPS');
         $output->writeln('  --target-tps=NUM         Target TPS');
         $output->writeln('  --ramp-up=SECONDS        Linearly increase concurrency over this duration (0 = no ramp)');
+        $output->writeln('  --memory-buffer-size=N   Max in-memory results before spilling to disk (default: 10000)');
         $output->writeln('  --fail-on-p95=MS         Fail if p95 exceeds this latency');
         $output->writeln('  --fail-on-p99=MS         Fail if p99 exceeds this latency');
         $output->writeln('  --fail-on-error-rate=PCT Fail if error rate exceeds this percent');

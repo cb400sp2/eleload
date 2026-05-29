@@ -33,6 +33,7 @@ final class StatisticsCalculator
         $total = 0;
         $success = 0;
         $statusCounts = [];
+        /** @var list<float> $latencies */
         $latencies = [];
         $streamingLatencySummary = $runResult->hasSpilledRequestResults() ? new StreamingLatencySummary() : null;
         $errors = [];
@@ -265,34 +266,6 @@ final class StatisticsCalculator
     }
 
     /**
-     * @param list<float> $values
-     */
-    private function min(array $values): float
-    {
-        return $values === [] ? 0.0 : (float)min($values);
-    }
-
-    /**
-     * @param list<float> $values
-     */
-    private function max(array $values): float
-    {
-        return $values === [] ? 0.0 : (float)max($values);
-    }
-
-    /**
-     * @param list<float> $values
-     */
-    private function avg(array $values): float
-    {
-        if ($values === []) {
-            return 0.0;
-        }
-
-        return array_sum($values) / count($values);
-    }
-
-    /**
      * Rounds a value to 2 decimal places.
      */
     private function round2(float $value): float
@@ -306,5 +279,33 @@ final class StatisticsCalculator
     private function round3(float $value): float
     {
         return round($value, 3);
+    }
+
+    /**
+     * @param list<float> $values
+     */
+    private function min(array $values): float
+    {
+        return $values === [] ? 0.0 : (float) min($values);
+    }
+
+    /**
+     * @param list<float> $values
+     */
+    private function max(array $values): float
+    {
+        return $values === [] ? 0.0 : (float) max($values);
+    }
+
+    /**
+     * @param list<float> $values
+     */
+    private function avg(array $values): float
+    {
+        if ($values === []) {
+            return 0.0;
+        }
+
+        return array_sum($values) / count($values);
     }
 }
