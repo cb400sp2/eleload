@@ -233,6 +233,10 @@ final class ArgvParser
             throw new InvalidArgumentException('Option --warmup must be lower than --duration.');
         }
 
+        if ($durationSec !== null && $rampUpSec >= $durationSec) {
+            throw new InvalidArgumentException('Option --ramp-up must be lower than --duration.');
+        }
+
         if (($basicUser === null) !== ($basicPassword === null)) {
             throw new InvalidArgumentException('Options --basic-user and --basic-password must be provided together.');
         }

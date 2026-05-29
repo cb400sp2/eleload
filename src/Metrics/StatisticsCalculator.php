@@ -138,6 +138,7 @@ final class StatisticsCalculator
                 'expect_body_contains' => $runResult->options->expectBodyContains,
                 'duration' => $runResult->options->durationSec,
                 'warmup' => $runResult->options->warmupSec,
+                'ramp_up' => $runResult->options->rampUpSec > 0.0 ? $runResult->options->rampUpSec : null,
                 'target_rps' => $runResult->options->targetRps,
                 'target_tps' => $runResult->options->targetTps,
             ],

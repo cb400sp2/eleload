@@ -140,6 +140,16 @@ test('ArgvParser rejects warmup greater than duration', function (): void {
     );
 });
 
+test('ArgvParser rejects ramp-up greater than or equal to duration', function (): void {
+    $parser = new ArgvParser();
+
+    assertThrows(
+        fn () => $parser->parseRun(['https://example.com', '--duration=5', '--ramp-up=5']),
+        InvalidArgumentException::class,
+        'Option --ramp-up must be lower than --duration'
+    );
+});
+
 test('ArgvParser applies last redirect control flag', function (): void {
     $parser = new ArgvParser();
 
