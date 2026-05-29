@@ -6,6 +6,9 @@ namespace Eleload\Cli;
 
 use InvalidArgumentException;
 
+/**
+ * Parses raw argv tokens into structured option objects for each sub-command.
+ */
 final class ArgvParser
 {
     private const DEFAULT_REQUESTS = 100;
@@ -428,12 +431,20 @@ final class ArgvParser
         return [$name, $value, $nextIndex + 1];
     }
 
-    private function isOption(string $token): bool
+    /**
+ * Returns true when the token starts with `--`.
+ */
+private function isOption(string $token): bool
     {
         return str_starts_with($token, '--');
     }
 
-    private function parsePositiveInt(string $name, string $value): int
+    /**
+ * Parses the option value as a positive integer (>= 1).
+ *
+ * @throws \InvalidArgumentException
+ */
+private function parsePositiveInt(string $name, string $value): int
     {
         if (!preg_match('/^\d+$/', $value)) {
             throw new InvalidArgumentException("Option --{$name} must be a positive integer.");
@@ -447,7 +458,12 @@ final class ArgvParser
         return $parsed;
     }
 
-    private function parsePositiveFloat(string $name, string $value): float
+    /**
+ * Parses the option value as a positive float (> 0).
+ *
+ * @throws \InvalidArgumentException
+ */
+private function parsePositiveFloat(string $name, string $value): float
     {
         if (!is_numeric($value)) {
             throw new InvalidArgumentException("Option --{$name} must be numeric.");
@@ -461,7 +477,12 @@ final class ArgvParser
         return $parsed;
     }
 
-    private function parseNonNegativeFloat(string $name, string $value): float
+    /**
+ * Parses the option value as a non-negative float (>= 0).
+ *
+ * @throws \InvalidArgumentException
+ */
+private function parseNonNegativeFloat(string $name, string $value): float
     {
         if (!is_numeric($value)) {
             throw new InvalidArgumentException("Option --{$name} must be numeric.");
@@ -475,7 +496,12 @@ final class ArgvParser
         return $parsed;
     }
 
-    private function parsePercent(string $name, string $value): float
+    /**
+ * Parses the option value as a percentage in the range [0, 100].
+ *
+ * @throws \InvalidArgumentException
+ */
+private function parsePercent(string $name, string $value): float
     {
         $parsed = $this->parseNonNegativeFloat($name, $value);
         if ($parsed > 100.0) {

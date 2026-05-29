@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Eleload\LoadTesting;
 
+/**
+ * Immutable value object that holds all configuration for a single load-test run.
+ */
 final class RequestOptions
 {
     /**

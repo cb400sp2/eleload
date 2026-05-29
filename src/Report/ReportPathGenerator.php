@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Eleload\Report;
 
+/**
+ * Generates timestamped output file paths for JSON, HTML, and Markdown reports.
+ */
 final class ReportPathGenerator
 {
     /**

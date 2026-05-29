@@ -7,12 +7,18 @@ namespace Eleload\Metrics;
 use Eleload\LoadTesting\RequestResult;
 use Eleload\LoadTesting\RunResult;
 
+/**
+ * Computes descriptive statistics from a {@see RunResult} and produces the report data structure.
+ */
 final class StatisticsCalculator
 {
     private const TOOL_VERSION = '0.1.0';
 
     private PercentileCalculator $percentile;
 
+    /**
+     * Initialises the percentile calculator dependency.
+     */
     public function __construct()
     {
         $this->percentile = new PercentileCalculator();
@@ -257,11 +263,17 @@ final class StatisticsCalculator
         return array_sum($values) / count($values);
     }
 
+    /**
+     * Rounds a value to 2 decimal places.
+     */
     private function round2(float $value): float
     {
         return round($value, 2);
     }
 
+    /**
+     * Rounds a value to 3 decimal places.
+     */
     private function round3(float $value): float
     {
         return round($value, 3);

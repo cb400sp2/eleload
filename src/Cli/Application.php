@@ -21,6 +21,12 @@ use JsonException;
 use RuntimeException;
 use Throwable;
 
+/**
+ * Entry point for the eleload CLI application.
+ *
+ * Dispatches to sub-commands (run, report, compare) and handles top-level
+ * error reporting.
+ */
 final class Application
 {
     public const VERSION = '0.1.0';
@@ -240,7 +246,10 @@ final class Application
         return $report;
     }
 
-    private function printHelp(ConsoleOutput $output): void
+    /**
+ * Prints help text to STDOUT and routes commands.
+ */
+private function printHelp(ConsoleOutput $output): void
     {
         $output->writeln('eleload ' . self::VERSION);
         $output->writeln();
@@ -298,7 +307,10 @@ final class Application
         $output->writeln('  --md=FILE                Output Markdown comparison path');
     }
 
-    private function enforceHighLoadGuard(RunOptions $options, ConsoleOutput $output): void
+    /**
+ * Warns the user (or throws) when request / concurrency counts exceed safe defaults.
+ */
+private function enforceHighLoadGuard(RunOptions $options, ConsoleOutput $output): void
     {
         $warningParts = [];
         if ($options->requests > self::HIGH_LOAD_REQUESTS_MAX) {
@@ -339,12 +351,18 @@ final class Application
         }
     }
 
-    private function isInteractiveInput(): bool
+    /**
+ * Returns true when STDIN is connected to an interactive TTY.
+ */
+private function isInteractiveInput(): bool
     {
         return function_exists('stream_isatty') && stream_isatty(STDIN);
     }
 
-    private function printDebugRunContext(RunOptions $options, ConsoleOutput $output): void
+    /**
+ * Dumps parsed options and the execution plan to STDOUT when --debug is set.
+ */
+private function printDebugRunContext(RunOptions $options, ConsoleOutput $output): void
     {
         if (!$options->debug) {
             return;

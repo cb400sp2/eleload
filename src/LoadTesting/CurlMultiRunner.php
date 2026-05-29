@@ -9,6 +9,12 @@ use CurlMultiHandle;
 use InvalidArgumentException;
 use RuntimeException;
 
+/**
+ * Executes HTTP load tests using curl_multi and collects per-request results.
+ *
+ * Supports both request-count mode and duration mode, optional rate limiting,
+ * and spills results to a temporary file when the in-memory limit is exceeded.
+ */
 final class CurlMultiRunner
 {
     private const DEFAULT_MAX_IN_MEMORY_REQUEST_RESULTS = 10_000;
@@ -17,6 +23,9 @@ final class CurlMultiRunner
     private const NANOSECONDS_PER_SECOND = 1_000_000_000;
     private const NANOSECONDS_PER_MICROSECOND = 1_000;
 
+    /**
+     * @param int $maxInMemoryRequestResults Maximum number of results to keep in memory before spilling to disk.
+     */
     public function __construct(
         private readonly int $maxInMemoryRequestResults = self::DEFAULT_MAX_IN_MEMORY_REQUEST_RESULTS
     ) {
@@ -25,6 +34,11 @@ final class CurlMultiRunner
         }
     }
 
+    /**
+     * Executes the load test described by $options and returns aggregated results.
+     *
+     * @throws \RuntimeException
+     */
     public function run(RequestOptions $options): RunResult
     {
         $multi = curl_multi_init();
@@ -170,6 +184,8 @@ final class CurlMultiRunner
     }
 
     /**
+     * Flushes in-memory results to a temporary file and appends the new result.
+     *
      * @param list<RequestResult> $inMemoryResults
      * @return array{0:string,1:mixed}
      */
@@ -195,6 +211,8 @@ final class CurlMultiRunner
     }
 
     /**
+     * Opens a new temporary file for spilling request results.
+     *
      * @return array{0:string,1:mixed}
      */
     private function openRequestResultsFile(): array
@@ -213,6 +231,11 @@ final class CurlMultiRunner
         return [$path, $handle];
     }
 
+    /**
+     * Serialises a single RequestResult as JSON and writes it to the spill file.
+     *
+     * @param resource $resultsHandle
+     */
     private function writeRequestResult($resultsHandle, RequestResult $requestResult): void
     {
         $encoded = json_encode(
@@ -225,6 +248,9 @@ final class CurlMultiRunner
         }
     }
 
+    /**
+     * Returns the effective concurrency level, applying a ramp-up curve when configured.
+     */
     private function effectiveConcurrency(RequestOptions $options, int $startedAt): int
     {
         if ($options->rampUpSec <= 0.0) {
@@ -240,6 +266,9 @@ final class CurlMultiRunner
         return max(1, (int) ceil($fraction * $options->concurrency));
     }
 
+    /**
+     * Returns true when another request can be started given the current elapsed time / count.
+     */
     private function canStartRequest(
         RequestOptions $options,
         int $startedAt,
@@ -254,6 +283,10 @@ final class CurlMultiRunner
         return $nextRequest <= $options->requests;
     }
 
+    /**
+     * Returns microseconds to sleep before dispatching the next request to honour the target rate.
+     * Returns 0 when no rate limit is configured or the request is already overdue.
+     */
     private function getRateLimitSleepUsec(RequestOptions $options, int $startedAt, int $nextRequest): int
     {
         $targetRate = $this->resolveTargetRate($options);
@@ -270,6 +303,10 @@ final class CurlMultiRunner
         return (int) ceil($remainingNs / self::NANOSECONDS_PER_MICROSECOND);
     }
 
+    /**
+     * Resolves the effective target rate (req/sec) from targetRps / targetTps.
+     * Returns null when no rate limit is configured.
+     */
     private function resolveTargetRate(RequestOptions $options): ?float
     {
         if ($options->targetRps !== null && $options->targetTps !== null) {
@@ -279,6 +316,9 @@ final class CurlMultiRunner
         return $options->targetRps ?? $options->targetTps;
     }
 
+    /**
+     * Returns true when the run has finished (all requests done, or duration elapsed and no in-flight).
+     */
     private function isComplete(
         RequestOptions $options,
         int $startedAt,
@@ -294,6 +334,11 @@ final class CurlMultiRunner
         return $completed >= $options->requests;
     }
 
+    /**
+     * Creates and configures a curl handle for a single request.
+     *
+     * @throws \RuntimeException
+     */
     private function createHandle(RequestOptions $options): CurlHandle
     {
         $ch = curl_init($options->url);

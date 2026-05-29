@@ -8,8 +8,16 @@ use Eleload\LoadTesting\RequestResult;
 use Eleload\LoadTesting\RunResult;
 use RuntimeException;
 
+/**
+ * Writes per-request results to a CSV file.
+ */
 final class CsvReporter
 {
+    /**
+     * Writes all request results from $runResult to a CSV file at $path.
+     *
+     * @throws \RuntimeException
+     */
     public function write(RunResult $runResult, string $path): void
     {
         $this->ensureParentDirectory($path);
@@ -43,6 +51,11 @@ final class CsvReporter
         }
     }
 
+    /**
+     * Creates parent directories for $path if they do not already exist.
+     *
+     * @throws \RuntimeException
+     */
     private function ensureParentDirectory(string $path): void
     {
         $dir = dirname($path);
@@ -81,6 +94,9 @@ final class CsvReporter
         ];
     }
 
+    /**
+     * Converts a nullable bool to "1", "0", or "" for CSV output.
+     */
     private function formatBodyContainsExpected(?bool $value): string
     {
         if ($value === null) {

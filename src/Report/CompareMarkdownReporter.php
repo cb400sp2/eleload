@@ -6,6 +6,9 @@ namespace Eleload\Report;
 
 use RuntimeException;
 
+/**
+ * Generates a Markdown file that summarises the diff between two load-test reports.
+ */
 final class CompareMarkdownReporter
 {
     /**
@@ -67,6 +70,11 @@ final class CompareMarkdownReporter
         return implode(PHP_EOL, $lines) . PHP_EOL;
     }
 
+    /**
+     * Creates parent directories for $path if they do not already exist.
+     *
+     * @throws \RuntimeException
+     */
     private function ensureParentDirectory(string $path): void
     {
         $dir = dirname($path);
@@ -79,16 +87,25 @@ final class CompareMarkdownReporter
         }
     }
 
+    /**
+     * Escapes pipe characters in Markdown table cells.
+     */
     private function escape(string $value): string
     {
         return str_replace('|', '\\|', $value);
     }
 
+    /**
+     * Formats a float as a fixed-precision decimal string.
+     */
     private function number(float $value): string
     {
         return number_format($value, 2);
     }
 
+    /**
+     * Formats a float with an explicit leading `+` for positive values.
+     */
     private function signed(float $value): string
     {
         if ($value > 0.0) {

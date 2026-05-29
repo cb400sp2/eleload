@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Eleload\Metrics;
 
+/**
+ * Accumulates latency samples one-by-one and can produce a summary without storing all values.
+ *
+ * Uses {@see StreamingPercentileEstimator} (P² algorithm) for p50/p95/p99 estimation.
+ */
 final class StreamingLatencySummary
 {
     private int $count = 0;
@@ -14,6 +19,9 @@ final class StreamingLatencySummary
     private StreamingPercentileEstimator $p95;
     private StreamingPercentileEstimator $p99;
 
+    /**
+     * Initialises the three internal P² estimators for p50, p95, and p99.
+     */
     public function __construct()
     {
         $this->p50 = new StreamingPercentileEstimator(0.50);
@@ -21,6 +29,9 @@ final class StreamingLatencySummary
         $this->p99 = new StreamingPercentileEstimator(0.99);
     }
 
+    /**
+     * Adds a latency sample to the running statistics.
+     */
     public function add(float $latencyMs): void
     {
         if ($this->count === 0) {

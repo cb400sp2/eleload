@@ -6,6 +6,9 @@ namespace Eleload\Compare;
 
 use RuntimeException;
 
+/**
+ * Compares two eleload JSON reports and produces a structured comparison result.
+ */
 final class ReportComparator
 {
     /**
@@ -172,7 +175,10 @@ final class ReportComparator
         return $object[$key];
     }
 
-    private function round2(float $value): float
+    /**
+ * Rounds a value to 2 decimal places.
+ */
+private function round2(float $value): float
     {
         return round($value, 2);
     }
