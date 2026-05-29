@@ -242,3 +242,116 @@ test('ScenarioLoader loads JSON via examples/scenarios/login-then-fetch.json', f
     assertSame('POST', $def->steps[0]->method);
     assertSame('GET', $def->steps[1]->method);
 });
+
+// -----------------------------------------------------------------------
+// Additional field parsing
+// -----------------------------------------------------------------------
+
+test('ScenarioLoader parses step name', function (): void {
+    $file = scenarioJson([
+        'steps' => [['url' => 'https://example.com', 'name' => 'login step']],
+    ]);
+
+    $def = (new ScenarioLoader())->load($file);
+    assertSame('login step', $def->steps[0]->name);
+});
+
+test('ScenarioLoader parses step timeout', function (): void {
+    $file = scenarioJson([
+        'steps' => [['url' => 'https://example.com', 'timeout' => 30]],
+    ]);
+
+    $def = (new ScenarioLoader())->load($file);
+    assertSame(30, $def->steps[0]->timeout);
+});
+
+test('ScenarioLoader parses connect_timeout', function (): void {
+    $file = scenarioJson([
+        'steps' => [['url' => 'https://example.com', 'connect_timeout' => 3]],
+    ]);
+
+    $def = (new ScenarioLoader())->load($file);
+    assertSame(3, $def->steps[0]->connectTimeout);
+});
+
+test('ScenarioLoader parses wait_ms', function (): void {
+    $file = scenarioJson([
+        'steps' => [['url' => 'https://example.com', 'wait_ms' => 500]],
+    ]);
+
+    $def = (new ScenarioLoader())->load($file);
+    assertSame(500, $def->steps[0]->waitMs);
+});
+
+test('ScenarioLoader parses follow_redirects true', function (): void {
+    $file = scenarioJson([
+        'steps' => [['url' => 'https://example.com', 'follow_redirects' => true]],
+    ]);
+
+    $def = (new ScenarioLoader())->load($file);
+    assertTrue($def->steps[0]->followRedirects);
+});
+
+test('ScenarioLoader throws for non-integer timeout', function (): void {
+    $file = scenarioJson([
+        'steps' => [['url' => 'https://example.com', 'timeout' => 'fast']],
+    ]);
+
+    assertThrows(
+        fn () => (new ScenarioLoader())->load($file),
+        InvalidArgumentException::class,
+        'timeout'
+    );
+});
+
+test('ScenarioLoader throws for invalid connect_timeout', function (): void {
+    $file = scenarioJson([
+        'steps' => [['url' => 'https://example.com', 'connect_timeout' => 0]],
+    ]);
+
+    assertThrows(
+        fn () => (new ScenarioLoader())->load($file),
+        InvalidArgumentException::class,
+        'connect_timeout'
+    );
+});
+
+test('ScenarioLoader throws for negative wait_ms', function (): void {
+    $file = scenarioJson([
+        'steps' => [['url' => 'https://example.com', 'wait_ms' => -1]],
+    ]);
+
+    assertThrows(
+        fn () => (new ScenarioLoader())->load($file),
+        InvalidArgumentException::class,
+        'wait_ms'
+    );
+});
+
+test('ScenarioLoader throws for non-boolean follow_redirects', function (): void {
+    $file = scenarioJson([
+        'steps' => [['url' => 'https://example.com', 'follow_redirects' => 1]],
+    ]);
+
+    assertThrows(
+        fn () => (new ScenarioLoader())->load($file),
+        InvalidArgumentException::class,
+        'follow_redirects'
+    );
+});
+
+test('ScenarioLoader loads multiple steps', function (): void {
+    $file = scenarioJson([
+        'steps' => [
+            ['url' => 'https://example.com/a'],
+            ['url' => 'https://example.com/b', 'method' => 'POST'],
+            ['url' => 'https://example.com/c', 'method' => 'DELETE'],
+        ],
+    ]);
+
+    $def = (new ScenarioLoader())->load($file);
+    assertSame(3, count($def->steps));
+    assertSame('GET', $def->steps[0]->method);
+    assertSame('POST', $def->steps[1]->method);
+    assertSame('DELETE', $def->steps[2]->method);
+});
