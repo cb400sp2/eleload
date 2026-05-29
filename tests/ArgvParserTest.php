@@ -13,6 +13,7 @@ test('ArgvParser parses minimum arguments', function (): void {
     assertSame(10, $options->concurrency);
     assertSame('GET', $options->method);
     assertSame(10, $options->timeout);
+    assertSame(false, $options->silent);
     assertSame(false, $options->followRedirects);
     assertSame([], $options->headers);
     assertSame(null, $options->bearerToken);
@@ -36,6 +37,7 @@ test('ArgvParser parses full option set', function (): void {
         '--method',
         'post',
         '--timeout=3',
+        '--silent',
         '--follow-redirects',
         '--header',
         'Accept: application/json',
@@ -75,6 +77,7 @@ test('ArgvParser parses full option set', function (): void {
     assertSame(25, $options->concurrency);
     assertSame('POST', $options->method);
     assertSame(3, $options->timeout);
+    assertSame(true, $options->silent);
     assertSame(true, $options->followRedirects);
     assertSame(
         ['Accept: application/json', 'Content-Type: application/json'],

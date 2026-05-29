@@ -49,6 +49,8 @@ It uses `curl_multi` for concurrent requests and prints throughput and latency m
   - `compare before.json after.json --html=compare.html`
   - `--md` for Markdown comparison output
   - improved/regressed highlighting for `RPS/TPS/p95/p99/error rate`
+- CI/script output control:
+  - `--silent`
 - UTF-8 report content, including multibyte text in JSON and HTML reports
 
 ## Requirements
@@ -205,6 +207,16 @@ Run for a fixed duration and fail on thresholds:
   --concurrency=50 \
   --fail-on-p95=500 \
   --fail-on-error-rate=1
+```
+
+Silent mode for CI/scripts:
+
+```bash
+./bin/eleload run https://example.com \
+  --requests=100 \
+  --concurrency=10 \
+  --silent \
+  --report-json=reports/ci-report.json
 ```
 
 ## Metric Definitions

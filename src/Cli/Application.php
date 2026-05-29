@@ -120,26 +120,36 @@ final class Application
         $report = $stats->summarize($result);
         $report['thresholds'] = $failureEvaluator->evaluate($report, $options);
 
-        $consoleReporter->render($report, $output);
+        if (!$options->silent) {
+            $consoleReporter->render($report, $output);
+        }
 
         if ($options->reportJsonPath !== null) {
             $jsonReporter->write($report, $options->reportJsonPath);
-            $output->writeln('JSON report: ' . $options->reportJsonPath);
+            if (!$options->silent) {
+                $output->writeln('JSON report: ' . $options->reportJsonPath);
+            }
         }
 
         if ($options->reportHtmlPath !== null) {
             $htmlReporter->write($report, $options->reportHtmlPath);
-            $output->writeln('HTML report: ' . $options->reportHtmlPath);
+            if (!$options->silent) {
+                $output->writeln('HTML report: ' . $options->reportHtmlPath);
+            }
         }
 
         if ($options->reportMdPath !== null) {
             $markdownReporter->write($report, $options->reportMdPath);
-            $output->writeln('Markdown report: ' . $options->reportMdPath);
+            if (!$options->silent) {
+                $output->writeln('Markdown report: ' . $options->reportMdPath);
+            }
         }
 
         if ($options->reportCsvPath !== null) {
             $csvReporter->write($result, $options->reportCsvPath);
-            $output->writeln('CSV report: ' . $options->reportCsvPath);
+            if (!$options->silent) {
+                $output->writeln('CSV report: ' . $options->reportCsvPath);
+            }
         }
 
         if ($options->outputDir !== null) {
@@ -147,9 +157,11 @@ final class Application
             $jsonReporter->write($report, $paths['json']);
             $htmlReporter->write($report, $paths['html']);
             $markdownReporter->write($report, $paths['md']);
-            $output->writeln('JSON report: ' . $paths['json']);
-            $output->writeln('HTML report: ' . $paths['html']);
-            $output->writeln('Markdown report: ' . $paths['md']);
+            if (!$options->silent) {
+                $output->writeln('JSON report: ' . $paths['json']);
+                $output->writeln('HTML report: ' . $paths['html']);
+                $output->writeln('Markdown report: ' . $paths['md']);
+            }
         }
 
         return $report['summary']['requests']['failed'] > 0 || $report['thresholds']['failed'] ? 1 : 0;
@@ -246,6 +258,7 @@ final class Application
         $output->writeln('  --no-follow-redirects    Disable redirect following (default)');
         $output->writeln('  --body="..."             Request body');
         $output->writeln('  --timeout=10             Timeout seconds');
+        $output->writeln('  --silent                 Suppress normal run output');
         $output->writeln('  --success-status=LIST    Comma-separated success status codes (e.g. 200,201,204)');
         $output->writeln('  --expect-status=LIST     Comma-separated expected status codes');
         $output->writeln('  --expect-body-contains=T Validate response body contains text');
