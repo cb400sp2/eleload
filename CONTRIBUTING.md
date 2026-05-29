@@ -30,7 +30,7 @@ All tests must pass before submitting a pull request.
 We measure line coverage using [php-code-coverage](https://github.com/sebastianbergmann/php-code-coverage)
 with PCOV or Xdebug.
 
-**Minimum required line coverage: 70%**
+### Minimum required line coverage: 70%
 
 To measure coverage locally, install PCOV (or enable Xdebug in `coverage` mode)
 and run:

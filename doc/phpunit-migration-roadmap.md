@@ -100,11 +100,13 @@ Estimated effort per file: **10–30 minutes** for straightforward files;
 
 The current `assertThrows(callable, class, message)` pattern wraps an entire anonymous function.
 In PHPUnit, the equivalent is:
+
 ```php
 $this->expectException(SomeException::class);
 $this->expectExceptionMessage('expected message');
 $object->methodThatThrows();
 ```
+
 This requires splitting each `assertThrows` call into 3 lines and removing the closure wrapper.
 There are 48 `assertThrows` calls across the codebase.
 

@@ -26,11 +26,18 @@ if ($coverageEnabled) {
         exit(1);
     }
 
-    $selector = new SebastianBergmann\CodeCoverage\Driver\Selector();
-    $driver   = $selector->forLineCoverage(new SebastianBergmann\CodeCoverage\Filter());
-
     $filter = new SebastianBergmann\CodeCoverage\Filter();
-    $filter->includeDirectory($root . '/src');
+    $it = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($root . '/src', RecursiveDirectoryIterator::SKIP_DOTS)
+    );
+    foreach ($it as $file) {
+        if ($file->isFile() && $file->getExtension() === 'php') {
+            $filter->includeFile($file->getPathname());
+        }
+    }
+
+    $selector = new SebastianBergmann\CodeCoverage\Driver\Selector();
+    $driver   = $selector->forLineCoverage($filter);
 
     $coverage = new SebastianBergmann\CodeCoverage\CodeCoverage($driver, $filter);
     $coverage->start('test-suite');
@@ -134,10 +141,7 @@ if ($coverage !== null) {
 
     // Text summary
     $textWriter = new SebastianBergmann\CodeCoverage\Report\Text(
-        10,
-        90,
-        false,
-        false
+        SebastianBergmann\CodeCoverage\Report\Thresholds::from(10, 90)
     );
     fwrite(STDOUT, $textWriter->process($coverage, false));
 

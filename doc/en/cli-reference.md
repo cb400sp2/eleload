@@ -17,7 +17,7 @@
 
 ## `run` — Single-URL Load Test
 
-```
+```sh
 eleload run <url> [options]
 ```
 
@@ -106,7 +106,7 @@ eleload run <url> [options]
 
 ## `scenario` — Multi-Step Scenario
 
-```
+```sh
 eleload scenario <scenario-file> [options]
 ```
 
@@ -131,7 +131,7 @@ eleload scenario <scenario-file> [options]
 
 ## `report` — Regenerate Reports
 
-```
+```sh
 eleload report <report.json> [options]
 ```
 
@@ -145,7 +145,7 @@ Re-render a saved JSON report into other formats.
 
 ## `compare` — Compare Two Runs
 
-```
+```sh
 eleload compare <before.json> <after.json> [options]
 ```
 

@@ -19,7 +19,7 @@ eleload run https://example.com \
 
 Output files (example):
 
-```
+```text
 reports/eleload-20260528-165619.json
 reports/eleload-20260528-165619.html
 reports/eleload-20260528-165619.md
@@ -43,7 +43,7 @@ Use `--silent` to suppress it (useful in CI when only file reports matter).
 
 ## Console Output
 
-```
+```text
 Requests:     100
 Success:      100
 Failed:       0

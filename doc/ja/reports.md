@@ -19,7 +19,7 @@ eleload run https://example.com \
 
 出力ファイル（例）:
 
-```
+```text
 reports/eleload-20260528-165619.json
 reports/eleload-20260528-165619.html
 reports/eleload-20260528-165619.md
@@ -43,7 +43,7 @@ eleload run https://example.com \
 
 ## コンソール出力
 
-```
+```text
 Requests:     100
 Success:      100
 Failed:       0

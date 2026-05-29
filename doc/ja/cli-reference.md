@@ -17,7 +17,7 @@
 
 ## `run` — 単一 URL 負荷試験
 
-```
+```sh
 eleload run <url> [options]
 ```
 
@@ -106,7 +106,7 @@ eleload run <url> [options]
 
 ## `scenario` — マルチステップシナリオ
 
-```
+```sh
 eleload scenario <scenario-file> [options]
 ```
 
@@ -131,7 +131,7 @@ eleload scenario <scenario-file> [options]
 
 ## `report` — レポートの再生成
 
-```
+```sh
 eleload report <report.json> [options]
 ```
 
@@ -145,7 +145,7 @@ eleload report <report.json> [options]
 
 ## `compare` — 2 つの実行結果の比較
 
-```
+```sh
 eleload compare <before.json> <after.json> [options]
 ```
 

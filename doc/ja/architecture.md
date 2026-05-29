@@ -41,7 +41,7 @@ graph TD
 
 ## ディレクトリ構造
 
-```
+```text
 src/
 ├── Cli/
 │   ├── Application.php           エントリポイント — コマンドをディスパッチ
@@ -94,6 +94,7 @@ src/
 ### セキュリティファーストの URL 処理
 
 `ArgvParser` はリクエスト送信前に URL を検証します:
+
 - `http://` と `https://` スキームのみ受け入れ
 - ヘッダーへの CRLF インジェクションをブロック
 - `--block-private-networks` によりターゲットホストを解決し RFC-1918/ループバックアドレスを拒否
@@ -101,6 +102,7 @@ src/
 ### デュアルフォーマットシナリオサポート
 
 `ScenarioLoader` はファイル拡張子によって適切なパーサーにディスパッチします:
+
 - `.json` → 組み込み `json_decode`
 - `.yaml` / `.yml` → `ext-yaml`（優先）または `symfony/yaml`（フォールバック）
 

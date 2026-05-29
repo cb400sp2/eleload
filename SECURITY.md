@@ -13,6 +13,7 @@ Please **do not** open a public GitHub issue for security vulnerabilities.
 Report vulnerabilities by emailing the maintainer or opening a [GitHub Security Advisory](https://github.com/cb400sp2/eleload/security/advisories/new).
 
 Include:
+
 - A description of the vulnerability and its potential impact
 - Steps to reproduce or a proof-of-concept
 - Affected versions
@@ -37,6 +38,7 @@ Use `--block-private-networks` to prevent accidental requests to `localhost`, lo
 ### TLS
 
 eleload enforces:
+
 - `CURLOPT_SSL_VERIFYPEER` and `CURLOPT_SSL_VERIFYHOST` (peer certificate verification is always on)
 - Minimum TLS version 1.2 (`CURL_SSLVERSION_TLSv1_2`)
 

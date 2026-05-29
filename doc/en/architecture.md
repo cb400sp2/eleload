@@ -41,7 +41,7 @@ graph TD
 
 ## Directory Structure
 
-```
+```text
 src/
 ├── Cli/
 │   ├── Application.php           Entry point — dispatches commands
@@ -94,6 +94,7 @@ This avoids OOM errors when running millions of requests while maintaining accur
 ### Security-first URL handling
 
 `ArgvParser` validates URLs before any request is made:
+
 - Only `http://` and `https://` schemes are accepted
 - CRLF injection in headers is blocked
 - `--block-private-networks` resolves the target host and rejects RFC-1918/loopback addresses
@@ -101,6 +102,7 @@ This avoids OOM errors when running millions of requests while maintaining accur
 ### Dual-format scenario support
 
 `ScenarioLoader` dispatches to the appropriate parser by file extension:
+
 - `.json` → built-in `json_decode`
 - `.yaml` / `.yml` → `ext-yaml` (preferred) or `symfony/yaml` (fallback)
 

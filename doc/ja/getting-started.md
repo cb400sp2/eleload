@@ -52,7 +52,7 @@ eleload run https://example.com --requests=100 --concurrency=10
 
 出力例:
 
-```
+```text
 Requests:     100
 Success:      100
 Failed:       0
