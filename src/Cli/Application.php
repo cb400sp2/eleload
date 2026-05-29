@@ -7,6 +7,8 @@ namespace Eleload\Cli;
 use Eleload\Compare\ReportComparator;
 use Eleload\LoadTesting\CurlMultiRunner;
 use Eleload\LoadTesting\RequestOptions;
+use Eleload\LoadTesting\ScenarioLoader;
+use Eleload\LoadTesting\ScenarioRunner;
 use Eleload\Metrics\FailureEvaluator;
 use Eleload\Metrics\StatisticsCalculator;
 use Eleload\Report\CompareMarkdownReporter;
@@ -63,6 +65,10 @@ final class Application
 
             if ($command === 'compare') {
                 return $this->runCompareCommand(array_slice($argv, 2), $output);
+            }
+
+            if ($command === 'scenario') {
+                return $this->runScenarioCommand(array_slice($argv, 2), $output);
             }
 
             $output->errorln("Unknown command: {$command}");
@@ -226,6 +232,219 @@ final class Application
     }
 
     /**
+     * @param list<string> $args
+     */
+    private function runScenarioCommand(array $args, ConsoleOutput $output): int
+    {
+        $parser = new ArgvParser();
+        $options = $parser->parseScenario($args);
+
+        $loader = new ScenarioLoader();
+        $definition = $loader->load($options->scenarioPath);
+
+        // Allow name override
+        if ($options->name !== null) {
+            $definition = new \Eleload\LoadTesting\ScenarioDefinition(
+                name: $options->name,
+                steps: $definition->steps,
+                variables: $definition->variables
+            );
+        }
+
+        if ($options->debug) {
+            $this->printDebugScenarioContext($definition, $options, $output);
+        }
+
+        $this->enforceScenarioHighLoadGuard($options, $output);
+
+        $runner = new ScenarioRunner();
+        $result = $runner->run(
+            definition: $definition,
+            concurrency: $options->concurrency,
+            durationSec: $options->durationSec,
+            iterations: $options->iterations,
+            warmupSec: $options->warmupSec
+        );
+
+        if (!$options->silent) {
+            $this->printScenarioSummary($result, $output, $options->verbose);
+        }
+
+        // JSON report
+        $report = $this->buildScenarioReport($result);
+
+        if ($options->reportJsonPath !== null) {
+            $jsonReporter = new JsonReporter();
+            $jsonReporter->write($report, $options->reportJsonPath);
+            if (!$options->silent) {
+                $output->writeln('JSON report: ' . $options->reportJsonPath);
+            }
+        }
+
+        if ($options->outputDir !== null) {
+            $pathGenerator = new ReportPathGenerator();
+            $paths = $pathGenerator->generate($options->outputDir);
+            $jsonReporter = new JsonReporter();
+            $jsonReporter->write($report, $paths['json']);
+            if (!$options->silent) {
+                $output->writeln('JSON report: ' . $paths['json']);
+            }
+        }
+
+        return $result->errorRate() > 0.0 ? 1 : 0;
+    }
+
+    private function printScenarioSummary(
+        \Eleload\LoadTesting\ScenarioResult $result,
+        ConsoleOutput $output,
+        bool $verbose
+    ): void {
+        $output->writeln('');
+        $output->writeln('Scenario: ' . $result->definition->name);
+        $output->writeln(sprintf('Duration: %.2fs', $result->durationSec));
+        $output->writeln('');
+
+        $total = $result->totalIterations();
+        $success = $result->successIterations();
+        $failed = $total - $success;
+        $tps = $result->scenarioTps();
+        $errorRate = $result->errorRate();
+
+        $output->writeln('Scenario Iterations:');
+        $output->writeln(sprintf('  Total:   %d', $total));
+        $output->writeln(sprintf('  Success: %d', $success));
+        $output->writeln(sprintf('  Failed:  %d', $failed));
+        $output->writeln(sprintf('  TPS:     %.2f', $tps));
+        $output->writeln(sprintf('  Error %%: %.1f%%', $errorRate));
+        $output->writeln('');
+
+        $output->writeln('Per-Step Summary:');
+        foreach ($result->perStepSummary() as $step) {
+            $output->writeln(sprintf(
+                '  [%d] %-30s  n=%-6d  rps=%-8.2f  avg=%6.1fms  p95=%6.1fms',
+                $step['index'],
+                $step['name'],
+                $step['count'],
+                $step['rps'],
+                $step['avgMs'],
+                $step['p95Ms']
+            ));
+        }
+
+        if ($verbose && $result->totalIterations() > 0) {
+            $output->writeln('');
+            $output->writeln('Failed Iterations:');
+            $printed = 0;
+            foreach ($result->iterationResults as $iter) {
+                if ($iter->success || $printed >= 5) {
+                    continue;
+                }
+                foreach ($iter->stepResults as $sr) {
+                    if (!$sr->success) {
+                        $output->writeln(sprintf(
+                            '  VU %d iter %d step %d "%s": HTTP %d  err=%s',
+                            $iter->vuId,
+                            $iter->iterationNumber,
+                            $sr->stepIndex,
+                            $sr->stepName,
+                            $sr->httpCode,
+                            $sr->error !== '' ? $sr->error : '(none)'
+                        ));
+                    }
+                }
+                $printed++;
+            }
+
+            if ($printed === 0) {
+                $output->writeln('  (none)');
+            }
+        }
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildScenarioReport(\Eleload\LoadTesting\ScenarioResult $result): array
+    {
+        return [
+            'scenario' => [
+                'name' => $result->definition->name,
+                'steps' => array_map(static fn($s) => [
+                    'name' => $s->name,
+                    'url' => $s->url,
+                    'method' => $s->method,
+                ], $result->definition->steps),
+            ],
+            'summary' => [
+                'duration_sec' => round($result->durationSec, 3),
+                'warmup_sec' => $result->warmupSec,
+                'total_iterations' => $result->totalIterations(),
+                'success_iterations' => $result->successIterations(),
+                'failed_iterations' => $result->totalIterations() - $result->successIterations(),
+                'tps' => round($result->scenarioTps(), 4),
+                'error_rate' => round($result->errorRate(), 2),
+            ],
+            'steps' => $result->perStepSummary(),
+        ];
+    }
+
+    private function printDebugScenarioContext(
+        \Eleload\LoadTesting\ScenarioDefinition $definition,
+        ScenarioOptions $options,
+        ConsoleOutput $output
+    ): void {
+        $output->writeln('[DEBUG] Scenario Options:');
+        $output->writeln(json_encode([
+            'scenario_path' => $options->scenarioPath,
+            'concurrency' => $options->concurrency,
+            'duration' => $options->durationSec,
+            'iterations' => $options->iterations,
+            'warmup' => $options->warmupSec,
+            'silent' => $options->silent,
+            'verbose' => $options->verbose,
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: '{}');
+        $output->writeln('[DEBUG] Scenario Definition:');
+        $output->writeln(sprintf('  name: %s', $definition->name));
+        $output->writeln(sprintf('  steps: %d', count($definition->steps)));
+        $output->writeln(sprintf('  variables: %d', count($definition->variables)));
+        $output->writeln('');
+    }
+
+    private function enforceScenarioHighLoadGuard(ScenarioOptions $options, ConsoleOutput $output): void
+    {
+        $warningParts = [];
+        if ($options->concurrency > self::HIGH_LOAD_CONCURRENCY_MAX) {
+            $warningParts[] = sprintf(
+                'concurrency=%d exceeds default max %d',
+                $options->concurrency,
+                self::HIGH_LOAD_CONCURRENCY_MAX
+            );
+        }
+
+        if ($warningParts === [] || $options->allowHighLoad || $options->yes) {
+            return;
+        }
+
+        $detail = implode('; ', $warningParts);
+        $message = 'High-load settings detected (' . $detail . ').';
+
+        if (!$this->isInteractiveInput()) {
+            throw new RuntimeException(
+                $message . ' Re-run with --yes to confirm or --allow-high-load to explicitly override.'
+            );
+        }
+
+        $output->writeln($message);
+        $output->writeln('Continue? [y/N]');
+
+        $line = fgets(STDIN);
+        $answer = strtolower(trim($line === false ? '' : $line));
+        if ($answer !== 'y' && $answer !== 'yes') {
+            throw new RuntimeException('Aborted by user.');
+        }
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function readJsonObjectFile(string $path): array
@@ -256,6 +475,7 @@ private function printHelp(ConsoleOutput $output): void
         $output->writeln();
         $output->writeln('Usage:');
         $output->writeln('  eleload run <url> [options]');
+        $output->writeln('  eleload scenario <scenario.json> [options]');
         $output->writeln('  eleload report <report.json> --html=<output.html>');
         $output->writeln('  eleload compare <before.json> <after.json> [--html=<output.html>] [--md=<output.md>]');
         $output->writeln('  eleload help');
@@ -300,6 +520,20 @@ private function printHelp(ConsoleOutput $output): void
         $output->writeln('  --fail-on-error-rate=PCT Fail if error rate exceeds this percent');
         $output->writeln('  --fail-on-rps-below=NUM  Fail if RPS is below this value');
         $output->writeln('  --fail-on-tps-below=NUM  Fail if TPS is below this value');
+        $output->writeln();
+        $output->writeln('Options for scenario:');
+        $output->writeln('  --concurrency=10         Concurrent virtual users');
+        $output->writeln('  --duration=SECONDS       Run for a fixed duration');
+        $output->writeln('  --iterations=100         Scenario iterations (used when --duration not set)');
+        $output->writeln('  --warmup=SECONDS         Exclude initial seconds from metrics');
+        $output->writeln('  --silent                 Suppress output');
+        $output->writeln('  --verbose                Show failed step details');
+        $output->writeln('  --debug                  Print parsed options and scenario definition');
+        $output->writeln('  --yes                    Skip high-load confirmation');
+        $output->writeln('  --allow-high-load        Explicitly allow high-load settings');
+        $output->writeln('  --report-json=FILE       Write JSON summary report');
+        $output->writeln('  --output-dir=DIR         Write timestamped JSON report to directory');
+        $output->writeln('  --name=TEXT              Override scenario name in reports');
         $output->writeln();
         $output->writeln('Options for report:');
         $output->writeln('  --html=FILE              Output HTML path');
