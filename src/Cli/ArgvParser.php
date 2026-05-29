@@ -24,6 +24,7 @@ final class ArgvParser
         $timeout = self::DEFAULT_TIMEOUT;
         $connectTimeout = null;
         $silent = false;
+        $debug = false;
         $yes = false;
         $allowHighLoad = false;
         $followRedirects = false;
@@ -64,6 +65,12 @@ final class ArgvParser
 
             if ($token === '--silent') {
                 $silent = true;
+                $i++;
+                continue;
+            }
+
+            if ($token === '--debug') {
+                $debug = true;
                 $i++;
                 continue;
             }
@@ -224,6 +231,7 @@ final class ArgvParser
             timeout: $timeout,
             connectTimeout: $connectTimeout,
             silent: $silent,
+            debug: $debug,
             yes: $yes,
             allowHighLoad: $allowHighLoad,
             followRedirects: $followRedirects,

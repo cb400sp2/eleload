@@ -85,6 +85,11 @@ final class Application
     {
         $parser = new ArgvParser();
         $options = $parser->parseRun($args);
+
+        if ($options->debug) {
+            $this->renderDebugInfo($options, $output);
+        }
+
         $this->enforceHighLoadGuard($options, $output);
 
         $runner = new CurlMultiRunner();
@@ -264,6 +269,7 @@ final class Application
         $output->writeln('  --timeout=10             Timeout seconds');
         $output->writeln('  --connect-timeout=NUM    Connection timeout seconds (default: min(--timeout, 5))');
         $output->writeln('  --silent                 Suppress normal run output');
+        $output->writeln('  --debug                  Print parsed options and execution plan');
         $output->writeln('  --yes                    Skip high-load confirmation prompt');
         $output->writeln('  --allow-high-load        Explicitly allow high-load settings');
         $output->writeln('  --success-status=LIST    Comma-separated success status codes (e.g. 200,201,204)');
@@ -291,6 +297,83 @@ final class Application
         $output->writeln('Options for compare:');
         $output->writeln('  --html=FILE              Output HTML comparison path');
         $output->writeln('  --md=FILE                Output Markdown comparison path');
+    }
+
+    /**
+     * @throws JsonException
+     */
+    private function renderDebugInfo(RunOptions $options, ConsoleOutput $output): void
+    {
+        $output->writeln('Debug');
+        $output->writeln('Parsed Options:');
+        $output->writeln(
+            json_encode(
+                get_object_vars($options),
+                JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
+            )
+        );
+        $output->writeln('Execution Plan:');
+        $output->writeln('  Request Mode         : ' . $this->describeRequestMode($options));
+        $output->writeln('  Concurrency          : ' . $options->concurrency);
+        $output->writeln('  Timeout              : ' . $options->timeout . ' sec');
+        $output->writeln('  Connect Timeout      : ' . $this->describeConnectTimeout($options));
+        $output->writeln('  Rate Target          : ' . $this->describeRateTarget($options));
+        $output->writeln('  Output Targets       : ' . $this->describeOutputTargets($options));
+        $output->writeln();
+    }
+
+    private function describeRequestMode(RunOptions $options): string
+    {
+        if ($options->durationSec !== null) {
+            return 'duration (' . $options->durationSec . ' sec)';
+        }
+
+        return 'requests (' . $options->requests . ' total)';
+    }
+
+    private function describeConnectTimeout(RunOptions $options): string
+    {
+        if ($options->connectTimeout !== null) {
+            return $options->connectTimeout . ' sec';
+        }
+
+        return 'default: min(--timeout, 5)';
+    }
+
+    private function describeRateTarget(RunOptions $options): string
+    {
+        $targets = [];
+        if ($options->targetRps !== null) {
+            $targets[] = 'rps=' . $options->targetRps;
+        }
+        if ($options->targetTps !== null) {
+            $targets[] = 'tps=' . $options->targetTps;
+        }
+
+        return $targets === [] ? 'none' : implode(', ', $targets);
+    }
+
+    private function describeOutputTargets(RunOptions $options): string
+    {
+        $targets = [];
+
+        if ($options->reportJsonPath !== null) {
+            $targets[] = 'json=' . $options->reportJsonPath;
+        }
+        if ($options->reportHtmlPath !== null) {
+            $targets[] = 'html=' . $options->reportHtmlPath;
+        }
+        if ($options->reportMdPath !== null) {
+            $targets[] = 'md=' . $options->reportMdPath;
+        }
+        if ($options->reportCsvPath !== null) {
+            $targets[] = 'csv=' . $options->reportCsvPath;
+        }
+        if ($options->outputDir !== null) {
+            $targets[] = 'output-dir=' . $options->outputDir;
+        }
+
+        return $targets === [] ? 'none' : implode(', ', $targets);
     }
 
     private function enforceHighLoadGuard(RunOptions $options, ConsoleOutput $output): void
