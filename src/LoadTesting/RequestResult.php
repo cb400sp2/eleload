@@ -13,7 +13,8 @@ final class RequestResult
         public readonly float $downloadBytes,
         public readonly int $errorNo,
         public readonly string $error,
-        public readonly bool $includedInMetrics = true
+        public readonly bool $includedInMetrics = true,
+        public readonly ?bool $bodyContainsExpected = null
     ) {
     }
 

@@ -31,6 +31,7 @@ final class RunOptions
         public readonly ?string $name,
         public readonly ?array $successStatusCodes,
         public readonly ?array $expectStatusCodes,
+        public readonly ?string $expectBodyContains,
         public readonly ?float $durationSec,
         public readonly float $warmupSec,
         public readonly ?float $failOnP95,

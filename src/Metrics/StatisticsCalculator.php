@@ -32,6 +32,7 @@ final class StatisticsCalculator
         $errors = [];
         $successStatusCodes = $runResult->options->successStatusCodes;
         $expectStatusCodes = $runResult->options->expectStatusCodes;
+        $expectBodyContains = $runResult->options->expectBodyContains;
 
         foreach ($metricResults as $result) {
             $latencies[] = $result->latencyMs;
@@ -41,6 +42,9 @@ final class StatisticsCalculator
             $isSuccess = $result->isSuccess($successStatusCodes);
             if ($isSuccess && $expectStatusCodes !== null) {
                 $isSuccess = in_array($result->httpCode, $expectStatusCodes, true);
+            }
+            if ($isSuccess && $expectBodyContains !== null) {
+                $isSuccess = $result->bodyContainsExpected === true;
             }
 
             if ($isSuccess) {
@@ -101,6 +105,7 @@ final class StatisticsCalculator
                 'name' => $runResult->options->name,
                 'success_status' => $runResult->options->successStatusCodes,
                 'expect_status' => $runResult->options->expectStatusCodes,
+                'expect_body_contains' => $runResult->options->expectBodyContains,
                 'duration' => $runResult->options->durationSec,
                 'warmup' => $runResult->options->warmupSec,
                 'target_rps' => $runResult->options->targetRps,
