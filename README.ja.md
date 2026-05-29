@@ -149,12 +149,14 @@ php -d phar.readonly=0 bin/build-phar.php  # PHAR ビルド
 
 ## ドキュメント
 
+- [doc/README.md](doc/README.md) — ドキュメントハブ（英語・日本語）
 - [doc/ja/getting-started.md](doc/ja/getting-started.md) — インストールと最初のステップ
 - [doc/ja/cli-reference.md](doc/ja/cli-reference.md) — すべてのコマンドとオプション
 - [doc/ja/scenarios.md](doc/ja/scenarios.md) — マルチステップシナリオファイル
 - [doc/ja/reports.md](doc/ja/reports.md) — レポート形式
 - [doc/ja/thresholds.md](doc/ja/thresholds.md) — CI しきい値オプション
 - [doc/ja/security.md](doc/ja/security.md) — セキュリティのベストプラクティス
+- [doc/ja/architecture.md](doc/ja/architecture.md) — コンポーネント図と内部設計
 
 ## ライセンス
 

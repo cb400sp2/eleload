@@ -149,12 +149,14 @@ In single-URL mode, 1 request = 1 transaction.
 
 ## Documentation
 
+- [doc/README.md](doc/README.md) — Documentation hub (English & 日本語)
 - [doc/en/getting-started.md](doc/en/getting-started.md) — Installation and first steps
 - [doc/en/cli-reference.md](doc/en/cli-reference.md) — All commands and options
 - [doc/en/scenarios.md](doc/en/scenarios.md) — Multi-step scenario files
 - [doc/en/reports.md](doc/en/reports.md) — Report formats
 - [doc/en/thresholds.md](doc/en/thresholds.md) — CI threshold options
 - [doc/en/security.md](doc/en/security.md) — Security best practices
+- [doc/en/architecture.md](doc/en/architecture.md) — Component diagram and internal design
 
 ## Security
 
