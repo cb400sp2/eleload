@@ -85,6 +85,7 @@ final class Application
     {
         $parser = new ArgvParser();
         $options = $parser->parseRun($args);
+        $this->printDebugRunContext($options, $output);
         $this->enforceHighLoadGuard($options, $output);
 
         $runner = new CurlMultiRunner();
@@ -264,6 +265,7 @@ final class Application
         $output->writeln('  --timeout=10             Timeout seconds');
         $output->writeln('  --connect-timeout=NUM    Connection timeout seconds (default: min(--timeout, 5))');
         $output->writeln('  --silent                 Suppress normal run output');
+        $output->writeln('  --debug                  Print parsed options and execution plan');
         $output->writeln('  --yes                    Skip high-load confirmation prompt');
         $output->writeln('  --allow-high-load        Explicitly allow high-load settings');
         $output->writeln('  --success-status=LIST    Comma-separated success status codes (e.g. 200,201,204)');
@@ -337,5 +339,77 @@ final class Application
     private function isInteractiveInput(): bool
     {
         return function_exists('stream_isatty') && stream_isatty(STDIN);
+    }
+
+    private function printDebugRunContext(RunOptions $options, ConsoleOutput $output): void
+    {
+        if (!$options->debug) {
+            return;
+        }
+
+        $parsedOptions = [
+            'url' => $options->url,
+            'method' => $options->method,
+            'requests' => $options->requests,
+            'concurrency' => $options->concurrency,
+            'timeout' => $options->timeout,
+            'connect_timeout' => $options->connectTimeout,
+            'follow_redirects' => $options->followRedirects,
+            'silent' => $options->silent,
+            'debug' => $options->debug,
+            'yes' => $options->yes,
+            'allow_high_load' => $options->allowHighLoad,
+            'headers' => $options->headers,
+            'bearer_token_set' => $options->bearerToken !== null && $options->bearerToken !== '',
+            'basic_auth_set' => $options->basicUser !== null && $options->basicPassword !== null,
+            'cookie_set' => $options->cookie !== null && $options->cookie !== '',
+            'body_length' => $options->body === null ? null : strlen($options->body),
+            'success_status' => $options->successStatusCodes,
+            'expect_status' => $options->expectStatusCodes,
+            'expect_body_contains' => $options->expectBodyContains,
+            'duration' => $options->durationSec,
+            'warmup' => $options->warmupSec,
+            'report_json' => $options->reportJsonPath,
+            'report_html' => $options->reportHtmlPath,
+            'report_md' => $options->reportMdPath,
+            'report_csv' => $options->reportCsvPath,
+            'output_dir' => $options->outputDir,
+            'name' => $options->name,
+            'target_rps' => $options->targetRps,
+            'target_tps' => $options->targetTps,
+            'fail_on_p95' => $options->failOnP95,
+            'fail_on_p99' => $options->failOnP99,
+            'fail_on_error_rate' => $options->failOnErrorRate,
+            'fail_on_rps_below' => $options->failOnRpsBelow,
+            'fail_on_tps_below' => $options->failOnTpsBelow,
+        ];
+
+        $executionPlan = [
+            'mode' => $options->durationSec !== null ? 'duration' : 'requests',
+            'planned_requests' => $options->durationSec === null ? $options->requests : null,
+            'planned_duration_sec' => $options->durationSec,
+            'concurrency' => $options->concurrency,
+            'timeout_sec' => $options->timeout,
+            'connect_timeout_sec' => $options->connectTimeout ?? min($options->timeout, 5),
+            'high_load_thresholds' => [
+                'max_requests' => self::HIGH_LOAD_REQUESTS_MAX,
+                'max_concurrency' => self::HIGH_LOAD_CONCURRENCY_MAX,
+            ],
+            'high_load_triggered' => (
+                $options->requests > self::HIGH_LOAD_REQUESTS_MAX ||
+                $options->concurrency > self::HIGH_LOAD_CONCURRENCY_MAX
+            ),
+            'report_targets' => [
+                'json' => $options->reportJsonPath,
+                'html' => $options->reportHtmlPath,
+                'md' => $options->reportMdPath,
+                'csv' => $options->reportCsvPath,
+                'output_dir' => $options->outputDir,
+            ],
+        ];
+
+        $flags = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR;
+        $output->writeln('[debug] parsed_options=' . json_encode($parsedOptions, $flags));
+        $output->writeln('[debug] execution_plan=' . json_encode($executionPlan, $flags));
     }
 }

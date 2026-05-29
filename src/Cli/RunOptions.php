@@ -19,6 +19,7 @@ final class RunOptions
         public readonly int $timeout,
         public readonly ?int $connectTimeout,
         public readonly bool $silent,
+        public readonly bool $debug,
         public readonly bool $yes,
         public readonly bool $allowHighLoad,
         public readonly bool $followRedirects,
