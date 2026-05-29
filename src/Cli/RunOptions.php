@@ -49,6 +49,7 @@ final class RunOptions
         public readonly ?float $failOnErrorRate,
         public readonly ?float $failOnRpsBelow,
         public readonly ?float $failOnTpsBelow,
+        public readonly ?float $rate,
         public readonly ?float $targetRps,
         public readonly ?float $targetTps,
         public readonly float $rampUpSec

@@ -33,6 +33,7 @@ test('ArgvParser parses minimum arguments', function (): void {
     assertSame(null, $options->expectStatusCodes);
     assertSame(null, $options->expectBodyContains);
     assertSame(null, $options->reportCsvPath);
+    assertSame(null, $options->rate);
 });
 
 test('ArgvParser parses full option set', function (): void {
@@ -82,6 +83,7 @@ test('ArgvParser parses full option set', function (): void {
         '--fail-on-tps-below=90',
         '--target-rps',
         '120.5',
+        '--rate=125.75',
         '--target-tps=110.25',
         '--ramp-up=30',
     ]);
@@ -125,7 +127,8 @@ test('ArgvParser parses full option set', function (): void {
     assertSame(1.0, $options->failOnErrorRate);
     assertSame(100.0, $options->failOnRpsBelow);
     assertSame(90.0, $options->failOnTpsBelow);
-    assertSame(120.5, $options->targetRps);
+    assertSame(125.75, $options->rate);
+    assertSame(125.75, $options->targetRps);
     assertSame(110.25, $options->targetTps);
     assertSame(30.0, $options->rampUpSec);
 });
@@ -147,6 +150,16 @@ test('ArgvParser rejects ramp-up greater than or equal to duration', function ()
         fn () => $parser->parseRun(['https://example.com', '--duration=5', '--ramp-up=5']),
         InvalidArgumentException::class,
         'Option --ramp-up must be lower than --duration'
+    );
+});
+
+test('ArgvParser rejects rate without duration', function (): void {
+    $parser = new ArgvParser();
+
+    assertThrows(
+        fn () => $parser->parseRun(['https://example.com', '--rate=100']),
+        InvalidArgumentException::class,
+        'Option --rate requires --duration'
     );
 });
 

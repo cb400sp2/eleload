@@ -20,6 +20,7 @@ Only run load tests against systems you own or have explicit permission to test.
   - latency (`min/avg/p50/p95/p99/max`)
   - status code count and rate
 - Optional target metrics:
+  - `--rate`
   - `--target-rps`
   - `--target-tps`
   - `--ramp-up`
@@ -228,10 +229,21 @@ Run for a fixed duration and fail on thresholds:
 ```bash
 ./bin/eleload run https://example.com \
   --duration=60 \
+  --rate=100 \
   --warmup=5 \
   --concurrency=50 \
   --fail-on-p95=500 \
   --fail-on-error-rate=1
+```
+
+Run with fixed request rate (RPS):
+
+```bash
+./bin/eleload run https://example.com \
+  --duration=120 \
+  --rate=100 \
+  --concurrency=50 \
+  --ramp-up=30
 ```
 
 Silent mode for CI/scripts:

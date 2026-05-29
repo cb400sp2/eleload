@@ -124,6 +124,7 @@ final class Application
             expectBodyContains: $options->expectBodyContains,
             durationSec: $options->durationSec,
             warmupSec: $options->warmupSec,
+            rate: $options->rate,
             targetRps: $options->targetRps,
             targetTps: $options->targetTps,
             rampUpSec: $options->rampUpSec
@@ -290,6 +291,7 @@ private function printHelp(ConsoleOutput $output): void
         $output->writeln('  --report-csv=FILE        Write CSV report');
         $output->writeln('  --output-dir=DIR         Write timestamped JSON/HTML/Markdown reports');
         $output->writeln('  --name=TEXT              Test name shown in reports');
+        $output->writeln('  --rate=NUM               Fixed request rate (RPS), requires --duration');
         $output->writeln('  --target-rps=NUM         Target RPS');
         $output->writeln('  --target-tps=NUM         Target TPS');
         $output->writeln('  --ramp-up=SECONDS        Linearly increase concurrency over this duration (0 = no ramp)');
@@ -397,6 +399,7 @@ private function printDebugRunContext(RunOptions $options, ConsoleOutput $output
             'report_csv' => $options->reportCsvPath,
             'output_dir' => $options->outputDir,
             'name' => $options->name,
+            'rate' => $options->rate,
             'target_rps' => $options->targetRps,
             'target_tps' => $options->targetTps,
             'ramp_up' => $options->rampUpSec > 0.0 ? $options->rampUpSec : null,
@@ -411,6 +414,7 @@ private function printDebugRunContext(RunOptions $options, ConsoleOutput $output
             'mode' => $options->durationSec !== null ? 'duration' : 'requests',
             'planned_requests' => $options->durationSec === null ? $options->requests : null,
             'planned_duration_sec' => $options->durationSec,
+            'fixed_rate_rps' => $options->rate,
             'concurrency' => $options->concurrency,
             'timeout_sec' => $options->timeout,
             'connect_timeout_sec' => $options->connectTimeout ?? min($options->timeout, 5),

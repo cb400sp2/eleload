@@ -19,6 +19,7 @@ test('StatisticsCalculator aggregates throughput, rates, and latency', function 
         body: null,
         name: 'top page smoke load',
         rampUpSec: 10.0,
+        rate: 2.0,
         targetRps: 2.0,
         targetTps: 1.0
     );
@@ -38,6 +39,8 @@ test('StatisticsCalculator aggregates throughput, rates, and latency', function 
 
     assertSame(4, $summary['summary']['requests']['total']);
     assertSame('top page smoke load', $summary['config']['name']);
+    assertSame(10.0, $summary['config']['ramp_up']);
+    assertSame(2.0, $summary['config']['rate']);
     assertSame(10.0, $summary['config']['ramp_up']);
     assertSame(null, $summary['config']['success_status']);
     assertSame(null, $summary['config']['expect_status']);
