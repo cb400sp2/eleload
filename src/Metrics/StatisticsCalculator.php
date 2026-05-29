@@ -31,6 +31,7 @@ final class StatisticsCalculator
         $latencies = [];
         $streamingLatencySummary = $runResult->hasSpilledRequestResults() ? new StreamingLatencySummary() : null;
         $errors = [];
+        $slowestRequests = [];
         $successStatusCodes = $runResult->options->successStatusCodes;
         $expectStatusCodes = $runResult->options->expectStatusCodes;
         $expectBodyContains = $runResult->options->expectBodyContains;
@@ -62,6 +63,8 @@ final class StatisticsCalculator
             } else {
                 $errors[] = $this->formatRequestDetail($result, false);
             }
+
+            $this->trackSlowestRequest($slowestRequests, $result, $isSuccess);
         }
 
         ksort($statusCounts, SORT_NATURAL);
@@ -154,11 +157,9 @@ final class StatisticsCalculator
                     'max' => $this->round2($latencySummary['max']),
                 ],
                 'status_codes' => $statusCodeStats,
-                'slowest_requests' => $this->collectSlowestRequests(
-                    $metricResults,
-                    $successStatusCodes,
-                    $expectStatusCodes,
-                    $expectBodyContains
+                'slowest_requests' => array_map(
+                    static fn (array $entry): array => $entry['detail'],
+                    $slowestRequests
                 ),
             ],
             'errors' => $errors,
@@ -209,35 +210,23 @@ final class StatisticsCalculator
     }
 
     /**
-     * @param list<RequestResult> $results
-     * @param list<int>|null $successStatusCodes
-     * @param list<int>|null $expectStatusCodes
-     * @return list<array<string, int|float|string|bool|null>>
+     * @param list<array{latency_ms:float,detail:array<string, int|float|string|bool|null>}> $slowestRequests
      */
-    private function collectSlowestRequests(
-        array $results,
-        ?array $successStatusCodes,
-        ?array $expectStatusCodes,
-        ?string $expectBodyContains
-    ): array {
-        if ($results === []) {
-            return [];
-        }
+    private function trackSlowestRequest(array &$slowestRequests, RequestResult $result, bool $isSuccess): void
+    {
+        $slowestRequests[] = [
+            'latency_ms' => $result->latencyMs,
+            'detail' => $this->formatRequestDetail($result, $isSuccess),
+        ];
 
         usort(
-            $results,
-            static fn (RequestResult $a, RequestResult $b): int => $b->latencyMs <=> $a->latencyMs
+            $slowestRequests,
+            static fn (array $a, array $b): int => $b['latency_ms'] <=> $a['latency_ms']
         );
 
-        $slowest = [];
-        foreach (array_slice($results, 0, 5) as $result) {
-            $slowest[] = $this->formatRequestDetail(
-                $result,
-                $this->isRequestSuccess($result, $successStatusCodes, $expectStatusCodes, $expectBodyContains)
-            );
+        if (count($slowestRequests) > 5) {
+            array_pop($slowestRequests);
         }
-
-        return $slowest;
     }
 
     /**
