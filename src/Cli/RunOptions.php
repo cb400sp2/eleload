@@ -52,7 +52,8 @@ final class RunOptions
         public readonly ?float $rate,
         public readonly ?float $targetRps,
         public readonly ?float $targetTps,
-        public readonly float $rampUpSec
+        public readonly float $rampUpSec,
+        public readonly int $memoryBufferSize = 10_000
     ) {
     }
 }
