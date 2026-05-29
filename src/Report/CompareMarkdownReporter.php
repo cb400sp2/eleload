@@ -9,7 +9,7 @@ use RuntimeException;
 /**
  * Generates a Markdown file that summarises the diff between two load-test reports.
  */
-final class CompareMarkdownReporter
+final class CompareMarkdownReporter implements ReportWriterInterface
 {
     /**
      * @param array<string, mixed> $comparison

@@ -10,7 +10,7 @@ use stdClass;
 /**
  * Serialises a report array to a pretty-printed JSON file.
  */
-final class JsonReporter
+final class JsonReporter implements ReportWriterInterface
 {
     /**
      * @param array<string, mixed> $report

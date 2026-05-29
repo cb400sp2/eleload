@@ -9,7 +9,7 @@ use RuntimeException;
 /**
  * Renders a load-test report to a Markdown file.
  */
-final class MarkdownReporter
+final class MarkdownReporter implements ReportWriterInterface
 {
     /**
      * @param array<string, mixed> $report

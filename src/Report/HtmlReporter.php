@@ -9,7 +9,7 @@ use RuntimeException;
 /**
  * Renders a report array into an HTML file using a PHP template.
  */
-final class HtmlReporter
+final class HtmlReporter implements ReportWriterInterface
 {
     /**
      * @param string $templatePath Absolute path to the PHP template file.
