@@ -95,11 +95,16 @@ final class Application
         $output->writeln('  --method=GET             HTTP method');
         $output->writeln('  --header="K: V"          Repeatable HTTP header');
         $output->writeln('  --bearer-token=TOKEN     Send Authorization: Bearer TOKEN');
+        $output->writeln('  --bearer-token-env=VAR   Read bearer token from environment variable');
         $output->writeln('  --basic-user=USER        Basic auth username');
+        $output->writeln('  --basic-user-env=VAR     Read basic auth username from environment variable');
         $output->writeln('  --basic-password=PASS    Basic auth password');
+        $output->writeln('  --basic-password-env=VAR Read basic auth password from environment variable');
         $output->writeln('  --cookie=TEXT            Send Cookie header value');
+        $output->writeln('  --cookie-env=VAR         Read cookie value from environment variable');
         $output->writeln('  --follow-redirects       Follow HTTP redirects');
         $output->writeln('  --no-follow-redirects    Disable redirect following (default)');
+        $output->writeln('  --block-private-networks Reject requests to private/loopback addresses');
         $output->writeln('  --body="..."             Request body');
         $output->writeln('  --timeout=10             Timeout seconds');
         $output->writeln('  --connect-timeout=NUM    Connection timeout seconds (default: min(--timeout, 5))');

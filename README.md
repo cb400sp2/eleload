@@ -156,6 +156,14 @@ In single-URL mode, 1 request = 1 transaction.
 - [doc/en/thresholds.md](doc/en/thresholds.md) — CI threshold options
 - [doc/en/security.md](doc/en/security.md) — Security best practices
 
+## Security
+
+- **Only test systems you own or have explicit written permission to test.**
+- Use `--bearer-token-env`, `--basic-password-env`, and `--cookie-env` to pass credentials via environment variables instead of command-line arguments (avoids shell history leaks).
+- Use `--block-private-networks` to reject requests to `localhost`, loopback, or private IP ranges — recommended in CI and when running scenario files from untrusted sources.
+- TLS peer verification is always on (`CURLOPT_SSL_VERIFYPEER`). Minimum TLS 1.2 is enforced.
+- See [SECURITY.md](SECURITY.md) for the vulnerability reporting policy.
+
 ## License
 
 MIT
