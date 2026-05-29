@@ -272,6 +272,71 @@ final class ArgvParser
 
     /**
      * @param list<string> $args
+     */
+    public function parseCompare(array $args): CompareOptions
+    {
+        $beforeJsonPath = null;
+        $afterJsonPath = null;
+        $htmlPath = null;
+        $markdownPath = null;
+
+        $i = 0;
+        while ($i < count($args)) {
+            $token = $args[$i];
+
+            if ($this->isOption($token)) {
+                [$name, $value, $i] = $this->parseOptionToken($args, $i);
+
+                if ($name === 'html') {
+                    $htmlPath = $value;
+                    continue;
+                }
+
+                if ($name === 'md') {
+                    $markdownPath = $value;
+                    continue;
+                }
+
+                throw new InvalidArgumentException("Unknown option for compare command: --{$name}");
+            }
+
+            if ($beforeJsonPath === null) {
+                $beforeJsonPath = $token;
+                $i++;
+                continue;
+            }
+
+            if ($afterJsonPath === null) {
+                $afterJsonPath = $token;
+                $i++;
+                continue;
+            }
+
+            throw new InvalidArgumentException("Unexpected argument for compare command: {$token}");
+        }
+
+        if ($beforeJsonPath === null || $afterJsonPath === null) {
+            throw new InvalidArgumentException(
+                'Two JSON report paths are required. Usage: eleload compare <before.json> <after.json> [--html=<output.html>] [--md=<output.md>]'
+            );
+        }
+
+        if ($htmlPath === null && $markdownPath === null) {
+            throw new InvalidArgumentException(
+                'At least one output path is required. Usage: eleload compare <before.json> <after.json> --html=<output.html> [--md=<output.md>]'
+            );
+        }
+
+        return new CompareOptions(
+            beforeJsonPath: $beforeJsonPath,
+            afterJsonPath: $afterJsonPath,
+            htmlPath: $htmlPath,
+            markdownPath: $markdownPath
+        );
+    }
+
+    /**
+     * @param list<string> $args
      * @return array{0:string, 1:string, 2:int}
      */
     private function parseOptionToken(array $args, int $index): array

@@ -44,6 +44,10 @@ It uses `curl_multi` for concurrent requests and prints throughput and latency m
   - `--output-dir`
   - `--name`
   - `report` command to regenerate HTML from saved JSON
+- Compare command:
+  - `compare before.json after.json --html=compare.html`
+  - `--md` for Markdown comparison output
+  - improved/regressed highlighting for `RPS/TPS/p95/p99/error rate`
 - UTF-8 report content, including multibyte text in JSON and HTML reports
 
 ## Requirements
@@ -75,6 +79,14 @@ Regenerate HTML from an existing JSON report:
 
 ```bash
 ./bin/eleload report reports/report.json --html=reports/regenerated.html
+```
+
+Compare two JSON reports:
+
+```bash
+./bin/eleload compare reports/before.json reports/after.json \
+  --html=reports/compare.html \
+  --md=reports/compare.md
 ```
 
 Run a simple load test:
