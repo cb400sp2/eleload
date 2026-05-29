@@ -25,7 +25,8 @@ test('run command with debug flag prints parsed options and execution plan', fun
     assertContains('[debug] parsed_options=', $output);
     assertContains('"url":"http://127.0.0.1:1"', $output);
     assertContains('"debug":true', $output);
+    assertContains('"rate":null', $output);
     assertContains('[debug] execution_plan=', $output);
     assertContains('"mode":"requests"', $output);
+    assertContains('"fixed_rate_rps":null', $output);
 });
-

@@ -54,6 +54,7 @@ final class ArgvParser
         $failOnErrorRate = null;
         $failOnRpsBelow = null;
         $failOnTpsBelow = null;
+        $rate = null;
         $targetRps = null;
         $targetTps = null;
         $rampUpSec = 0.0;
@@ -189,6 +190,9 @@ final class ArgvParser
                     case 'fail-on-tps-below':
                         $failOnTpsBelow = $this->parsePositiveFloat($name, $value);
                         break;
+                    case 'rate':
+                        $rate = $this->parsePositiveFloat($name, $value);
+                        break;
                     case 'target-rps':
                         $targetRps = $this->parsePositiveFloat($name, $value);
                         break;
@@ -237,6 +241,14 @@ final class ArgvParser
             throw new InvalidArgumentException('Option --ramp-up must be lower than --duration.');
         }
 
+        if ($rate !== null && $durationSec === null) {
+            throw new InvalidArgumentException('Option --rate requires --duration.');
+        }
+
+        if ($rate !== null) {
+            $targetRps = $rate;
+        }
+
         if (($basicUser === null) !== ($basicPassword === null)) {
             throw new InvalidArgumentException('Options --basic-user and --basic-password must be provided together.');
         }
@@ -276,6 +288,7 @@ final class ArgvParser
             failOnErrorRate: $failOnErrorRate,
             failOnRpsBelow: $failOnRpsBelow,
             failOnTpsBelow: $failOnTpsBelow,
+            rate: $rate,
             targetRps: $targetRps,
             targetTps: $targetTps,
             rampUpSec: $rampUpSec

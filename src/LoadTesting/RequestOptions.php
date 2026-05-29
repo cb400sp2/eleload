@@ -34,6 +34,7 @@ final class RequestOptions
         public readonly ?string $expectBodyContains = null,
         public readonly ?float $durationSec = null,
         public readonly float $warmupSec = 0.0,
+        public readonly ?float $rate = null,
         public readonly ?float $targetRps = null,
         public readonly ?float $targetTps = null,
         public readonly float $rampUpSec = 0.0
