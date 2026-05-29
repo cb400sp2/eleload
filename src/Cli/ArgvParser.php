@@ -61,6 +61,7 @@ final class ArgvParser
         $memoryBufferSize = 10_000;
         $blockPrivateNetworks = false;
         $httpVersion = '2.0';
+        $dnsCacheTtl = -1;
         $bearerTokenEnv = null;
         $basicUserEnv = null;
         $basicPasswordEnv = null;
@@ -236,6 +237,9 @@ final class ArgvParser
                     case 'http-version':
                         $httpVersion = $this->parseHttpVersion($name, $value);
                         break;
+                    case 'dns-cache-ttl':
+                        $dnsCacheTtl = $this->parseNonNegativeInt($name, $value);
+                        break;
                     default:
                         throw new InvalidArgumentException("Unknown option: --{$name}");
                 }
@@ -382,7 +386,8 @@ final class ArgvParser
             rampUpSec: $rampUpSec,
             memoryBufferSize: $memoryBufferSize,
             blockPrivateNetworks: $blockPrivateNetworks,
-            httpVersion: $httpVersion
+            httpVersion: $httpVersion,
+            dnsCacheTtl: $dnsCacheTtl
         );
     }
 
@@ -768,6 +773,15 @@ final class ArgvParser
         }
 
         return $parsedCodes;
+    }
+
+    private function parseNonNegativeInt(string $name, string $value): int
+    {
+        if (!preg_match('/^\d+$/', $value)) {
+            throw new InvalidArgumentException("Option --{$name} must be a non-negative integer.");
+        }
+
+        return (int) $value;
     }
 
     private function parseHttpVersion(string $name, string $value): string
