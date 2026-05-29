@@ -153,7 +153,7 @@ final class CurlMultiRunner
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_CUSTOMREQUEST => $options->method,
             CURLOPT_TIMEOUT => $options->timeout,
-            CURLOPT_CONNECTTIMEOUT => min($options->timeout, 5),
+            CURLOPT_CONNECTTIMEOUT => $options->connectTimeout ?? min($options->timeout, 5),
             CURLOPT_HEADER => false,
             CURLOPT_FOLLOWLOCATION => $options->followRedirects,
             CURLOPT_SSL_VERIFYPEER => true,

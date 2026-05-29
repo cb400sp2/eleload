@@ -3,16 +3,20 @@
 declare(strict_types=1);
 
 use Eleload\Cli\ArgvParser;
+use Eleload\Cli\RunOptions;
 
 test('ArgvParser parses minimum arguments', function (): void {
     $parser = new ArgvParser();
     $options = $parser->parseRun(['https://example.com']);
+
+    /** @var RunOptions $options */
 
     assertSame('https://example.com', $options->url);
     assertSame(100, $options->requests);
     assertSame(10, $options->concurrency);
     assertSame('GET', $options->method);
     assertSame(10, $options->timeout);
+    assertSame(null, $options->connectTimeout);
     assertSame(false, $options->silent);
     assertSame(false, $options->followRedirects);
     assertSame([], $options->headers);
@@ -37,6 +41,7 @@ test('ArgvParser parses full option set', function (): void {
         '--method',
         'post',
         '--timeout=3',
+        '--connect-timeout=2',
         '--silent',
         '--follow-redirects',
         '--header',
@@ -72,11 +77,14 @@ test('ArgvParser parses full option set', function (): void {
         '--target-tps=110.25',
     ]);
 
+    /** @var RunOptions $options */
+
     assertSame('https://example.com/api/items', $options->url);
     assertSame(250, $options->requests);
     assertSame(25, $options->concurrency);
     assertSame('POST', $options->method);
     assertSame(3, $options->timeout);
+    assertSame(2, $options->connectTimeout);
     assertSame(true, $options->silent);
     assertSame(true, $options->followRedirects);
     assertSame(
@@ -141,6 +149,16 @@ test('ArgvParser rejects invalid success status list', function (): void {
         fn () => $parser->parseRun(['https://example.com', '--success-status=99']),
         InvalidArgumentException::class,
         'between 100 and 599'
+    );
+});
+
+test('ArgvParser rejects invalid connect timeout', function (): void {
+    $parser = new ArgvParser();
+
+    assertThrows(
+        fn () => $parser->parseRun(['https://example.com', '--connect-timeout=0']),
+        InvalidArgumentException::class,
+        'Option --connect-timeout must be >= 1'
     );
 });
 
