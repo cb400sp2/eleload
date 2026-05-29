@@ -355,3 +355,163 @@ test('ScenarioLoader loads multiple steps', function (): void {
     assertSame('POST', $def->steps[1]->method);
     assertSame('DELETE', $def->steps[2]->method);
 });
+
+// -----------------------------------------------------------------------
+// if/then/else conditional branching (#82)
+// -----------------------------------------------------------------------
+
+test('ScenarioLoader parses step with if/then/else block', function (): void {
+    $file = scenarioJson([
+        'steps' => [
+            [
+                'url' => 'https://example.com/check',
+                'if' => [
+                    'field' => 'status',
+                    'op' => '==',
+                    'value' => 200,
+                    'then' => [
+                        ['url' => 'https://example.com/success'],
+                    ],
+                    'else' => [
+                        ['url' => 'https://example.com/failure'],
+                    ],
+                ],
+            ],
+        ],
+    ]);
+
+    $def = (new ScenarioLoader())->load($file);
+    $branch = $def->steps[0]->if;
+    assertNotNull($branch);
+    assertSame('status', $branch->condition->field);
+    assertSame('==', $branch->condition->op);
+    assertSame(200, $branch->condition->value);
+    assertSame(1, count($branch->then));
+    assertSame('https://example.com/success', $branch->then[0]->url);
+    assertSame(1, count($branch->else));
+    assertSame('https://example.com/failure', $branch->else[0]->url);
+});
+
+test('ScenarioLoader parses step with if block and no else', function (): void {
+    $file = scenarioJson([
+        'steps' => [
+            [
+                'url' => 'https://example.com/check',
+                'if' => [
+                    'field' => 'body',
+                    'op' => 'contains',
+                    'value' => 'success',
+                    'then' => [
+                        ['url' => 'https://example.com/next'],
+                    ],
+                ],
+            ],
+        ],
+    ]);
+
+    $def = (new ScenarioLoader())->load($file);
+    $branch = $def->steps[0]->if;
+    assertNotNull($branch);
+    assertSame('body', $branch->condition->field);
+    assertSame('contains', $branch->condition->op);
+    assertSame(0, count($branch->else));
+});
+
+test('ScenarioLoader parses nested if inside then branch', function (): void {
+    $file = scenarioJson([
+        'steps' => [
+            [
+                'url' => 'https://example.com/outer',
+                'if' => [
+                    'field' => 'status',
+                    'op' => '==',
+                    'value' => 200,
+                    'then' => [
+                        [
+                            'url' => 'https://example.com/inner',
+                            'if' => [
+                                'field' => 'body',
+                                'op' => 'regex_match',
+                                'value' => '"ok":true',
+                                'then' => [
+                                    ['url' => 'https://example.com/deep'],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ]);
+
+    $def = (new ScenarioLoader())->load($file);
+    $outer = $def->steps[0]->if;
+    assertNotNull($outer);
+    $inner = $outer->then[0]->if;
+    assertNotNull($inner);
+    assertSame('regex_match', $inner->condition->op);
+    assertSame('https://example.com/deep', $inner->then[0]->url);
+});
+
+test('ScenarioLoader throws when if block is not an object', function (): void {
+    $file = scenarioJson([
+        'steps' => [
+            ['url' => 'https://example.com', 'if' => 'bad'],
+        ],
+    ]);
+
+    assertThrows(
+        fn () => (new ScenarioLoader())->load($file),
+        InvalidArgumentException::class,
+        "'if' must be an object"
+    );
+});
+
+test('ScenarioLoader throws when if.field is missing', function (): void {
+    $file = scenarioJson([
+        'steps' => [
+            [
+                'url' => 'https://example.com',
+                'if' => ['op' => '==', 'value' => 200],
+            ],
+        ],
+    ]);
+
+    assertThrows(
+        fn () => (new ScenarioLoader())->load($file),
+        InvalidArgumentException::class,
+        'if.field'
+    );
+});
+
+test('ScenarioLoader throws for unknown if.field', function (): void {
+    $file = scenarioJson([
+        'steps' => [
+            [
+                'url' => 'https://example.com',
+                'if' => ['field' => 'headers', 'op' => '==', 'value' => 200],
+            ],
+        ],
+    ]);
+
+    assertThrows(
+        fn () => (new ScenarioLoader())->load($file),
+        InvalidArgumentException::class
+    );
+});
+
+test('ScenarioLoader throws for unknown if.op', function (): void {
+    $file = scenarioJson([
+        'steps' => [
+            [
+                'url' => 'https://example.com',
+                'if' => ['field' => 'status', 'op' => 'startswith', 'value' => '2'],
+            ],
+        ],
+    ]);
+
+    assertThrows(
+        fn () => (new ScenarioLoader())->load($file),
+        InvalidArgumentException::class
+    );
+});

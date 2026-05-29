@@ -20,7 +20,8 @@ final class ScenarioStep
         public readonly int $waitMs = 0,
         public readonly ?string $name = null,
         public readonly bool $followRedirects = false,
-        public readonly array $extract = []
+        public readonly array $extract = [],
+        public readonly ?ScenarioBranch $if = null,
     ) {
     }
 }
