@@ -41,7 +41,9 @@ final class RequestOptions
         public readonly string $httpVersion = '2.0',
         public readonly int $dnsCacheTtl = -1,
         public readonly string $acceptEncoding = 'gzip',
-        public readonly bool $noDecompress = false
+        public readonly bool $noDecompress = false,
+        public readonly int $maxConnections = 0,
+        public readonly int $tcpKeepaliveSec = 60
     ) {
     }
 
