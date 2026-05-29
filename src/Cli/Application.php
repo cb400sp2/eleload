@@ -93,6 +93,7 @@ final class Application
             method: $options->method,
             timeout: $options->timeout,
             headers: $options->headers,
+            bearerToken: $options->bearerToken,
             body: $options->body,
             name: $options->name,
             successStatusCodes: $options->successStatusCodes,
@@ -179,6 +180,7 @@ final class Application
         $output->writeln('  --concurrency=10         Concurrent requests');
         $output->writeln('  --method=GET             HTTP method');
         $output->writeln('  --header="K: V"          Repeatable HTTP header');
+        $output->writeln('  --bearer-token=TOKEN     Send Authorization: Bearer TOKEN');
         $output->writeln('  --body="..."             Request body');
         $output->writeln('  --timeout=10             Timeout seconds');
         $output->writeln('  --success-status=LIST    Comma-separated success status codes (e.g. 200,201,204)');
