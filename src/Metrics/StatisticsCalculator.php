@@ -9,6 +9,8 @@ use Eleload\LoadTesting\RunResult;
 
 final class StatisticsCalculator
 {
+    private const TOOL_VERSION = '0.1.0';
+
     private PercentileCalculator $percentile;
 
     public function __construct()
@@ -21,22 +23,31 @@ final class StatisticsCalculator
      */
     public function summarize(RunResult $runResult): array
     {
-        $metricResults = array_values(array_filter(
-            $runResult->requestResults,
-            static fn (RequestResult $result): bool => $result->includedInMetrics
-        ));
-        $total = count($metricResults);
+        $executed = $runResult->countRequestResults();
+        $warmup = 0;
+        $total = 0;
         $success = 0;
         $statusCounts = [];
         $latencies = [];
+        $streamingLatencySummary = $runResult->hasSpilledRequestResults() ? new StreamingLatencySummary() : null;
         $errors = [];
         $successStatusCodes = $runResult->options->successStatusCodes;
         $expectStatusCodes = $runResult->options->expectStatusCodes;
         $expectBodyContains = $runResult->options->expectBodyContains;
 
-        foreach ($metricResults as $result) {
-            $latencies[] = $result->latencyMs;
-            $statusKey = (string)$result->httpCode;
+        foreach ($runResult->iterateRequestResults() as $result) {
+            if (!$result->includedInMetrics) {
+                $warmup++;
+                continue;
+            }
+
+            $total++;
+            if ($streamingLatencySummary !== null) {
+                $streamingLatencySummary->add($result->latencyMs);
+            } else {
+                $latencies[] = $result->latencyMs;
+            }
+            $statusKey = (string) $result->httpCode;
             $statusCounts[$statusKey] = ($statusCounts[$statusKey] ?? 0) + 1;
 
             $isSuccess = $this->isRequestSuccess(
@@ -91,6 +102,17 @@ final class StatisticsCalculator
             );
         }
 
+        $latencySummary = $streamingLatencySummary !== null
+            ? $streamingLatencySummary->summarize()
+            : [
+                'min' => $this->min($latencies),
+                'avg' => $this->avg($latencies),
+                'p50' => $this->percentile->calculate($latencies, 50),
+                'p95' => $this->percentile->calculate($latencies, 95),
+                'p99' => $this->percentile->calculate($latencies, 99),
+                'max' => $this->max($latencies),
+            ];
+
         return [
             'target' => [
                 'url' => $runResult->options->url,
@@ -115,8 +137,8 @@ final class StatisticsCalculator
                 'total_duration_sec' => $this->round3($runResult->durationSec),
                 'requests' => [
                     'total' => $total,
-                    'executed' => count($runResult->requestResults),
-                    'warmup' => count($runResult->requestResults) - $total,
+                    'executed' => $executed,
+                    'warmup' => $warmup,
                     'success' => $success,
                     'failed' => $failed,
                     'success_rate' => $this->round2($successRate),
@@ -124,12 +146,12 @@ final class StatisticsCalculator
                 ],
                 'throughput' => $throughput,
                 'latency' => [
-                    'min' => $this->round2($this->min($latencies)),
-                    'avg' => $this->round2($this->avg($latencies)),
-                    'p50' => $this->round2($this->percentile->calculate($latencies, 50)),
-                    'p95' => $this->round2($this->percentile->calculate($latencies, 95)),
-                    'p99' => $this->round2($this->percentile->calculate($latencies, 99)),
-                    'max' => $this->round2($this->max($latencies)),
+                    'min' => $this->round2($latencySummary['min']),
+                    'avg' => $this->round2($latencySummary['avg']),
+                    'p50' => $this->round2($latencySummary['p50']),
+                    'p95' => $this->round2($latencySummary['p95']),
+                    'p99' => $this->round2($latencySummary['p99']),
+                    'max' => $this->round2($latencySummary['max']),
                 ],
                 'status_codes' => $statusCodeStats,
                 'slowest_requests' => $this->collectSlowestRequests(
@@ -142,7 +164,7 @@ final class StatisticsCalculator
             'errors' => $errors,
             'meta' => [
                 'tool' => 'eleload',
-                'version' => '0.1.0',
+                'version' => self::TOOL_VERSION,
                 'test_name' => $runResult->options->name,
             ],
         ];
