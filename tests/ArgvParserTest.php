@@ -83,6 +83,7 @@ test('ArgvParser parses full option set', function (): void {
         '--target-rps',
         '120.5',
         '--target-tps=110.25',
+        '--ramp-up=30',
     ]);
 
     /** @var RunOptions $options */
@@ -126,6 +127,7 @@ test('ArgvParser parses full option set', function (): void {
     assertSame(90.0, $options->failOnTpsBelow);
     assertSame(120.5, $options->targetRps);
     assertSame(110.25, $options->targetTps);
+    assertSame(30.0, $options->rampUpSec);
 });
 
 test('ArgvParser rejects warmup greater than duration', function (): void {
@@ -306,5 +308,28 @@ test('ArgvParser compare command rejects unknown option', function (): void {
         fn () => $parser->parseCompare(['reports/before.json', 'reports/after.json', '--output=report.html']),
         InvalidArgumentException::class,
         'Unknown option for compare command'
+    );
+});
+
+test('ArgvParser parses --ramp-up option', function (): void {
+    $parser = new ArgvParser();
+
+    $options = $parser->parseRun(['https://example.com', '--ramp-up=10']);
+    assertSame(10.0, $options->rampUpSec);
+
+    $options2 = $parser->parseRun(['https://example.com', '--ramp-up=0']);
+    assertSame(0.0, $options2->rampUpSec);
+
+    $options3 = $parser->parseRun(['https://example.com']);
+    assertSame(0.0, $options3->rampUpSec);
+});
+
+test('ArgvParser rejects negative --ramp-up', function (): void {
+    $parser = new ArgvParser();
+
+    assertThrows(
+        fn () => $parser->parseRun(['https://example.com', '--ramp-up=-1']),
+        InvalidArgumentException::class,
+        'ramp-up'
     );
 });

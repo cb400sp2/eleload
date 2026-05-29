@@ -32,7 +32,8 @@ final class RequestOptions
         public readonly ?float $durationSec = null,
         public readonly float $warmupSec = 0.0,
         public readonly ?float $targetRps = null,
-        public readonly ?float $targetTps = null
+        public readonly ?float $targetTps = null,
+        public readonly float $rampUpSec = 0.0
     ) {
     }
 

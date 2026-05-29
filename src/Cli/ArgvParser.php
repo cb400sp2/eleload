@@ -53,6 +53,7 @@ final class ArgvParser
         $failOnTpsBelow = null;
         $targetRps = null;
         $targetTps = null;
+        $rampUpSec = 0.0;
 
         $i = 0;
         while ($i < count($args)) {
@@ -191,6 +192,9 @@ final class ArgvParser
                     case 'target-tps':
                         $targetTps = $this->parsePositiveFloat($name, $value);
                         break;
+                    case 'ramp-up':
+                        $rampUpSec = $this->parseNonNegativeFloat($name, $value);
+                        break;
                     default:
                         throw new InvalidArgumentException("Unknown option: --{$name}");
                 }
@@ -266,7 +270,8 @@ final class ArgvParser
             failOnRpsBelow: $failOnRpsBelow,
             failOnTpsBelow: $failOnTpsBelow,
             targetRps: $targetRps,
-            targetTps: $targetTps
+            targetTps: $targetTps,
+            rampUpSec: $rampUpSec
         );
     }
 

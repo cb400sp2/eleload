@@ -48,7 +48,7 @@ final class CurlMultiRunner
             while (true) {
                 while (
                     $this->canStartRequest($options, $startedAt, $nextRequest, $durationMode) &&
-                    count($inFlight) < $options->concurrency
+                    count($inFlight) < $this->effectiveConcurrency($options, $startedAt)
                 ) {
                     $rateLimitSleepUsec = $this->getRateLimitSleepUsec($options, $startedAt, $nextRequest);
                     if ($rateLimitSleepUsec > 0) {
@@ -223,6 +223,21 @@ final class CurlMultiRunner
         if (!is_string($encoded) || fwrite($resultsHandle, $encoded . PHP_EOL) === false) {
             throw new RuntimeException('Failed to write spilled request result.');
         }
+    }
+
+    private function effectiveConcurrency(RequestOptions $options, int $startedAt): int
+    {
+        if ($options->rampUpSec <= 0.0) {
+            return $options->concurrency;
+        }
+
+        $elapsedSec = (hrtime(true) - $startedAt) / 1_000_000_000;
+        if ($elapsedSec >= $options->rampUpSec) {
+            return $options->concurrency;
+        }
+
+        $fraction = $elapsedSec / $options->rampUpSec;
+        return max(1, (int) ceil($fraction * $options->concurrency));
     }
 
     private function canStartRequest(
