@@ -1,6 +1,7 @@
 # eleload
 
 [![CI](https://github.com/cb400sp2/eleload/actions/workflows/ci.yml/badge.svg)](https://github.com/cb400sp2/eleload/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/cb400sp2/eleload/branch/main/graph/badge.svg)](https://codecov.io/gh/cb400sp2/eleload)
 
 **[日本語版 README はこちら](README.ja.md)**
 
