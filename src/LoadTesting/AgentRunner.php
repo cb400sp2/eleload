@@ -109,7 +109,9 @@ final class AgentRunner
                         error: (string) ($stepResult['error'] ?? ''),
                         success: (bool) ($stepResult['success'] ?? false),
                     ),
-                    is_array($iterationData['step_results'] ?? null) ? $iterationData['step_results'] : []
+                    is_array($iterationData['step_results'] ?? null)
+                        ? array_values($iterationData['step_results'])
+                        : []
                 );
 
                 $iterationResults[] = new ScenarioIterationResult(
