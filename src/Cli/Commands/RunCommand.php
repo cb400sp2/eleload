@@ -11,6 +11,8 @@ use Eleload\Cli\Support\HighLoadGuard;
 use Eleload\Compare\ReportComparator;
 use Eleload\LoadTesting\CurlMultiRunner;
 use Eleload\LoadTesting\RequestOptions;
+use Eleload\Logging\JsonLinesLogger;
+use Eleload\Logging\NullLogger;
 use Eleload\Metrics\FailureEvaluator;
 use Eleload\Metrics\StatisticsCalculator;
 use Eleload\Report\CompareMarkdownReporter;
@@ -35,6 +37,13 @@ final class RunCommand
         $parser = new ArgvParser();
         $options = $parser->parseRun($args);
         $this->printDebugContext($options, $output);
+
+        $logger = $options->logFile !== null
+            ? new JsonLinesLogger($options->logFile, $options->logLevel)
+            : new NullLogger();
+
+        $logger->info('run started', ['url' => $options->url, 'requests' => $options->requests]);
+
         HighLoadGuard::enforceRun(
             $options->requests,
             $options->concurrency,
@@ -172,6 +181,12 @@ final class RunCommand
                 $exitCode = 1;
             }
         }
+
+        $logger->info('run completed', [
+            'exit_code' => $exitCode,
+            'failed_requests' => $report['summary']['requests']['failed'],
+            'thresholds_failed' => $report['thresholds']['failed'],
+        ]);
 
         if ($options->debug) {
             $output->writeln(sprintf('[debug] peak_memory_after_run=%d bytes', memory_get_peak_usage(true)));
