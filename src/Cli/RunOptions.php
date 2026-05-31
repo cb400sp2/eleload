@@ -69,7 +69,9 @@ final class RunOptions
         public readonly string $logLevel = 'warn',
         /** Optional file path for structured JSON-Lines log output. */
         public readonly ?string $logFile = null,
-        public readonly ?string $grpcMethod = null
+        public readonly ?string $grpcMethod = null,
+        /** OTLP HTTP endpoint URL (e.g. http://localhost:4318). Null = no-op tracing. */
+        public readonly ?string $otelEndpoint = null,
     ) {
     }
 }
