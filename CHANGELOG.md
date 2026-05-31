@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/cb400sp2/eleload/compare/v1.4.0...v1.5.0) (2026-05-31)
+
+
+### Features
+
+* add Rector modernization with dry-run CI check ([#170](https://github.com/cb400sp2/eleload/issues/170)) ([710cf25](https://github.com/cb400sp2/eleload/commit/710cf251ffed001c7ddf97b9dfb06d116263c5cf)), closes [#112](https://github.com/cb400sp2/eleload/issues/112)
+
 # [1.4.0](https://github.com/cb400sp2/eleload/compare/v1.3.0...v1.4.0) (2026-05-31)
 
 
