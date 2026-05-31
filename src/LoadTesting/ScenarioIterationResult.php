@@ -15,7 +15,8 @@ final class ScenarioIterationResult
         public readonly float $totalMs,
         public readonly float $elapsedAtEndSec,
         public readonly array $stepResults,
-        public readonly bool $success
+        public readonly bool $success,
+        public readonly ?string $variantName = null,
     ) {
     }
 }

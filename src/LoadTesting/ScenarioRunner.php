@@ -48,10 +48,37 @@ final class ScenarioRunner
         $durationMode = $durationSec !== null;
         $startedAt = hrtime(true);
 
+        // Resolve variant assignment map (vuId => ScenarioVariant|null)
+        $vuVariants = [];
+        if ($definition->variants !== []) {
+            $totalWeight = array_sum(array_map(fn ($v) => $v->weight, $definition->variants));
+            $cumulative = 0.0;
+            $thresholds = [];
+            foreach ($definition->variants as $variant) {
+                $cumulative += $variant->weight / $totalWeight;
+                $thresholds[] = [$cumulative, $variant];
+            }
+            for ($i = 0; $i < $concurrency; $i++) {
+                $p = $i / $concurrency;
+                $assigned = $thresholds[count($thresholds) - 1][1]; // fallback to last
+                foreach ($thresholds as [$threshold, $variant]) {
+                    if ($p < $threshold) {
+                        $assigned = $variant;
+                        break;
+                    }
+                }
+                $vuVariants[$i] = $assigned;
+            }
+        }
+
         // Initialize VU states
         $vus = [];
         for ($i = 0; $i < $concurrency; $i++) {
-            $vus[$i] = $this->newVuState($i, $definition->variables, $definition->steps, $startedAt);
+            $steps = isset($vuVariants[$i]) ? $vuVariants[$i]->steps : $definition->steps;
+            $vus[$i] = $this->newVuState($i, $definition->variables, $steps, $startedAt);
+            if (isset($vuVariants[$i])) {
+                $vus[$i]['variant_name'] = $vuVariants[$i]->name;
+            }
         }
 
         /** @var array<int, int> handleObjectId => vuId */
@@ -97,7 +124,8 @@ final class ScenarioRunner
                                 totalMs: $iterDurationMs,
                                 elapsedAtEndSec: $elapsedSec,
                                 stepResults: $vu['step_results'],
-                                success: $allSuccess
+                                success: $allSuccess,
+                                variantName: $vu['variant_name'] ?? null,
                             );
                         }
 
@@ -116,7 +144,7 @@ final class ScenarioRunner
 
                         // Reset VU for next iteration (variables carry over for auth token reuse)
                         $vu['iteration']++;
-                        $vu['step_queue'] = $definition->steps;
+                        $vu['step_queue'] = isset($vuVariants[$vuId]) ? $vuVariants[$vuId]->steps : $definition->steps;
                         $vu['step_counter'] = 0;
                         $vu['step_results'] = [];
                         $vu['iteration_started_at_ns'] = hrtime(true);
