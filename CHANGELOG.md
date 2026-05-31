@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/cb400sp2/eleload/compare/v1.0.0...v1.1.0) (2026-05-31)
+
+
+### Features
+
+* scenario step breakdown metrics with HTML report ([#160](https://github.com/cb400sp2/eleload/issues/160)) ([7bfba51](https://github.com/cb400sp2/eleload/commit/7bfba51f4a3939c650c13a643bdae8f480163266)), closes [#96](https://github.com/cb400sp2/eleload/issues/96)
+
 # 1.0.0 (2026-05-31)
 
 
