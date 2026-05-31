@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Eleload\Telemetry;
 
-use JsonException;
-
 /**
  * Minimal OpenTelemetry tracer that exports spans via OTLP/HTTP+JSON.
  *
@@ -186,15 +184,15 @@ final class OtelTracer implements TracerInterface
         // Suppress any PHP warnings; a return value of false means failure
         $result = @file_get_contents($url, false, $ctx);
         if ($result === false) {
-            throw new \RuntimeException("OTLP export failed (connection refused or network error).");
+            throw new \RuntimeException('OTLP export failed (connection refused or network error).');
         }
     }
 
     /**
      * Generate a random hex-encoded ID of the given byte length.
-     * 16 bytes → 32 hex chars (traceId)
-    /**
-     *  8 bytes → 16 hex chars (spanId)
+     *
+     * 16 bytes => 32 hex chars (traceId)
+     * 8 bytes => 16 hex chars (spanId)
      */
     private function generateId(int $bytes): string
     {

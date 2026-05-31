@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Eleload\Telemetry\NullTracer;
-use Eleload\Telemetry\NullSpan;
-use Eleload\Telemetry\OtelTracer;
-use Eleload\Telemetry\OtelSpan;
-use Eleload\Telemetry\TracerInterface;
-use Eleload\Telemetry\SpanInterface;
 use Eleload\Cli\ArgvParser;
+use Eleload\Telemetry\NullSpan;
+use Eleload\Telemetry\NullTracer;
+use Eleload\Telemetry\OtelSpan;
+use Eleload\Telemetry\OtelTracer;
+use Eleload\Telemetry\SpanInterface;
+use Eleload\Telemetry\TracerInterface;
 
 // ---- NullTracer / NullSpan ----
 test('NullTracer implements TracerInterface', function (): void {
