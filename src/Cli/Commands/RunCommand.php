@@ -14,6 +14,7 @@ use Eleload\LoadTesting\RequestOptions;
 use Eleload\Logging\JsonLinesLogger;
 use Eleload\Logging\NullLogger;
 use Eleload\Metrics\FailureEvaluator;
+use Eleload\Metrics\PrometheusPusher;
 use Eleload\Metrics\StatisticsCalculator;
 use Eleload\Report\CompareMarkdownReporter;
 use Eleload\Report\ConsoleReporter;
@@ -204,6 +205,14 @@ final class RunCommand
         $runSpan->end();
         if ($tracer instanceof OtelTracer) {
             $tracer->flush();
+        }
+
+        // --- Prometheus Pushgateway ---
+        if ($options->prometheusUrl !== null) {
+            (new PrometheusPusher($options->prometheusUrl))->push($report);
+            if (!$options->silent) {
+                $output->writeln('Prometheus metrics pushed: ' . $options->prometheusUrl);
+            }
         }
 
         if ($options->debug) {

@@ -72,6 +72,8 @@ final class RunOptions
         public readonly ?string $grpcMethod = null,
         /** OTLP HTTP endpoint URL (e.g. http://localhost:4318). Null = no-op tracing. */
         public readonly ?string $otelEndpoint = null,
+        /** Prometheus Pushgateway URL (e.g. http://localhost:9091). Null = disabled. */
+        public readonly ?string $prometheusUrl = null,
     ) {
     }
 }

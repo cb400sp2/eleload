@@ -68,6 +68,7 @@ final class ArgvParser
         $tcpKeepaliveSec = 60;
         $grpcMethod = null;
         $otelEndpoint = null;
+        $prometheusUrl = null;
         $bearerTokenEnv = null;
         $basicUserEnv = null;
         $basicPasswordEnv = null;
@@ -285,6 +286,9 @@ final class ArgvParser
                     case 'otel-endpoint':
                         $otelEndpoint = $value;
                         break;
+                    case 'prometheus-pushgateway-url':
+                        $prometheusUrl = $value;
+                        break;
                     default:
                         throw new InvalidArgumentException("Unknown option: --{$name}");
                 }
@@ -443,6 +447,7 @@ final class ArgvParser
             logFile: $logFile,
             grpcMethod: $grpcMethod,
             otelEndpoint: $otelEndpoint,
+            prometheusUrl: $prometheusUrl,
         );
     }
 
