@@ -152,7 +152,23 @@
                     "rps":            { "type": "number", "minimum": 0 },
                     "tps":            { "type": "number", "minimum": 0 },
                     "error_rate":     { "type": "number", "minimum": 0, "maximum": 100 },
-                    "avg_latency_ms": { "type": "number", "minimum": 0 }
+                    "avg_latency_ms": { "type": "number", "minimum": 0 },
+                    "p50":            { "type": "number", "minimum": 0 },
+                    "p75":            { "type": "number", "minimum": 0 },
+                    "p95":            { "type": "number", "minimum": 0 },
+                    "p99":            { "type": "number", "minimum": 0 },
+                    "latency_dist": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "required": ["label", "count"],
+                            "additionalProperties": false,
+                            "properties": {
+                                "label": { "type": "string" },
+                                "count": { "type": "integer", "minimum": 0 }
+                            }
+                        }
+                    }
                 }
             }
         },
