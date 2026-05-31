@@ -442,7 +442,7 @@ final class ArgvParser
             logLevel: $logLevel,
             logFile: $logFile,
             grpcMethod: $grpcMethod,
-                otelEndpoint: $otelEndpoint,
+            otelEndpoint: $otelEndpoint,
         );
     }
 
