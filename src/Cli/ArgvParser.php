@@ -42,6 +42,7 @@ final class ArgvParser
         $reportHtmlPath = null;
         $reportMdPath = null;
         $reportCsvPath = null;
+        $reportHeatmapPath = null;
         $outputDir = null;
         $testName = null;
         $successStatusCodes = null;
@@ -206,6 +207,9 @@ final class ArgvParser
                         break;
                     case 'report-csv':
                         $reportCsvPath = $value;
+                        break;
+                    case 'report-heatmap':
+                        $reportHeatmapPath = $value;
                         break;
                     case 'output-dir':
                         $outputDir = $value;
@@ -424,6 +428,7 @@ final class ArgvParser
             reportHtmlPath: $reportHtmlPath,
             reportMdPath: $reportMdPath,
             reportCsvPath: $reportCsvPath,
+            reportHeatmapPath: $reportHeatmapPath,
             outputDir: $outputDir,
             name: $testName,
             successStatusCodes: $successStatusCodes,

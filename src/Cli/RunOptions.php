@@ -37,6 +37,7 @@ final class RunOptions
         public readonly ?string $reportHtmlPath,
         public readonly ?string $reportMdPath,
         public readonly ?string $reportCsvPath,
+        public readonly ?string $reportHeatmapPath,
         public readonly ?string $outputDir,
         public readonly ?string $name,
         public readonly ?array $successStatusCodes,

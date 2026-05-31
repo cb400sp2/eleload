@@ -24,14 +24,51 @@ $chartRps     = [];
 $chartTps     = [];
 $chartErr     = [];
 $chartLatency = [];
+$chartP50     = [];
+$chartP75     = [];
+$chartP95     = [];
+$chartP99     = [];
+
+// Latency dist bins: collect from first bucket with dist data
+$distBinLabels = [];
+/** @var array<int, list<int>> $distBinData */
+$distBinData   = [];
 foreach ($timeBuckets as $bucket) {
     $chartLabels[]  = (string) ((int) ($bucket['t'] ?? 0));
     $chartRps[]     = (float) ($bucket['rps'] ?? 0.0);
     $chartTps[]     = (float) ($bucket['tps'] ?? 0.0);
     $chartErr[]     = (float) ($bucket['error_rate'] ?? 0.0);
     $chartLatency[] = (float) ($bucket['avg_latency_ms'] ?? 0.0);
+    $chartP50[]     = (float) ($bucket['p50'] ?? 0.0);
+    $chartP75[]     = (float) ($bucket['p75'] ?? 0.0);
+    $chartP95[]     = (float) ($bucket['p95'] ?? 0.0);
+    $chartP99[]     = (float) ($bucket['p99'] ?? 0.0);
+
+    $dist = is_array($bucket['latency_dist'] ?? null) ? $bucket['latency_dist'] : [];
+    foreach ($dist as $i => $bin) {
+        if ($distBinLabels === [] || !isset($distBinLabels[$i])) {
+            $distBinLabels[$i] = (string) ($bin['label'] ?? '');
+        }
+        $distBinData[$i][] = (int) ($bin['count'] ?? 0);
+    }
 }
 $hasTimeSeries = $chartLabels !== [];
+$hasDistData   = $distBinLabels !== [];
+
+$distBinColors = [
+    'rgba(99,102,241,0.7)', 'rgba(59,130,246,0.7)', 'rgba(6,182,212,0.7)',
+    'rgba(16,185,129,0.7)', 'rgba(245,158,11,0.7)', 'rgba(249,115,22,0.7)',
+    'rgba(239,68,68,0.7)',  'rgba(139,92,246,0.7)',
+];
+$distDatasets = [];
+foreach ($distBinLabels as $i => $binLabel) {
+    $distDatasets[] = [
+        'label' => $binLabel,
+        'data' => $distBinData[$i] ?? [],
+        'backgroundColor' => $distBinColors[$i % count($distBinColors)],
+        'stack' => 'dist',
+    ];
+}
 
 // Latency CDF points from summary percentiles
 $cdfPoints = [
@@ -54,16 +91,21 @@ foreach ($summary['status_codes'] as $code => $item) {
     $pi++;
 }
 
-$jsonLabels   = json_encode($chartLabels, JSON_THROW_ON_ERROR);
-$jsonRps      = json_encode($chartRps, JSON_THROW_ON_ERROR);
-$jsonTps      = json_encode($chartTps, JSON_THROW_ON_ERROR);
-$jsonErr      = json_encode($chartErr, JSON_THROW_ON_ERROR);
-$jsonLatency  = json_encode($chartLatency, JSON_THROW_ON_ERROR);
-$jsonCdfPct   = json_encode(array_column($cdfPoints, 'pct'), JSON_THROW_ON_ERROR);
-$jsonCdfMs    = json_encode(array_column($cdfPoints, 'ms'), JSON_THROW_ON_ERROR);
-$jsonStLabels = json_encode($statusLabels, JSON_THROW_ON_ERROR);
-$jsonStCounts = json_encode($statusCounts, JSON_THROW_ON_ERROR);
-$jsonStColors = json_encode($statusColors, JSON_THROW_ON_ERROR);
+$jsonLabels      = json_encode($chartLabels, JSON_THROW_ON_ERROR);
+$jsonRps         = json_encode($chartRps, JSON_THROW_ON_ERROR);
+$jsonTps         = json_encode($chartTps, JSON_THROW_ON_ERROR);
+$jsonErr         = json_encode($chartErr, JSON_THROW_ON_ERROR);
+$jsonLatency     = json_encode($chartLatency, JSON_THROW_ON_ERROR);
+$jsonP50         = json_encode($chartP50, JSON_THROW_ON_ERROR);
+$jsonP75         = json_encode($chartP75, JSON_THROW_ON_ERROR);
+$jsonP95         = json_encode($chartP95, JSON_THROW_ON_ERROR);
+$jsonP99         = json_encode($chartP99, JSON_THROW_ON_ERROR);
+$jsonDistDatasets = json_encode($distDatasets, JSON_THROW_ON_ERROR);
+$jsonCdfPct      = json_encode(array_column($cdfPoints, 'pct'), JSON_THROW_ON_ERROR);
+$jsonCdfMs       = json_encode(array_column($cdfPoints, 'ms'), JSON_THROW_ON_ERROR);
+$jsonStLabels    = json_encode($statusLabels, JSON_THROW_ON_ERROR);
+$jsonStCounts    = json_encode($statusCounts, JSON_THROW_ON_ERROR);
+$jsonStColors    = json_encode($statusColors, JSON_THROW_ON_ERROR);
 ?><!DOCTYPE html>
 <html lang="en">
 <head>
@@ -145,6 +187,21 @@ $jsonStColors = json_encode($statusColors, JSON_THROW_ON_ERROR);
     <h2 class="text-sm font-semibold text-gray-700 mb-4">Avg latency &amp; error rate over time</h2>
     <canvas id="chartLatency" height="90"></canvas>
   </div>
+
+  <!-- Percentile time-series -->
+  <?php if ($hasDistData): ?>
+  <div class="bg-white border border-gray-200 rounded-lg p-5">
+    <h2 class="text-sm font-semibold text-gray-700 mb-4">Latency percentiles over time (p50 / p75 / p95 / p99)</h2>
+    <canvas id="chartPercentiles" height="90"></canvas>
+  </div>
+
+  <!-- Latency distribution heatmap -->
+  <div class="bg-white border border-gray-200 rounded-lg p-5">
+    <h2 class="text-sm font-semibold text-gray-700 mb-1">Latency distribution heatmap</h2>
+    <p class="text-xs text-gray-400 mb-4">Stacked bars: each second × latency band. Hover for counts.</p>
+    <canvas id="chartHeatmap" height="90"></canvas>
+  </div>
+  <?php endif; ?>
   <?php endif; ?>
 
   <!-- Latency CDF + Status codes -->
@@ -332,6 +389,46 @@ $jsonStColors = json_encode($statusColors, JSON_THROW_ON_ERROR);
       },
     },
   });
+  <?php if ($hasDistData): ?>
+
+  // Percentile time-series
+  new Chart(document.getElementById('chartPercentiles'), {
+    type: 'line',
+    data: {
+      labels: <?= $jsonLabels ?>,
+      datasets: [
+        { label: 'p50', data: <?= $jsonP50 ?>, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0)',  tension: 0.3, pointRadius: 0, borderWidth: 1.5 },
+        { label: 'p75', data: <?= $jsonP75 ?>, borderColor: '#6366f1', backgroundColor: 'rgba(99,102,241,0)',  tension: 0.3, pointRadius: 0, borderWidth: 1.5 },
+        { label: 'p95', data: <?= $jsonP95 ?>, borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0)',  tension: 0.3, pointRadius: 0, borderWidth: 2 },
+        { label: 'p99', data: <?= $jsonP99 ?>, borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0)',   tension: 0.3, pointRadius: 0, borderWidth: 2 },
+      ],
+    },
+    options: {
+      ...baseOptions,
+      scales: {
+        x: { ...baseOptions.scales.x, title: { display: true, text: 'elapsed (s)', font: { size: 11 } } },
+        y: { ...baseOptions.scales.y, title: { display: true, text: 'latency (ms)', font: { size: 11 } } },
+      },
+    },
+  });
+
+  // Latency distribution heatmap (stacked bar)
+  new Chart(document.getElementById('chartHeatmap'), {
+    type: 'bar',
+    data: {
+      labels: <?= $jsonLabels ?>,
+      datasets: <?= $jsonDistDatasets ?>,
+    },
+    options: {
+      ...baseOptions,
+      plugins: { ...baseOptions.plugins, tooltip: { mode: 'index' } },
+      scales: {
+        x: { ...baseOptions.scales.x, stacked: true, title: { display: true, text: 'elapsed (s)', font: { size: 11 } } },
+        y: { ...baseOptions.scales.y, stacked: true, title: { display: true, text: 'requests', font: { size: 11 } } },
+      },
+    },
+  });
+  <?php endif; ?>
   <?php endif; ?>
 
   // Latency CDF

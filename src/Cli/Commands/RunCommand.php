@@ -72,6 +72,7 @@ final class RunCommand
         $consoleReporter = new ConsoleReporter();
         $jsonReporter = new JsonReporter();
         $htmlReporter = new HtmlReporter(__DIR__ . '/../../../templates/report.php');
+        $heatmapReporter = new HtmlReporter(__DIR__ . '/../../../templates/heatmap.php');
         $markdownReporter = new MarkdownReporter();
         $csvReporter = new CsvReporter();
         $pathGenerator = new ReportPathGenerator();
@@ -159,6 +160,13 @@ final class RunCommand
             $csvReporter->write($result, $options->reportCsvPath);
             if (!$options->silent) {
                 $output->writeln('CSV report: ' . $options->reportCsvPath);
+            }
+        }
+
+        if ($options->reportHeatmapPath !== null) {
+            $heatmapReporter->write($report, $options->reportHeatmapPath);
+            if (!$options->silent) {
+                $output->writeln('Heatmap report: ' . $options->reportHeatmapPath);
             }
         }
 
@@ -274,6 +282,7 @@ final class RunCommand
             'report_html' => $options->reportHtmlPath,
             'report_md' => $options->reportMdPath,
             'report_csv' => $options->reportCsvPath,
+            'report_heatmap' => $options->reportHeatmapPath,
             'output_dir' => $options->outputDir,
             'name' => $options->name,
             'rate' => $options->rate,
@@ -309,6 +318,7 @@ final class RunCommand
                 'html' => $options->reportHtmlPath,
                 'md' => $options->reportMdPath,
                 'csv' => $options->reportCsvPath,
+                'heatmap' => $options->reportHeatmapPath,
                 'output_dir' => $options->outputDir,
             ],
         ];

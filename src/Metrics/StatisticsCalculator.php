@@ -76,28 +76,71 @@ final class StatisticsCalculator
 
             $bucketIdx = max(0, (int) floor($result->elapsedSec - $runResult->options->warmupSec));
             if (!isset($buckets[$bucketIdx])) {
-                $buckets[$bucketIdx] = ['count' => 0, 'success' => 0, 'latency_sum' => 0.0];
+                $buckets[$bucketIdx] = ['count' => 0, 'success' => 0, 'latency_sum' => 0.0, 'latencies' => []];
             }
             $buckets[$bucketIdx]['count']++;
             if ($isSuccess) {
                 $buckets[$bucketIdx]['success']++;
             }
             $buckets[$bucketIdx]['latency_sum'] += $result->latencyMs;
+            $buckets[$bucketIdx]['latencies'][] = $result->latencyMs;
         }
 
         ksort($statusCounts, SORT_NATURAL);
 
+        /** @var list<int> $latencyBinEdges */
+        $latencyBinEdges = [0, 10, 25, 50, 100, 250, 500, 1000];
+
+        /** @var array<int, array{count: int, success: int, latency_sum: float, latencies: list<float>}> $buckets */
         ksort($buckets, SORT_NUMERIC);
         $timeBuckets = [];
         foreach ($buckets as $t => $bucket) {
             $count = $bucket['count'];
             $bucketSuccess = $bucket['success'];
+            /** @var list<float> $bLatencies */
+            $bLatencies = $bucket['latencies'];
+
+            $p = static function (float $pct) use ($bLatencies): float {
+                if ($bLatencies === []) {
+                    return 0.0;
+                }
+                $sorted = $bLatencies;
+                sort($sorted, SORT_NUMERIC);
+                $idx = max(0, (int) ceil(($pct / 100.0) * count($sorted)) - 1);
+                return round($sorted[$idx], 2);
+            };
+
+            $latencyDist = [];
+            $edges = $latencyBinEdges;
+            foreach ($edges as $i => $edge) {
+                $next = isset($edges[$i + 1]) ? $edges[$i + 1] : null;
+                $label = $next !== null ? $edge . '-' . $next . 'ms' : $edge . 'ms+';
+                $binCount = 0;
+                foreach ($bLatencies as $ms) {
+                    if ($next !== null) {
+                        if ($ms >= $edge && $ms < $next) {
+                            $binCount++;
+                        }
+                    } else {
+                        if ($ms >= $edge) {
+                            $binCount++;
+                        }
+                    }
+                }
+                $latencyDist[] = ['label' => $label, 'count' => $binCount];
+            }
+
             $timeBuckets[] = [
                 't' => $t,
                 'rps' => (float) $count,
                 'tps' => (float) $bucketSuccess,
                 'error_rate' => $count > 0 ? $this->round2((($count - $bucketSuccess) / $count) * 100.0) : 0.0,
                 'avg_latency_ms' => $count > 0 ? $this->round2($bucket['latency_sum'] / $count) : 0.0,
+                'p50' => $p(50.0),
+                'p75' => $p(75.0),
+                'p95' => $p(95.0),
+                'p99' => $p(99.0),
+                'latency_dist' => $latencyDist,
             ];
         }
 
