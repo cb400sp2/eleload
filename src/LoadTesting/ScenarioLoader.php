@@ -120,8 +120,54 @@ final class ScenarioLoader
             }
         }
 
+        // --- variants (optional) ---
+        $variants = [];
+        if (isset($data['variants'])) {
+            if (!is_array($data['variants']) || count($data['variants']) === 0) {
+                throw new InvalidArgumentException("Scenario 'variants' must be a non-empty array.");
+            }
+            foreach ($data['variants'] as $vi => $variantData) {
+                $variants[] = $this->parseVariant($variantData, (int) $vi);
+            }
+        }
+
+        // --- steps: required when no variants provided ---
+        if ($variants === [] && (!isset($data['steps']) || !is_array($data['steps']) || count($data['steps']) === 0)) {
+            throw new InvalidArgumentException('Scenario must have at least one step (or define variants).');
+        }
+
+        $steps = [];
+        if (isset($data['steps']) && is_array($data['steps'])) {
+            foreach ($data['steps'] as $i => $stepData) {
+                $steps[] = $this->parseStep($stepData, (int) $i);
+            }
+        }
+
+        return new ScenarioDefinition(name: $name, steps: $steps, variables: $variables, variants: $variants);
+    }
+
+    private function parseVariant(mixed $data, int $index): ScenarioVariant
+    {
+        if (!is_array($data)) {
+            throw new InvalidArgumentException("Variant {$index} must be a JSON object.");
+        }
+
+        $label = 'Variant ' . ($index + 1);
+
+        if (!isset($data['name']) || !is_string($data['name']) || $data['name'] === '') {
+            throw new InvalidArgumentException("{$label}: 'name' is required.");
+        }
+
+        $weight = 1.0;
+        if (isset($data['weight'])) {
+            if ((!is_int($data['weight']) && !is_float($data['weight'])) || $data['weight'] <= 0) {
+                throw new InvalidArgumentException("{$label}: 'weight' must be a positive number.");
+            }
+            $weight = (float) $data['weight'];
+        }
+
         if (!isset($data['steps']) || !is_array($data['steps']) || count($data['steps']) === 0) {
-            throw new InvalidArgumentException('Scenario must have at least one step.');
+            throw new InvalidArgumentException("{$label}: 'steps' must be a non-empty array.");
         }
 
         $steps = [];
@@ -129,7 +175,7 @@ final class ScenarioLoader
             $steps[] = $this->parseStep($stepData, (int) $i);
         }
 
-        return new ScenarioDefinition(name: $name, steps: $steps, variables: $variables);
+        return new ScenarioVariant(name: $data['name'], weight: $weight, steps: $steps);
     }
 
     private function parseStep(mixed $data, int $index): ScenarioStep
