@@ -378,6 +378,7 @@ test('ArgvParser parseScenario parses minimum arguments', function (): void {
     assertSame(null, $options->reportJsonPath);
     assertSame(null, $options->outputDir);
     assertSame(null, $options->name);
+    assertSame(1, $options->agents);
 });
 
 test('ArgvParser parseScenario parses all options', function (): void {
@@ -392,6 +393,7 @@ test('ArgvParser parseScenario parses all options', function (): void {
         '--debug',
         '--yes',
         '--allow-high-load',
+        '--agents=3',
         '--report-json=out/report.json',
         '--output-dir=out',
         '--name=My Perf Test',
@@ -406,6 +408,7 @@ test('ArgvParser parseScenario parses all options', function (): void {
     assertSame(true, $options->debug);
     assertSame(true, $options->yes);
     assertSame(true, $options->allowHighLoad);
+    assertSame(3, $options->agents);
     assertSame('out/report.json', $options->reportJsonPath);
     assertSame('out', $options->outputDir);
     assertSame('My Perf Test', $options->name);
