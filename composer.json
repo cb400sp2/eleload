@@ -23,7 +23,9 @@
     "analyse": "phpstan analyse --memory-limit=512M",
     "cs-check": "php-cs-fixer fix --dry-run --diff",
     "cs-fix": "php-cs-fixer fix",
-    "complexity": "phpcs --standard=phpcs.xml --report=full"
+    "complexity": "phpcs --standard=phpcs.xml --report=full",
+    "psalm": "php tools/psalm/vendor/bin/psalm",
+    "psalm-baseline": "php tools/psalm/vendor/bin/psalm --set-baseline=psalm-baseline.xml"
   },
   "bin": [
     "bin/eleload"
