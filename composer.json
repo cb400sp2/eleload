@@ -27,7 +27,8 @@
     "psalm": "php tools/psalm/vendor/bin/psalm",
     "psalm-baseline": "php tools/psalm/vendor/bin/psalm --set-baseline=psalm-baseline.xml",
     "rector": "rector process --dry-run",
-    "rector-fix": "rector process"
+    "rector-fix": "rector process",
+    "post-install-cmd": "captainhook install --force --skip-existing"
   },
   "bin": [
     "bin/eleload"
@@ -40,7 +41,8 @@
     "phpunit/phpunit": "^11.0",
     "symfony/event-dispatcher-contracts": "^3",
     "squizlabs/php_codesniffer": "^4.0",
-    "rector/rector": "^2.4"
+    "rector/rector": "^2.4",
+    "captainhook/captainhook": "^5.29"
   },
   "config": {
     "allow-plugins": {

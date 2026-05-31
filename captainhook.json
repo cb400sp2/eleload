@@ -1,0 +1,54 @@
+{
+    "config": {
+        "php-path": "/usr/bin/env php",
+        "verbosity": "verbose"
+    },
+    "pre-commit": {
+        "enabled": true,
+        "actions": [
+            {
+                "action": "composer cs-check",
+                "options": [],
+                "conditions": []
+            },
+            {
+                "action": "composer analyse",
+                "options": [],
+                "conditions": []
+            },
+            {
+                "action": "composer test",
+                "options": [],
+                "conditions": []
+            }
+        ]
+    },
+    "commit-msg": {
+        "enabled": false,
+        "actions": []
+    },
+    "pre-push": {
+        "enabled": false,
+        "actions": []
+    },
+    "prepare-commit-msg": {
+        "enabled": false,
+        "actions": []
+    },
+    "post-commit": {
+        "enabled": false,
+        "actions": []
+    },
+    "post-merge": {
+        "enabled": false,
+        "actions": []
+    },
+    "post-checkout": {
+        "enabled": false,
+        "actions": []
+    },
+    "post-rewrite": {
+        "enabled": false,
+        "actions": []
+    }
+}
