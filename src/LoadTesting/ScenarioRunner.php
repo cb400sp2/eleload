@@ -210,9 +210,13 @@ final class ScenarioRunner
                         $vus[$vuId]['step_queue'] = array_merge($branch, $vus[$vuId]['step_queue']);
                     }
 
-                    // Apply post-step wait
-                    if ($step->waitMs > 0) {
-                        $vus[$vuId]['wait_until_ns'] = hrtime(true) + (int) ($step->waitMs * self::NANOSECONDS_PER_MILLISECOND);
+                    // Apply post-step wait: think_time (user think) + wait_ms (server/pacing)
+                    $totalWaitMs = $step->waitMs;
+                    if ($step->thinkTime !== null) {
+                        $totalWaitMs += (int) round($step->thinkTime->sampleMs());
+                    }
+                    if ($totalWaitMs > 0) {
+                        $vus[$vuId]['wait_until_ns'] = hrtime(true) + (int) ($totalWaitMs * self::NANOSECONDS_PER_MILLISECOND);
                     }
 
                     $vus[$vuId]['in_flight'] = false;

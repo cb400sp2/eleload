@@ -23,6 +23,8 @@ final class ScenarioStep
         public readonly bool $followRedirects = false,
         public readonly array $extract = [],
         public readonly ?ScenarioBranch $if = null,
+        /** Think time applied after the step response (before wait_ms). */
+        public readonly ?ThinkTime $thinkTime = null,
     ) {
     }
 }
