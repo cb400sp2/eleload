@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Eleload\LoadTesting\ScenarioVariant;
-use Eleload\LoadTesting\ScenarioStep;
 use Eleload\LoadTesting\ScenarioDefinition;
 use Eleload\LoadTesting\ScenarioLoader;
 use Eleload\LoadTesting\ScenarioRunner;
+use Eleload\LoadTesting\ScenarioStep;
+use Eleload\LoadTesting\ScenarioVariant;
 
 $stepA = new ScenarioStep(url: 'http://127.0.0.1:9999/a');
 $stepB = new ScenarioStep(url: 'http://127.0.0.1:9999/b');
