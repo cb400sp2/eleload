@@ -191,7 +191,14 @@ final class RunCommand
             }
         }
 
-        $exitCode = $report['summary']['requests']['failed'] > 0 || $report['thresholds']['failed'] ? 1 : 0;
+        /** @var array<string, mixed> $reportSummary */
+        $reportSummary = is_array($report['summary'] ?? null) ? $report['summary'] : [];
+        /** @var array{failed?: int} $reportRequests */
+        $reportRequests = is_array($reportSummary['requests'] ?? null) ? $reportSummary['requests'] : [];
+        /** @var array{failed?: bool} $reportThresholdsMeta */
+        $reportThresholdsMeta = $report['thresholds'];
+
+        $exitCode = ($reportRequests['failed'] ?? 0) > 0 || ($reportThresholdsMeta['failed'] ?? false) ? 1 : 0;
 
         // --- Baseline: save current report as baseline ---
         if ($options->saveBaselinePath !== null) {
@@ -226,7 +233,9 @@ final class RunCommand
                 $output->writeln($compareMd);
             }
 
-            $regressions = $comparison['summary']['regressed'] ?? 0;
+            /** @var array{regressed?: int} $comparisonSummary */
+            $comparisonSummary = is_array($comparison['summary'] ?? null) ? $comparison['summary'] : [];
+            $regressions = $comparisonSummary['regressed'] ?? 0;
             if ($regressions > 0) {
                 $exitCode = 1;
             }
@@ -234,8 +243,8 @@ final class RunCommand
 
         $logger->info('run completed', [
             'exit_code' => $exitCode,
-            'failed_requests' => $report['summary']['requests']['failed'],
-            'thresholds_failed' => $report['thresholds']['failed'],
+            'failed_requests' => $reportRequests['failed'] ?? 0,
+            'thresholds_failed' => $reportThresholdsMeta['failed'] ?? false,
         ]);
         $runSpan->setAttribute('exit_code', $exitCode);
         $runSpan->end();

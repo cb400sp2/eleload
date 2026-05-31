@@ -51,12 +51,22 @@ final class PrometheusPusher
      */
     public function buildBody(array $report, string $jobName = 'eleload'): string
     {
+        /** @var array<string, mixed> $summary */
         $summary    = is_array($report['summary'] ?? null) ? $report['summary'] : [];
+        /** @var array{total?: int, success?: int, error_rate?: float} $requests */
         $requests   = is_array($summary['requests'] ?? null) ? $summary['requests'] : [];
+        /** @var array{rps?: float, tps?: float} $throughput */
         $throughput = is_array($summary['throughput'] ?? null) ? $summary['throughput'] : [];
+        /** @var array{p50?: float, p95?: float, p99?: float} $latency */
         $latency    = is_array($summary['latency'] ?? null) ? $summary['latency'] : [];
-        $testName   = (string) ($report['meta']['test_name'] ?? '');
-        $url        = (string) ($report['target']['url'] ?? '');
+        /** @var float $durationSec */
+        $durationSec  = $summary['duration_sec'] ?? 0.0;
+        /** @var array{test_name?: string} $reportMeta */
+        $reportMeta   = is_array($report['meta'] ?? null) ? $report['meta'] : [];
+        /** @var array{url?: string} $reportTarget */
+        $reportTarget = is_array($report['target'] ?? null) ? $report['target'] : [];
+        $testName   = $reportMeta['test_name'] ?? '';
+        $url        = $reportTarget['url'] ?? '';
 
         $labels = $this->buildLabels([
             'job'       => $jobName,
@@ -144,7 +154,7 @@ final class PrometheusPusher
             'gauge',
             'Total load-test duration in seconds.',
             $labels,
-            (float) ($summary['duration_sec'] ?? 0.0)
+            $durationSec
         );
 
         $lines[] = '';

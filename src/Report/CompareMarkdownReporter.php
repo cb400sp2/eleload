@@ -28,6 +28,15 @@ final class CompareMarkdownReporter implements ReportWriterInterface
      */
     public function render(array $comparison): string
     {
+        /** @var array{url: string, method: string, test_name?: string} $before */
+        $before = $comparison['before'];
+        /** @var array{url: string, method: string, test_name?: string} $after */
+        $after = $comparison['after'];
+        /** @var list<array{label: string, before: float, after: float, delta: float, delta_rate: float|null, direction: string, status: string}> $metrics */
+        $metrics = is_array($comparison['metrics'] ?? null) ? array_values($comparison['metrics']) : [];
+        /** @var array{improved: int, regressed: int, unchanged: int} $comparisonSummary */
+        $comparisonSummary = $comparison['summary'];
+
         $lines = [
             '# Eleload Compare Report',
             '',
@@ -35,9 +44,9 @@ final class CompareMarkdownReporter implements ReportWriterInterface
             '',
             '| Item | Before | After |',
             '|---|---|---|',
-            '| URL | ' . $this->escape((string)$comparison['before']['url']) . ' | ' . $this->escape((string)$comparison['after']['url']) . ' |',
-            '| Method | ' . $this->escape((string)$comparison['before']['method']) . ' | ' . $this->escape((string)$comparison['after']['method']) . ' |',
-            '| Test Name | ' . $this->escape((string)($comparison['before']['test_name'] ?? '')) . ' | ' . $this->escape((string)($comparison['after']['test_name'] ?? '')) . ' |',
+            '| URL | ' . $this->escape($before['url']) . ' | ' . $this->escape($after['url']) . ' |',
+            '| Method | ' . $this->escape($before['method']) . ' | ' . $this->escape($after['method']) . ' |',
+            '| Test Name | ' . $this->escape($before['test_name'] ?? '') . ' | ' . $this->escape($after['test_name'] ?? '') . ' |',
             '',
             '## Metric Deltas',
             '',
@@ -45,17 +54,17 @@ final class CompareMarkdownReporter implements ReportWriterInterface
             '|---|---:|---:|---:|---:|---|---|',
         ];
 
-        foreach ($comparison['metrics'] as $metric) {
-            $deltaRate = $metric['delta_rate'] === null ? 'n/a' : $this->number((float)$metric['delta_rate']) . '%';
+        foreach ($metrics as $metric) {
+            $deltaRate = $metric['delta_rate'] === null ? 'n/a' : $this->number($metric['delta_rate']) . '%';
             $direction = $metric['direction'] === 'higher' ? 'Higher is better' : 'Lower is better';
 
-            $lines[] = '| ' . $this->escape((string)$metric['label']) .
-                ' | ' . $this->number((float)$metric['before']) .
-                ' | ' . $this->number((float)$metric['after']) .
-                ' | ' . $this->signed((float)$metric['delta']) .
+            $lines[] = '| ' . $this->escape($metric['label']) .
+                ' | ' . $this->number($metric['before']) .
+                ' | ' . $this->number($metric['after']) .
+                ' | ' . $this->signed($metric['delta']) .
                 ' | ' . $deltaRate .
                 ' | ' . $direction .
-                ' | ' . strtoupper((string)$metric['status']) . ' |';
+                ' | ' . strtoupper($metric['status']) . ' |';
         }
 
         $lines[] = '';
@@ -63,9 +72,9 @@ final class CompareMarkdownReporter implements ReportWriterInterface
         $lines[] = '';
         $lines[] = '| Improved | Regressed | Unchanged |';
         $lines[] = '|---:|---:|---:|';
-        $lines[] = '| ' . $comparison['summary']['improved'] . ' | ' .
-            $comparison['summary']['regressed'] . ' | ' .
-            $comparison['summary']['unchanged'] . ' |';
+        $lines[] = '| ' . $comparisonSummary['improved'] . ' | ' .
+            $comparisonSummary['regressed'] . ' | ' .
+            $comparisonSummary['unchanged'] . ' |';
 
         return implode(PHP_EOL, $lines) . PHP_EOL;
     }

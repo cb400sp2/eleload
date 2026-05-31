@@ -67,9 +67,9 @@ final class AgentCommand
         $result = $runner->run(
             definition: $definition,
             concurrency: is_int($payload['concurrency'] ?? null) ? $payload['concurrency'] : 1,
-            durationSec: isset($payload['duration_sec']) ? (float) $payload['duration_sec'] : null,
+            durationSec: isset($payload['duration_sec']) && is_numeric($payload['duration_sec']) ? (float) $payload['duration_sec'] : null,
             iterations: is_int($payload['iterations'] ?? null) ? $payload['iterations'] : 1,
-            warmupSec: isset($payload['warmup_sec']) ? (float) $payload['warmup_sec'] : 0.0,
+            warmupSec: isset($payload['warmup_sec']) && is_numeric($payload['warmup_sec']) ? (float) $payload['warmup_sec'] : 0.0,
         );
 
         $iterationResults = array_map(

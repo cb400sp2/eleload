@@ -95,6 +95,7 @@ final class ScenarioRunner
 
                 // Start requests for ready VUs
                 foreach ($vus as $vuId => &$vu) {
+                    /** @var array{id: int, iteration: int, step_queue: list<ScenarioStep>, step_counter: int, current_step: ScenarioStep|null, variables: array<string, string>, handle: CurlHandle|null, in_flight: bool, step_started_at_ns: int, iteration_started_at_ns: int, wait_until_ns: int, step_results: list<ScenarioStepResult>, stopped: bool, variant_name?: string} $vu */
                     if ($vu['in_flight'] || $vu['stopped']) {
                         continue;
                     }
@@ -158,6 +159,7 @@ final class ScenarioRunner
 
                     // Pop next step from queue and start it
                     $step = array_shift($vu['step_queue']);
+                    assert($step instanceof ScenarioStep);
                     $vu['current_step'] = $step;
                     $handle = $this->createHandle($step, $vu['variables']);
                     $handleId = spl_object_id($handle);
@@ -192,14 +194,16 @@ final class ScenarioRunner
                     }
 
                     $endedAt = hrtime(true);
-                    $latencyMs = ($endedAt - $vus[$vuId]['step_started_at_ns']) / 1_000_000;
+                    /** @var array{id: int, iteration: int, step_queue: list<ScenarioStep>, step_counter: int, current_step: ScenarioStep|null, variables: array<string, string>, handle: CurlHandle|null, in_flight: bool, step_started_at_ns: int, iteration_started_at_ns: int, wait_until_ns: int, step_results: list<ScenarioStepResult>, stopped: bool, variant_name?: string} $vuState */
+                    $vuState = &$vus[$vuId];
+                    $latencyMs = ($endedAt - $vuState['step_started_at_ns']) / 1_000_000;
                     $httpCode = (int) curl_getinfo($handle, CURLINFO_HTTP_CODE);
                     $errorNo = curl_errno($handle);
                     $error = curl_error($handle);
                     $responseBody = (string) curl_multi_getcontent($handle);
 
                     /** @var ScenarioStep $step */
-                    $step = $vus[$vuId]['current_step'];
+                    $step = $vuState['current_step'];
                     $stepSuccess = $errorNo === 0 && $httpCode >= 200 && $httpCode < 300;
 
                     // Extract variables from response body
@@ -212,14 +216,14 @@ final class ScenarioRunner
                             if ($config['scope'] === 'global') {
                                 $this->globalVariables[$varName] = $extracted[$varName];
                             } else {
-                                $vus[$vuId]['variables'][$varName] = $extracted[$varName];
+                                $vuState['variables'][$varName] = $extracted[$varName];
                             }
                         }
                     }
 
-                    $stepIndex = $vus[$vuId]['step_counter'];
+                    $stepIndex = $vuState['step_counter'];
                     $stepName = $step->name ?? 'Step ' . ($stepIndex + 1);
-                    $vus[$vuId]['step_results'][] = new ScenarioStepResult(
+                    $vuState['step_results'][] = new ScenarioStepResult(
                         stepIndex: $stepIndex,
                         stepName: $stepName,
                         latencyMs: $latencyMs,
@@ -228,14 +232,14 @@ final class ScenarioRunner
                         error: $error,
                         success: $stepSuccess
                     );
-                    $vus[$vuId]['step_counter']++;
+                    $vuState['step_counter']++;
 
                     // Evaluate if/then/else branch and prepend branch steps to queue
                     if ($step->if !== null) {
                         $branch = $step->if->condition->evaluate($httpCode, $responseBody)
                             ? $step->if->then
                             : $step->if->else;
-                        $vus[$vuId]['step_queue'] = array_merge($branch, $vus[$vuId]['step_queue']);
+                        $vuState['step_queue'] = array_merge($branch, $vuState['step_queue']);
                     }
 
                     // Apply post-step wait: think_time (user think) + wait_ms (server/pacing)
@@ -244,12 +248,13 @@ final class ScenarioRunner
                         $totalWaitMs += (int) round($step->thinkTime->sampleMs());
                     }
                     if ($totalWaitMs > 0) {
-                        $vus[$vuId]['wait_until_ns'] = hrtime(true) + (int) ($totalWaitMs * self::NANOSECONDS_PER_MILLISECOND);
+                        $vuState['wait_until_ns'] = hrtime(true) + (int) ($totalWaitMs * self::NANOSECONDS_PER_MILLISECOND);
                     }
 
-                    $vus[$vuId]['in_flight'] = false;
-                    $vus[$vuId]['handle'] = null;
-                    $vus[$vuId]['current_step'] = null;
+                    $vuState['in_flight'] = false;
+                    $vuState['handle'] = null;
+                    $vuState['current_step'] = null;
+                    unset($vuState);
 
                     unset($handleToVu[$handleId]);
                     curl_multi_remove_handle($multi, $handle);
@@ -259,6 +264,7 @@ final class ScenarioRunner
                 $allDone = true;
                 $hasInFlight = false;
                 foreach ($vus as $vu) {
+                    /** @var array{in_flight: bool, stopped: bool} $vu */
                     if ($vu['in_flight']) {
                         $hasInFlight = true;
                         $allDone = false;
@@ -360,7 +366,22 @@ final class ScenarioRunner
     /**
      * @param array<string, string> $variables
      * @param list<ScenarioStep> $steps
-     * @return array<string, mixed>
+     * @return array{
+     *   id: int,
+     *   iteration: int,
+     *   step_queue: list<ScenarioStep>,
+     *   step_counter: int,
+     *   current_step: ScenarioStep|null,
+     *   variables: array<string, string>,
+     *   handle: CurlHandle|null,
+     *   in_flight: bool,
+     *   step_started_at_ns: int,
+     *   iteration_started_at_ns: int,
+     *   wait_until_ns: int,
+     *   step_results: list<ScenarioStepResult>,
+     *   stopped: bool,
+     *   variant_name?: string,
+     * }
      */
     private function newVuState(int $vuId, array $variables, array $steps, int $startedAt): array
     {

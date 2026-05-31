@@ -28,12 +28,30 @@ final class MarkdownReporter implements ReportWriterInterface
      */
     public function render(array $report): string
     {
+        /** @var array<string, mixed> $summary */
         $summary = $report['summary'];
+        /** @var array{total: int, success: int, failed: int, success_rate: float, error_rate: float} $requests */
         $requests = $summary['requests'];
+        /** @var array{rps: float, tps: float, tps_rps_rate: float} $throughput */
         $throughput = $summary['throughput'];
+        /** @var array{p50: float, p95: float, p99: float, min: float, avg: float, max: float} $latency */
         $latency = $summary['latency'];
-        $testName = $report['meta']['test_name'] ?? null;
-        $successStatusLabel = $this->formatSuccessStatus($report['config']['success_status'] ?? null);
+        /** @var float $durationSec */
+        $durationSec = $summary['duration_sec'];
+        /** @var array<string, array{count: int, rate: float}> $statusCodes */
+        $statusCodes = is_array($summary['status_codes'] ?? null) ? $summary['status_codes'] : [];
+        /** @var array{url: string, method: string} $reportTarget */
+        $reportTarget = $report['target'];
+        /** @var array{concurrency: int, success_status?: mixed} $reportConfig */
+        $reportConfig = $report['config'];
+        /** @var array{test_name?: string} $reportMeta */
+        $reportMeta = is_array($report['meta'] ?? null) ? $report['meta'] : [];
+        /** @var array{checks?: list<array{name: string, actual: float, threshold: float, operator: string, passed: bool}>} $reportThresholds */
+        $reportThresholds = is_array($report['thresholds'] ?? null) ? $report['thresholds'] : [];
+        /** @var list<array{request: int, http_code: int, error_no: int, latency_ms: float, error: string}> $reportErrors */
+        $reportErrors = is_array($report['errors'] ?? null) ? array_values($report['errors']) : [];
+        $testName = $reportMeta['test_name'] ?? null;
+        $successStatusLabel = $this->formatSuccessStatus($reportConfig['success_status'] ?? null);
 
         $lines = [
             '# Eleload Report',
@@ -50,12 +68,12 @@ final class MarkdownReporter implements ReportWriterInterface
             '',
             '| Field | Value |',
             '|---|---:|',
-            '| URL | ' . $this->escape((string)$report['target']['url']) . ' |',
-            '| Method | ' . $this->escape((string)$report['target']['method']) . ' |',
+            '| URL | ' . $this->escape($reportTarget['url']) . ' |',
+            '| Method | ' . $this->escape($reportTarget['method']) . ' |',
             '| Success Status | ' . $this->escape($successStatusLabel) . ' |',
             '| Requests | ' . $requests['total'] . ' |',
-            '| Concurrency | ' . $report['config']['concurrency'] . ' |',
-            '| Duration | ' . number_format((float)$summary['duration_sec'], 3) . ' sec |',
+            '| Concurrency | ' . $reportConfig['concurrency'] . ' |',
+            '| Duration | ' . number_format($durationSec, 3) . ' sec |',
             '',
             '## Summary',
             '',
@@ -87,11 +105,11 @@ final class MarkdownReporter implements ReportWriterInterface
             '|---|---:|---:|',
         ]);
 
-        foreach ($summary['status_codes'] as $code => $item) {
+        foreach ($statusCodes as $code => $item) {
             $lines[] = '| ' . $this->escape((string)$code) . ' | ' . $item['count'] . ' | ' . $this->percent((float)$item['rate']) . ' |';
         }
 
-        if (!empty($report['thresholds']['checks'])) {
+        if (!empty($reportThresholds['checks'])) {
             $lines = array_merge($lines, [
                 '',
                 '## Thresholds',
@@ -100,15 +118,15 @@ final class MarkdownReporter implements ReportWriterInterface
                 '|---|---:|---:|---|',
             ]);
 
-            foreach ($report['thresholds']['checks'] as $check) {
-                $lines[] = '| ' . $this->escape((string)$check['name']) .
-                    ' | ' . $this->number((float)$check['actual']) .
-                    ' | ' . $check['operator'] . ' ' . $this->number((float)$check['threshold']) .
+            foreach ($reportThresholds['checks'] as $check) {
+                $lines[] = '| ' . $this->escape($check['name']) .
+                    ' | ' . $this->number($check['actual']) .
+                    ' | ' . $check['operator'] . ' ' . $this->number($check['threshold']) .
                     ' | ' . ($check['passed'] ? 'PASS' : 'FAIL') . ' |';
             }
         }
 
-        if (!empty($report['errors'])) {
+        if ($reportErrors !== []) {
             $lines = array_merge($lines, [
                 '',
                 '## Errors',
@@ -117,12 +135,12 @@ final class MarkdownReporter implements ReportWriterInterface
                 '|---:|---:|---:|---:|---|',
             ]);
 
-            foreach (array_slice($report['errors'], 0, 10) as $error) {
+            foreach (array_slice($reportErrors, 0, 10) as $error) {
                 $lines[] = '| ' . $error['request'] .
                     ' | ' . $error['http_code'] .
                     ' | ' . $error['error_no'] .
                     ' | ' . $this->number((float)$error['latency_ms']) . ' ms' .
-                    ' | ' . $this->escape((string)($error['error'] !== '' ? $error['error'] : '(no message)')) . ' |';
+                    ' | ' . $this->escape($error['error'] !== '' ? $error['error'] : '(no message)') . ' |';
             }
         }
 
@@ -179,6 +197,6 @@ final class MarkdownReporter implements ReportWriterInterface
             return '2xx,3xx (default)';
         }
 
-        return implode(',', array_map(static fn (mixed $code): string => (string)$code, $value));
+        return implode(',', array_map(static fn (mixed $code): string => is_scalar($code) ? (string)$code : '', $value));
     }
 }

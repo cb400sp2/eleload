@@ -30,6 +30,7 @@ final class JsonFileReader
             throw new RuntimeException('Invalid JSON report format: root must be an object');
         }
 
+        /** @var array<string, mixed> $report */
         return $report;
     }
 }

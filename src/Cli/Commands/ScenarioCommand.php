@@ -53,7 +53,7 @@ final class ScenarioCommand
         if ($options->agents > 1) {
             $runner = new AgentRunner(
                 phpBinary: PHP_BINARY,
-                entryPoint: $_SERVER['argv'][0] ?? 'eleload',
+                entryPoint: is_array($_SERVER['argv']) && is_string($_SERVER['argv'][0]) ? $_SERVER['argv'][0] : 'eleload',
                 agents: $options->agents
             );
             $result = $runner->run(

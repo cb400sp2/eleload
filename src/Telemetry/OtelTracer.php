@@ -160,7 +160,7 @@ final class OtelTracer implements TracerInterface
         if (is_float($value)) {
             return ['doubleValue' => $value];
         }
-        return ['stringValue' => (string) $value];
+        return ['stringValue' => is_string($value) ? $value : ''];
     }
 
     /**
