@@ -72,6 +72,8 @@ final class ArgvParser
         $cookieEnv = null;
         $baselinePath = null;
         $saveBaselinePath = null;
+        $logLevel = 'warn';
+        $logFile = null;
 
         $i = 0;
         while ($i < count($args)) {
@@ -267,6 +269,13 @@ final class ArgvParser
                     case 'save-baseline':
                         $saveBaselinePath = $value;
                         break;
+                    case 'log-level':
+                        $this->validateLogLevel($value);
+                        $logLevel = $value;
+                        break;
+                    case 'log-file':
+                        $logFile = $value;
+                        break;
                     default:
                         throw new InvalidArgumentException("Unknown option: --{$name}");
                 }
@@ -421,6 +430,8 @@ final class ArgvParser
             tcpKeepaliveSec: $tcpKeepaliveSec,
             baselinePath: $baselinePath,
             saveBaselinePath: $saveBaselinePath,
+            logLevel: $logLevel,
+            logFile: $logFile,
         );
     }
 
@@ -839,6 +850,16 @@ final class ArgvParser
         }
 
         return $value;
+    }
+
+    private function validateLogLevel(string $value): void
+    {
+        $allowed = ['debug', 'info', 'warn', 'error'];
+        if (!in_array($value, $allowed, true)) {
+            throw new InvalidArgumentException(
+                "Option --log-level must be one of: " . implode(', ', $allowed) . '.'
+            );
+        }
     }
 
     /**

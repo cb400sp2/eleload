@@ -65,6 +65,10 @@ final class RunOptions
         public readonly ?string $baselinePath = null,
         /** Save this run's JSON report as the new baseline at this path. */
         public readonly ?string $saveBaselinePath = null,
+        /** Minimum log level: debug|info|warn|error */
+        public readonly string $logLevel = 'warn',
+        /** Optional file path for structured JSON-Lines log output. */
+        public readonly ?string $logFile = null,
     ) {
     }
 }
