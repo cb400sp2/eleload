@@ -1,4 +1,5 @@
 /vendor/
+/tools/psalm/vendor/
 /reports/
 /build/
 /.php-cs-fixer.cache

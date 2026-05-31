@@ -72,6 +72,13 @@ jobs:
         continue-on-error: true
         run: composer complexity
 
+      - name: Install Psalm dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress --working-dir=tools/psalm
+
+      - name: Run Psalm
+        continue-on-error: true
+        run: composer psalm -- --no-cache --php-version=8.2
+
   security-audit:
     name: Security Audit
     runs-on: ubuntu-latest

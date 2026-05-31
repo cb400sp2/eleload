@@ -1,0 +1,14 @@
+{
+    "name": "eleload/psalm-tools",
+    "description": "Psalm static analysis tool (isolated to avoid nikic/php-parser version conflict)",
+    "require": {
+        "vimeo/psalm": "^5.26"
+    },
+    "config": {
+        "platform": {
+            "php": "8.2.0"
+        },
+        "optimize-autoloader": true,
+        "sort-packages": true
+    }
+}
