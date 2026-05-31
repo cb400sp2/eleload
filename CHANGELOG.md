@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/cb400sp2/eleload/compare/v1.1.0...v1.2.0) (2026-05-31)
+
+
+### Features
+
+* latency heatmap and percentile time-series in report ([#159](https://github.com/cb400sp2/eleload/issues/159)) ([5f81849](https://github.com/cb400sp2/eleload/commit/5f818493b0eaff5ee5d8a87ee6bbb48e06617d8c)), closes [#95](https://github.com/cb400sp2/eleload/issues/95)
+
 # [1.1.0](https://github.com/cb400sp2/eleload/compare/v1.0.0...v1.1.0) (2026-05-31)
 
 
