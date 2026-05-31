@@ -91,7 +91,8 @@ final class RunCommand
             acceptEncoding: $options->acceptEncoding,
             noDecompress: $options->noDecompress,
             maxConnections: $options->maxConnections,
-            tcpKeepaliveSec: $options->tcpKeepaliveSec
+            tcpKeepaliveSec: $options->tcpKeepaliveSec,
+            grpcMethod: $options->grpcMethod,
         ));
 
         $report = $stats->summarize($result);

@@ -66,6 +66,7 @@ final class ArgvParser
         $noDecompress = false;
         $maxConnections = 0;
         $tcpKeepaliveSec = 60;
+        $grpcMethod = null;
         $bearerTokenEnv = null;
         $basicUserEnv = null;
         $basicPasswordEnv = null;
@@ -269,6 +270,10 @@ final class ArgvParser
                     case 'save-baseline':
                         $saveBaselinePath = $value;
                         break;
+                    case 'grpc':
+                        $this->validateGrpcMethod($value);
+                        $grpcMethod = $value;
+                        break;
                     case 'log-level':
                         $this->validateLogLevel($value);
                         $logLevel = $value;
@@ -432,6 +437,7 @@ final class ArgvParser
             saveBaselinePath: $saveBaselinePath,
             logLevel: $logLevel,
             logFile: $logFile,
+            grpcMethod: $grpcMethod,
         );
     }
 
@@ -859,6 +865,13 @@ final class ArgvParser
             throw new InvalidArgumentException(
                 'Option --log-level must be one of: ' . implode(', ', $allowed) . '.'
             );
+        }
+    }
+
+    private function validateGrpcMethod(string $value): void
+    {
+        if (!preg_match('/^[A-Za-z0-9_.]+\/[A-Za-z0-9_]+$/', $value)) {
+            throw new InvalidArgumentException('Option --grpc must use package.Service/Method syntax.');
         }
     }
 

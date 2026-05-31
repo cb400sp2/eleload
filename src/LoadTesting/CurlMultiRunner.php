@@ -343,14 +343,18 @@ final class CurlMultiRunner
      */
     private function createHandle(RequestOptions $options): CurlHandle
     {
-        $ch = curl_init($options->url);
+        $url = $options->grpcMethod !== null
+            ? rtrim($options->url, '/') . '/' . ltrim($options->grpcMethod, '/')
+            : $options->url;
+
+        $ch = curl_init($url);
         if (!$ch instanceof CurlHandle) {
             throw new RuntimeException('Failed to initialize curl handle.');
         }
 
         $curlOptions = [
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_CUSTOMREQUEST => $options->method,
+            CURLOPT_CUSTOMREQUEST => $options->grpcMethod !== null ? 'POST' : $options->method,
             CURLOPT_TIMEOUT => $options->timeout,
             CURLOPT_CONNECTTIMEOUT => $options->connectTimeout ?? min($options->timeout, 5),
             CURLOPT_HEADER => false,
@@ -360,19 +364,36 @@ final class CurlMultiRunner
             CURLOPT_SSLVERSION => CURL_SSLVERSION_TLSv1_2,
             CURLOPT_TCP_KEEPALIVE => $options->tcpKeepaliveSec > 0 ? 1 : 0,
             CURLOPT_TCP_KEEPIDLE => $options->tcpKeepaliveSec,
-            CURLOPT_HTTP_VERSION => $this->resolveCurlHttpVersion($options->httpVersion),
+            CURLOPT_HTTP_VERSION => $options->grpcMethod !== null
+                ? CURL_HTTP_VERSION_2_0
+                : $this->resolveCurlHttpVersion($options->httpVersion),
             CURLOPT_DNS_CACHE_TIMEOUT => $options->dnsCacheTtl,
             CURLOPT_ENCODING => $options->noDecompress ? '' : ($options->acceptEncoding === 'none' ? '' : $options->acceptEncoding),
             CURLOPT_MAXCONNECTS => $options->maxConnections,
         ];
 
-        $headers = $options->resolveHeaders();
-        if (!empty($headers)) {
-            $curlOptions[CURLOPT_HTTPHEADER] = $headers;
-        }
+        if ($options->grpcMethod !== null) {
+            // gRPC unary RPC over HTTP/2: apply gRPC framing and mandatory headers
+            $rawBody = $options->body ?? '';
+            $curlOptions[CURLOPT_POSTFIELDS] = GrpcFramer::encode($rawBody);
+            $curlOptions[CURLOPT_HTTPHEADER] = array_merge(
+                [
+                    'Content-Type: application/grpc+proto',
+                    'TE: trailers',
+                    'grpc-encoding: identity',
+                    'grpc-accept-encoding: identity',
+                ],
+                $options->resolveHeaders()
+            );
+        } else {
+            $headers = $options->resolveHeaders();
+            if (!empty($headers)) {
+                $curlOptions[CURLOPT_HTTPHEADER] = $headers;
+            }
 
-        if ($options->body !== null) {
-            $curlOptions[CURLOPT_POSTFIELDS] = $options->body;
+            if ($options->body !== null) {
+                $curlOptions[CURLOPT_POSTFIELDS] = $options->body;
+            }
         }
 
         // @phpstan-ignore-next-line (CURLOPT_CUSTOMREQUEST accepts any non-empty string; method is validated at parse time)

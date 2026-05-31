@@ -69,6 +69,7 @@ final class RunOptions
         public readonly string $logLevel = 'warn',
         /** Optional file path for structured JSON-Lines log output. */
         public readonly ?string $logFile = null,
+        public readonly ?string $grpcMethod = null
     ) {
     }
 }
