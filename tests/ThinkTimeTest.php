@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Eleload\LoadTesting\ThinkTime;
 use Eleload\LoadTesting\ScenarioLoader;
 use Eleload\LoadTesting\ScenarioStep;
+use Eleload\LoadTesting\ThinkTime;
 
 // ---- ThinkTime: fixed distribution ----
 test('ThinkTime fixed returns constant value', function (): void {
@@ -51,7 +51,7 @@ test('ThinkTime throws for unknown distribution', function (): void {
     assertThrows(
         fn () => new ThinkTime('uniform', 100.0),
         InvalidArgumentException::class,
-        "uniform"
+        'uniform'
     );
 });
 
