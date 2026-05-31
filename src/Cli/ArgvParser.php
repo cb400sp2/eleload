@@ -857,7 +857,7 @@ final class ArgvParser
         $allowed = ['debug', 'info', 'warn', 'error'];
         if (!in_array($value, $allowed, true)) {
             throw new InvalidArgumentException(
-                "Option --log-level must be one of: " . implode(', ', $allowed) . '.'
+                'Option --log-level must be one of: ' . implode(', ', $allowed) . '.'
             );
         }
     }
