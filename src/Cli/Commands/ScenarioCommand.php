@@ -8,6 +8,7 @@ use Eleload\Cli\ArgvParser;
 use Eleload\Cli\ConsoleOutput;
 use Eleload\Cli\ScenarioOptions;
 use Eleload\Cli\Support\HighLoadGuard;
+use Eleload\LoadTesting\AgentRunner;
 use Eleload\LoadTesting\ScenarioDefinition;
 use Eleload\LoadTesting\ScenarioLoader;
 use Eleload\LoadTesting\ScenarioResult;
@@ -47,14 +48,29 @@ final class ScenarioCommand
             $output
         );
 
-        $runner = new ScenarioRunner();
-        $result = $runner->run(
-            definition: $definition,
-            concurrency: $options->concurrency,
-            durationSec: $options->durationSec,
-            iterations: $options->iterations,
-            warmupSec: $options->warmupSec
-        );
+        if ($options->agents > 1) {
+            $runner = new AgentRunner(
+                phpBinary: PHP_BINARY,
+                entryPoint: $_SERVER['argv'][0] ?? 'eleload',
+                agents: $options->agents
+            );
+            $result = $runner->run(
+                definition: $definition,
+                concurrency: $options->concurrency,
+                durationSec: $options->durationSec,
+                iterations: $options->iterations,
+                warmupSec: $options->warmupSec
+            );
+        } else {
+            $runner = new ScenarioRunner();
+            $result = $runner->run(
+                definition: $definition,
+                concurrency: $options->concurrency,
+                durationSec: $options->durationSec,
+                iterations: $options->iterations,
+                warmupSec: $options->warmupSec
+            );
+        }
 
         if (!$options->silent) {
             $this->printSummary($result, $output, $options->verbose);
@@ -191,6 +207,7 @@ final class ScenarioCommand
         $output->writeln(sprintf('  name: %s', $definition->name));
         $output->writeln(sprintf('  steps: %d', count($definition->steps)));
         $output->writeln(sprintf('  variables: %d', count($definition->variables)));
+        $output->writeln(sprintf('  agents: %d', $options->agents));
         $output->writeln('');
     }
 }

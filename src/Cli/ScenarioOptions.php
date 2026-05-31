@@ -19,7 +19,8 @@ final class ScenarioOptions
         public readonly bool $allowHighLoad = false,
         public readonly ?string $reportJsonPath = null,
         public readonly ?string $outputDir = null,
-        public readonly ?string $name = null
+        public readonly ?string $name = null,
+        public readonly int $agents = 1,
     ) {
     }
 }

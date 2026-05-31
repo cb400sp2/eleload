@@ -579,6 +579,7 @@ final class ArgvParser
         $reportJsonPath = null;
         $outputDir = null;
         $name = null;
+        $agents = 1;
 
         $i = 0;
         while ($i < count($args)) {
@@ -639,6 +640,9 @@ final class ArgvParser
                     case 'name':
                         $name = $value;
                         break;
+                    case 'agents':
+                        $agents = $this->parsePositiveInt($optName, $value);
+                        break;
                     default:
                         throw new InvalidArgumentException("Unknown option for scenario command: --{$optName}");
                 }
@@ -677,7 +681,8 @@ final class ArgvParser
             allowHighLoad: $allowHighLoad,
             reportJsonPath: $reportJsonPath,
             outputDir: $outputDir,
-            name: $name
+            name: $name,
+            agents: $agents,
         );
     }
 
