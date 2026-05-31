@@ -18,28 +18,33 @@ final class FailureEvaluator
     public function evaluate(array $report, RunOptions $options): array
     {
         $checks = [];
-        $latency = $report['summary']['latency'];
-        $requests = $report['summary']['requests'];
-        $throughput = $report['summary']['throughput'];
+        /** @var array<string, mixed> $summary */
+        $summary = $report['summary'];
+        /** @var array{p95: float, p99: float} $latency */
+        $latency = $summary['latency'];
+        /** @var array{error_rate: float} $requests */
+        $requests = $summary['requests'];
+        /** @var array{rps: float, tps: float} $throughput */
+        $throughput = $summary['throughput'];
 
         if ($options->failOnP95 !== null) {
-            $checks[] = $this->maxCheck('p95', (float)$latency['p95'], $options->failOnP95);
+            $checks[] = $this->maxCheck('p95', $latency['p95'], $options->failOnP95);
         }
 
         if ($options->failOnP99 !== null) {
-            $checks[] = $this->maxCheck('p99', (float)$latency['p99'], $options->failOnP99);
+            $checks[] = $this->maxCheck('p99', $latency['p99'], $options->failOnP99);
         }
 
         if ($options->failOnErrorRate !== null) {
-            $checks[] = $this->maxCheck('error_rate', (float)$requests['error_rate'], $options->failOnErrorRate);
+            $checks[] = $this->maxCheck('error_rate', $requests['error_rate'], $options->failOnErrorRate);
         }
 
         if ($options->failOnRpsBelow !== null) {
-            $checks[] = $this->minCheck('rps', (float)$throughput['rps'], $options->failOnRpsBelow);
+            $checks[] = $this->minCheck('rps', $throughput['rps'], $options->failOnRpsBelow);
         }
 
         if ($options->failOnTpsBelow !== null) {
-            $checks[] = $this->minCheck('tps', (float)$throughput['tps'], $options->failOnTpsBelow);
+            $checks[] = $this->minCheck('tps', $throughput['tps'], $options->failOnTpsBelow);
         }
 
         return [

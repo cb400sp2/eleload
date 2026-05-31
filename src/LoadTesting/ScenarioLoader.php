@@ -64,6 +64,7 @@ final class ScenarioLoader
             throw new InvalidArgumentException('Scenario file must be a JSON object.');
         }
 
+        /** @var array<string, mixed> $data */
         return $this->parseDefinition($data);
     }
 
@@ -94,6 +95,7 @@ final class ScenarioLoader
             throw new InvalidArgumentException('Scenario YAML file must be a mapping (object).');
         }
 
+        /** @var array<string, mixed> $data */
         return $this->parseDefinition($data);
     }
 

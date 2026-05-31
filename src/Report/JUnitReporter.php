@@ -35,15 +35,24 @@ final class JUnitReporter implements ReportWriterInterface
      */
     private function buildXml(array $report): string
     {
-        $testName  = (string)($report['meta']['test_name'] ?? 'eleload');
-        $durationSec = (float)($report['summary']['duration_sec'] ?? 0.0);
+        /** @var array{test_name?: string} $reportMeta */
+        $reportMeta = is_array($report['meta'] ?? null) ? $report['meta'] : [];
+        /** @var array{duration_sec?: float, requests?: array{failed?: int}} $reportSummary */
+        $reportSummary = is_array($report['summary'] ?? null) ? $report['summary'] : [];
+        /** @var array{checks?: list<array{name: string, actual: float, threshold: float, operator: string, passed: bool}>} $reportThresholds */
+        $reportThresholds = is_array($report['thresholds'] ?? null) ? $report['thresholds'] : [];
+
+        $testName    = $reportMeta['test_name'] ?? 'eleload';
+        $durationSec = $reportSummary['duration_sec'] ?? 0.0;
 
         /** @var list<array{name:string,actual:float,threshold:float,operator:string,passed:bool}> $checks */
-        $checks = $report['thresholds']['checks'] ?? [];
+        $checks = $reportThresholds['checks'] ?? [];
 
         // If no threshold checks exist, synthesise one from the failure count.
         if ($checks === []) {
-            $failed = (int)($report['summary']['requests']['failed'] ?? 0);
+            $requestsSummary = is_array($reportSummary['requests'] ?? null) ? $reportSummary['requests'] : [];
+            /** @var array{failed?: int} $requestsSummary */
+            $failed = $requestsSummary['failed'] ?? 0;
             $checks = [
                 [
                     'name'      => 'requests_succeeded',

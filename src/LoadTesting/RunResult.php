@@ -71,6 +71,7 @@ final class RunResult
                     throw new RuntimeException('Invalid spilled request result payload.');
                 }
 
+                /** @var array<string, bool|float|int|string|null> $payload */
                 yield RequestResult::fromArray($payload);
             }
         } finally {

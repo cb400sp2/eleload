@@ -33,6 +33,7 @@ final class ReportComparator
         ];
 
         foreach ($metrics as $metric) {
+            /** @var array{status: string} $metric */
             $counts[$metric['status']]++;
         }
 
@@ -145,6 +146,7 @@ final class ReportComparator
             throw new RuntimeException("Invalid report format: '{$key}' must be an object.");
         }
 
+        /** @var array<string, mixed> $value */
         return $value;
     }
 

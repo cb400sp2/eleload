@@ -92,35 +92,42 @@ final class AgentRunner
 
             $result = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
             if (!is_array($result) || !($result['success'] ?? false)) {
-                $message = is_array($result) ? (string) ($result['error'] ?? 'unknown error') : 'invalid agent output';
+                $errorVal = is_array($result) ? ($result['error'] ?? null) : null;
+                $message = is_string($errorVal) ? $errorVal : (is_array($result) ? 'unknown error' : 'invalid agent output');
                 throw new RuntimeException('Agent ' . $processInfo['id'] . ' failed: ' . $message);
             }
+            /** @var array<string, mixed> $result */
 
-            $durationFromAgents = max($durationFromAgents, (float) ($result['duration_sec'] ?? 0.0));
+            $durationFromAgents = max($durationFromAgents, is_numeric($result['duration_sec'] ?? null) ? (float) $result['duration_sec'] : 0.0);
 
-            foreach ($result['iteration_results'] ?? [] as $iterationData) {
+            /** @var list<mixed> $iterationResultsList */
+            $iterationResultsList = is_array($result['iteration_results'] ?? null) ? array_values($result['iteration_results']) : [];
+            foreach ($iterationResultsList as $iterationData) {
+                /** @var array{vu_id: int, iteration_number: int, total_ms: float, elapsed_at_end_sec: float, step_results: list<array{step_index: int, step_name: string, latency_ms: float, http_code: int, error_no: int, error: string, success: bool}>, success: bool} $iterationData */
+                $stepResultsData = $iterationData['step_results'];
                 $stepResults = array_map(
-                    static fn (array $stepResult) => new ScenarioStepResult(
-                        stepIndex: (int) ($stepResult['step_index'] ?? 0),
-                        stepName: (string) ($stepResult['step_name'] ?? ''),
-                        latencyMs: (float) ($stepResult['latency_ms'] ?? 0.0),
-                        httpCode: (int) ($stepResult['http_code'] ?? 0),
-                        errorNo: (int) ($stepResult['error_no'] ?? 0),
-                        error: (string) ($stepResult['error'] ?? ''),
-                        success: (bool) ($stepResult['success'] ?? false),
-                    ),
-                    is_array($iterationData['step_results'] ?? null)
-                        ? array_values($iterationData['step_results'])
-                        : []
+                    static function (mixed $stepResult): ScenarioStepResult {
+                        /** @var array{step_index: int, step_name: string, latency_ms: float, http_code: int, error_no: int, error: string, success: bool} $stepResult */
+                        return new ScenarioStepResult(
+                            stepIndex: $stepResult['step_index'],
+                            stepName: $stepResult['step_name'],
+                            latencyMs: $stepResult['latency_ms'],
+                            httpCode: $stepResult['http_code'],
+                            errorNo: $stepResult['error_no'],
+                            error: $stepResult['error'],
+                            success: $stepResult['success'],
+                        );
+                    },
+                    $stepResultsData
                 );
 
                 $iterationResults[] = new ScenarioIterationResult(
-                    vuId: (int) ($iterationData['vu_id'] ?? 0),
-                    iterationNumber: (int) ($iterationData['iteration_number'] ?? 0),
-                    totalMs: (float) ($iterationData['total_ms'] ?? 0.0),
-                    elapsedAtEndSec: (float) ($iterationData['elapsed_at_end_sec'] ?? 0.0),
+                    vuId: $iterationData['vu_id'],
+                    iterationNumber: $iterationData['iteration_number'],
+                    totalMs: $iterationData['total_ms'],
+                    elapsedAtEndSec: $iterationData['elapsed_at_end_sec'],
                     stepResults: $stepResults,
-                    success: (bool) ($iterationData['success'] ?? false),
+                    success: $iterationData['success'],
                 );
             }
         }

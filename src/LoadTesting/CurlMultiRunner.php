@@ -205,7 +205,7 @@ final class CurlMultiRunner
      * Flushes in-memory results to a temporary file and appends the new result.
      *
      * @param list<RequestResult> $inMemoryResults
-     * @return array{0:string,1:mixed}
+     * @return array{0:string,1:resource}
      */
     private function storeRequestResultToDisk(
         array &$inMemoryResults,
@@ -223,6 +223,7 @@ final class CurlMultiRunner
             $inMemoryResults = [];
         }
 
+        assert(is_resource($resultsHandle));
         $this->writeRequestResult($resultsHandle, $requestResult);
 
         return [$resultsPath, $resultsHandle];
@@ -231,7 +232,7 @@ final class CurlMultiRunner
     /**
      * Opens a new temporary file for spilling request results.
      *
-     * @return array{0:string,1:mixed}
+     * @return array{0:string,1:resource}
      */
     private function openRequestResultsFile(): array
     {

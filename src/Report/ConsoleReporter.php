@@ -16,24 +16,44 @@ final class ConsoleReporter
      */
     public function render(array $report, ConsoleOutput $output, bool $verbose = false): void
     {
+        /** @var array<string, mixed> $summary */
         $summary = $report['summary'];
+        /** @var array{total: int, success: int, failed: int, success_rate: float, error_rate: float} $requests */
         $requests = $summary['requests'];
+        /** @var array{rps: float, tps: float, tps_rps_rate: float, target_rps?: float, rps_achievement_rate?: float, target_tps?: float, tps_achievement_rate?: float} $throughput */
         $throughput = $summary['throughput'];
+        /** @var array{p50: float, p95: float, p99: float, min: float, avg: float, max: float} $latency */
         $latency = $summary['latency'];
+        /** @var float $durationSec */
+        $durationSec = $summary['duration_sec'];
+        /** @var array<string, array{count: int, rate: float}> $statusCodes */
+        $statusCodes = is_array($summary['status_codes'] ?? null) ? $summary['status_codes'] : [];
+        /** @var list<array{request: int, success?: bool, http_code: int, error_no: int, latency_ms: float, download_bytes?: float, body_contains_expected?: bool, error: string}> $slowestRequests */
+        $slowestRequests = is_array($summary['slowest_requests'] ?? null) ? array_values($summary['slowest_requests']) : [];
+        /** @var array{url: string, method: string} $reportTarget */
+        $reportTarget = $report['target'];
+        /** @var array{concurrency: int, success_status?: mixed} $reportConfig */
+        $reportConfig = $report['config'];
+        /** @var array{test_name?: string} $reportMeta */
+        $reportMeta = is_array($report['meta'] ?? null) ? $report['meta'] : [];
+        /** @var array{checks?: list<array{name: string, actual: float, threshold: float, operator: string, passed: bool}>} $reportThresholds */
+        $reportThresholds = is_array($report['thresholds'] ?? null) ? $report['thresholds'] : [];
+        /** @var list<array{request: int, success?: bool, http_code: int, error_no: int, latency_ms: float, download_bytes?: float, body_contains_expected?: bool, error: string}> $reportErrors */
+        $reportErrors = is_array($report['errors'] ?? null) ? array_values($report['errors']) : [];
 
         $output->writeln();
         $output->writeln('HTTP Load Test Result');
         $output->writeln();
         $output->writeln('Target');
-        if (!empty($report['meta']['test_name']) && is_string($report['meta']['test_name'])) {
-            $output->writeln('  Test Name            : ' . $report['meta']['test_name']);
+        if (!empty($reportMeta['test_name'])) {
+            $output->writeln('  Test Name            : ' . $reportMeta['test_name']);
         }
-        $output->writeln('  URL                  : ' . $report['target']['url']);
-        $output->writeln('  Method               : ' . $report['target']['method']);
-        $output->writeln('  Success Status       : ' . $this->formatSuccessStatus($report['config']['success_status'] ?? null));
+        $output->writeln('  URL                  : ' . $reportTarget['url']);
+        $output->writeln('  Method               : ' . $reportTarget['method']);
+        $output->writeln('  Success Status       : ' . $this->formatSuccessStatus($reportConfig['success_status'] ?? null));
         $output->writeln('  Requests             : ' . $requests['total']);
-        $output->writeln('  Concurrency          : ' . $report['config']['concurrency']);
-        $output->writeln('  Duration             : ' . number_format((float)$summary['duration_sec'], 3) . ' sec');
+        $output->writeln('  Concurrency          : ' . $reportConfig['concurrency']);
+        $output->writeln('  Duration             : ' . number_format($durationSec, 3) . ' sec');
         $output->writeln();
         $output->writeln('Throughput');
         $output->writeln('  RPS                  : ' . $this->formatRate((float)$throughput['rps'], 'req/sec'));
@@ -50,7 +70,7 @@ final class ConsoleReporter
                     '  Target RPS           : ' . $this->formatRate((float)$throughput['target_rps'], 'req/sec')
                 );
                 $output->writeln(
-                    '  RPS Achievement      : ' . $this->formatPercent((float)$throughput['rps_achievement_rate'])
+                    '  RPS Achievement      : ' . $this->formatPercent($throughput['rps_achievement_rate'] ?? 0.0)
                 );
             }
             if ($hasTargetTps) {
@@ -58,7 +78,7 @@ final class ConsoleReporter
                     '  Target TPS           : ' . $this->formatRate((float)$throughput['target_tps'], 'tx/sec')
                 );
                 $output->writeln(
-                    '  TPS Achievement      : ' . $this->formatPercent((float)$throughput['tps_achievement_rate'])
+                    '  TPS Achievement      : ' . $this->formatPercent($throughput['tps_achievement_rate'] ?? 0.0)
                 );
             }
         }
@@ -88,17 +108,17 @@ final class ConsoleReporter
 
         $output->writeln();
         $output->writeln('Status Codes');
-        foreach ($summary['status_codes'] as $code => $item) {
+        foreach ($statusCodes as $code => $item) {
             $output->writeln(
                 '  ' . str_pad((string)$code, 20, ' ', STR_PAD_RIGHT) .
                 ': ' . $item['count'] . ' (' . $this->formatPercent((float)$item['rate']) . ')'
             );
         }
 
-        if (!empty($report['thresholds']['checks'])) {
+        if (!empty($reportThresholds['checks'])) {
             $output->writeln();
             $output->writeln('Thresholds');
-            foreach ($report['thresholds']['checks'] as $check) {
+            foreach ($reportThresholds['checks'] as $check) {
                 $output->writeln(
                     '  ' . str_pad((string)$check['name'], 20, ' ', STR_PAD_RIGHT) .
                     ': actual ' . $check['actual'] . ' ' . $check['operator'] . ' ' . $check['threshold'] .
@@ -107,10 +127,10 @@ final class ConsoleReporter
             }
         }
 
-        if (!empty($report['errors'])) {
+        if ($reportErrors !== []) {
             $output->writeln();
             $output->writeln($verbose ? 'Errors (detailed)' : 'Errors');
-            $errorRows = $verbose ? $report['errors'] : array_slice($report['errors'], 0, 10);
+            $errorRows = $verbose ? $reportErrors : array_slice($reportErrors, 0, 10);
 
             foreach ($errorRows as $error) {
                 if ($verbose) {
@@ -142,15 +162,15 @@ final class ConsoleReporter
                 );
             }
 
-            if (!$verbose && count($report['errors']) > 10) {
-                $output->writeln('  ... and ' . (count($report['errors']) - 10) . ' more');
+            if (!$verbose && count($reportErrors) > 10) {
+                $output->writeln('  ... and ' . (count($reportErrors) - 10) . ' more');
             }
         }
 
-        if ($verbose && !empty($summary['slowest_requests'])) {
+        if ($verbose && $slowestRequests !== []) {
             $output->writeln();
             $output->writeln('Slowest Requests');
-            foreach ($summary['slowest_requests'] as $request) {
+            foreach ($slowestRequests as $request) {
                 $output->writeln(
                     sprintf(
                         '  #%d success=%s code=%d errno=%d latency=%sms bytes=%s body_match=%s message=%s',
@@ -213,6 +233,6 @@ final class ConsoleReporter
             return '2xx,3xx (default)';
         }
 
-        return implode(',', array_map(static fn (mixed $code): string => (string)$code, $value));
+        return implode(',', array_map(static fn (mixed $code): string => is_scalar($code) ? (string)$code : '', $value));
     }
 }
