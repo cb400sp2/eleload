@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Eleload\Logging\JsonLinesLogger;
-use Eleload\Logging\NullLogger;
-use Eleload\Logging\LoggerInterface;
 use Eleload\Cli\ArgvParser;
+use Eleload\Logging\JsonLinesLogger;
+use Eleload\Logging\LoggerInterface;
+use Eleload\Logging\NullLogger;
 
 // ---- NullLogger ----
 test('NullLogger implements LoggerInterface', function (): void {
