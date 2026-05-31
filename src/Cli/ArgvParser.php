@@ -590,6 +590,7 @@ final class ArgvParser
         $yes = false;
         $allowHighLoad = false;
         $reportJsonPath = null;
+        $reportHtmlPath = null;
         $outputDir = null;
         $name = null;
         $agents = 1;
@@ -647,6 +648,9 @@ final class ArgvParser
                     case 'report-json':
                         $reportJsonPath = $value;
                         break;
+                    case 'report-html':
+                        $reportHtmlPath = $value;
+                        break;
                     case 'output-dir':
                         $outputDir = $value;
                         break;
@@ -693,6 +697,7 @@ final class ArgvParser
             yes: $yes,
             allowHighLoad: $allowHighLoad,
             reportJsonPath: $reportJsonPath,
+            reportHtmlPath: $reportHtmlPath,
             outputDir: $outputDir,
             name: $name,
             agents: $agents,
