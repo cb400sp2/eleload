@@ -78,6 +78,49 @@ We follow PSR-12 with the additional rules configured in `.php-cs-fixer.php`.
 4. Verify coverage does not drop below 60% (`composer coverage`).
 5. Open a pull request against `main` and describe what you changed and why.
 
+## Branch naming
+
+Use the format `issue-<number>-<short-slug>`, e.g. `issue-42-add-csv-reporter`.
+
+## Commit convention
+
+This project follows [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
+
+```
+<type>(<scope>): <subject>
+```
+
+Common types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `ci`, `perf`.
+
+Examples:
+```
+feat: add CSV report output format
+fix: prevent division by zero when duration is 0
+docs: update scenario file format reference
+```
+
+Commit messages are validated by [commitlint](https://commitlint.js.org/) in CI.
+
+## Pre-commit hooks
+
+[captainhook](https://github.com/captainhookphp/captainhook) hooks are installed automatically by `composer install`.
+The pre-commit hook runs `cs-check`, `analyse`, and `test` before each commit.
+
+To install hooks manually:
+
+```bash
+make hooks
+```
+
+## Development shortcuts
+
+Run `make help` to see all available development targets.
+
+## Code of Conduct
+
+This project is governed by the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
+
+
 ## Security
 
 If you discover a security vulnerability, please follow the responsible disclosure
