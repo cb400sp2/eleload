@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/cb400sp2/eleload/compare/v1.3.0...v1.4.0) (2026-05-31)
+
+
+### Features
+
+* add Psalm static analysis (isolated tools/ install) ([#169](https://github.com/cb400sp2/eleload/issues/169)) ([f4bcf45](https://github.com/cb400sp2/eleload/commit/f4bcf457cea3be554247277ff7156c10bb7f31c3)), closes [#111](https://github.com/cb400sp2/eleload/issues/111)
+
 # [1.3.0](https://github.com/cb400sp2/eleload/compare/v1.2.0...v1.3.0) (2026-05-31)
 
 
