@@ -69,6 +69,7 @@ final class ArgvParser
         $grpcMethod = null;
         $otelEndpoint = null;
         $prometheusUrl = null;
+        $tui = false;
         $bearerTokenEnv = null;
         $basicUserEnv = null;
         $basicPasswordEnv = null;
@@ -114,6 +115,12 @@ final class ArgvParser
 
             if ($token === '--allow-high-load') {
                 $allowHighLoad = true;
+                $i++;
+                continue;
+            }
+
+            if ($token === '--tui') {
+                $tui = true;
                 $i++;
                 continue;
             }
@@ -448,6 +455,7 @@ final class ArgvParser
             grpcMethod: $grpcMethod,
             otelEndpoint: $otelEndpoint,
             prometheusUrl: $prometheusUrl,
+            tui: $tui,
         );
     }
 

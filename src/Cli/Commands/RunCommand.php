@@ -8,6 +8,7 @@ use Eleload\Cli\ArgvParser;
 use Eleload\Cli\ConsoleOutput;
 use Eleload\Cli\RunOptions;
 use Eleload\Cli\Support\HighLoadGuard;
+use Eleload\Cli\TuiDashboard;
 use Eleload\Compare\ReportComparator;
 use Eleload\LoadTesting\CurlMultiRunner;
 use Eleload\LoadTesting\RequestOptions;
@@ -75,6 +76,20 @@ final class RunCommand
         $csvReporter = new CsvReporter();
         $pathGenerator = new ReportPathGenerator();
 
+        // --- TUI Dashboard ---
+        $tui = null;
+        $onProgress = null;
+        if ($options->tui) {
+            $tui = new TuiDashboard();
+            $tui->start();
+            $total = $options->requests;
+            $onProgress = static function (int $completed, int $errors, float $elapsedSec, int $requestTotal) use ($tui, $total): void {
+                $rps = $elapsedSec > 0 ? $completed / $elapsedSec : 0.0;
+                $errPct = $completed > 0 ? ($errors / $completed * 100) : 0.0;
+                $tui->update($completed, $requestTotal > 0 ? $requestTotal : $total, $rps, $errPct, $elapsedSec);
+            };
+        }
+
         $result = $runner->run(new RequestOptions(
             url: $options->url,
             requests: $options->requests,
@@ -106,7 +121,11 @@ final class RunCommand
             maxConnections: $options->maxConnections,
             tcpKeepaliveSec: $options->tcpKeepaliveSec,
             grpcMethod: $options->grpcMethod,
-        ));
+        ), $onProgress);
+
+        if ($tui !== null) {
+            $tui->finish();
+        }
 
         $report = $stats->summarize($result);
         $report['thresholds'] = $failureEvaluator->evaluate($report, $options);

@@ -593,3 +593,21 @@ test('ArgvParser rejects combining --bearer-token and --bearer-token-env', funct
 
     putenv($envVar);
 });
+
+test('ArgvParser parses --tui flag', function (): void {
+    $parser = new ArgvParser();
+    $opts = $parser->parseRun(['https://example.com', '--requests=10', '--tui']);
+    assertTrue($opts->tui);
+});
+
+test('ArgvParser tui defaults to false', function (): void {
+    $parser = new ArgvParser();
+    $opts = $parser->parseRun(['https://example.com', '--requests=10']);
+    assertFalse($opts->tui);
+});
+
+test('ArgvParser parses --prometheus-pushgateway-url', function (): void {
+    $parser = new ArgvParser();
+    $opts = $parser->parseRun(['https://example.com', '--requests=10', '--prometheus-pushgateway-url=http://localhost:9091']);
+    assertSame('http://localhost:9091', $opts->prometheusUrl);
+});

@@ -74,6 +74,8 @@ final class RunOptions
         public readonly ?string $otelEndpoint = null,
         /** Prometheus Pushgateway URL (e.g. http://localhost:9091). Null = disabled. */
         public readonly ?string $prometheusUrl = null,
+        /** Enable real-time TUI progress dashboard (requires TTY). */
+        public readonly bool $tui = false,
     ) {
     }
 }
