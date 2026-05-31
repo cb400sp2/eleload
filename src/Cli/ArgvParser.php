@@ -67,6 +67,7 @@ final class ArgvParser
         $maxConnections = 0;
         $tcpKeepaliveSec = 60;
         $grpcMethod = null;
+        $otelEndpoint = null;
         $bearerTokenEnv = null;
         $basicUserEnv = null;
         $basicPasswordEnv = null;
@@ -281,6 +282,9 @@ final class ArgvParser
                     case 'log-file':
                         $logFile = $value;
                         break;
+                    case 'otel-endpoint':
+                        $otelEndpoint = $value;
+                        break;
                     default:
                         throw new InvalidArgumentException("Unknown option: --{$name}");
                 }
@@ -438,6 +442,7 @@ final class ArgvParser
             logLevel: $logLevel,
             logFile: $logFile,
             grpcMethod: $grpcMethod,
+                otelEndpoint: $otelEndpoint,
         );
     }
 

@@ -22,6 +22,8 @@ use Eleload\Report\HtmlReporter;
 use Eleload\Report\JsonReporter;
 use Eleload\Report\MarkdownReporter;
 use Eleload\Report\ReportPathGenerator;
+use Eleload\Telemetry\NullTracer;
+use Eleload\Telemetry\OtelTracer;
 use RuntimeException;
 
 final class RunCommand
@@ -51,6 +53,16 @@ final class RunCommand
             $options->yes,
             $output
         );
+
+        $tracer = $options->otelEndpoint !== null
+            ? new OtelTracer($options->otelEndpoint)
+            : new NullTracer();
+
+        $runSpan = $tracer->startSpan('scenario.run', [
+            'url'         => $options->url,
+            'requests'    => $options->requests,
+            'concurrency' => $options->concurrency,
+        ]);
 
         $runner = new CurlMultiRunner($options->memoryBufferSize);
         $stats = new StatisticsCalculator();
@@ -188,6 +200,11 @@ final class RunCommand
             'failed_requests' => $report['summary']['requests']['failed'],
             'thresholds_failed' => $report['thresholds']['failed'],
         ]);
+        $runSpan->setAttribute('exit_code', $exitCode);
+        $runSpan->end();
+        if ($tracer instanceof OtelTracer) {
+            $tracer->flush();
+        }
 
         if ($options->debug) {
             $output->writeln(sprintf('[debug] peak_memory_after_run=%d bytes', memory_get_peak_usage(true)));
