@@ -48,8 +48,9 @@ test('Report writers create json and html files', function (): void {
     assertContains('"tool": "eleload"', $json);
     assertContains('"test_name": "top page smoke load"', $json);
     assertContains('<title>eleload report</title>', $html);
-    assertContains('Test Name: top page smoke load', $html);
-    assertContains('Total Requests', $html);
+    assertContains('top page smoke load', $html);
+    assertContains('Requests', $html);
+    assertContains('<canvas', $html);
     assertContains('# Eleload Report', $markdown);
     assertContains('**Test Name:** top page smoke load', $markdown);
     assertContains('| RPS | 1.00 req/sec |', $markdown);
