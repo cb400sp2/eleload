@@ -22,6 +22,7 @@ use Eleload\Report\ConsoleReporter;
 use Eleload\Report\CsvReporter;
 use Eleload\Report\HtmlReporter;
 use Eleload\Report\JsonReporter;
+use Eleload\Report\JUnitReporter;
 use Eleload\Report\MarkdownReporter;
 use Eleload\Report\ReportPathGenerator;
 use Eleload\Telemetry\NullTracer;
@@ -75,6 +76,7 @@ final class RunCommand
         $heatmapReporter = new HtmlReporter(__DIR__ . '/../../../templates/heatmap.php');
         $markdownReporter = new MarkdownReporter();
         $csvReporter = new CsvReporter();
+        $junitReporter = new JUnitReporter();
         $pathGenerator = new ReportPathGenerator();
 
         // --- TUI Dashboard ---
@@ -167,6 +169,13 @@ final class RunCommand
             $heatmapReporter->write($report, $options->reportHeatmapPath);
             if (!$options->silent) {
                 $output->writeln('Heatmap report: ' . $options->reportHeatmapPath);
+            }
+        }
+
+        if ($options->reportJunitPath !== null) {
+            $junitReporter->write($report, $options->reportJunitPath);
+            if (!$options->silent) {
+                $output->writeln('JUnit report: ' . $options->reportJunitPath);
             }
         }
 
@@ -283,6 +292,7 @@ final class RunCommand
             'report_md' => $options->reportMdPath,
             'report_csv' => $options->reportCsvPath,
             'report_heatmap' => $options->reportHeatmapPath,
+            'report_junit' => $options->reportJunitPath,
             'output_dir' => $options->outputDir,
             'name' => $options->name,
             'rate' => $options->rate,
@@ -319,6 +329,7 @@ final class RunCommand
                 'md' => $options->reportMdPath,
                 'csv' => $options->reportCsvPath,
                 'heatmap' => $options->reportHeatmapPath,
+                'junit' => $options->reportJunitPath,
                 'output_dir' => $options->outputDir,
             ],
         ];

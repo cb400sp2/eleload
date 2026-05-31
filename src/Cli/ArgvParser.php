@@ -43,6 +43,7 @@ final class ArgvParser
         $reportMdPath = null;
         $reportCsvPath = null;
         $reportHeatmapPath = null;
+        $reportJunitPath = null;
         $outputDir = null;
         $testName = null;
         $successStatusCodes = null;
@@ -210,6 +211,9 @@ final class ArgvParser
                         break;
                     case 'report-heatmap':
                         $reportHeatmapPath = $value;
+                        break;
+                    case 'report-junit':
+                        $reportJunitPath = $value;
                         break;
                     case 'output-dir':
                         $outputDir = $value;
@@ -429,6 +433,7 @@ final class ArgvParser
             reportMdPath: $reportMdPath,
             reportCsvPath: $reportCsvPath,
             reportHeatmapPath: $reportHeatmapPath,
+            reportJunitPath: $reportJunitPath,
             outputDir: $outputDir,
             name: $testName,
             successStatusCodes: $successStatusCodes,
@@ -595,6 +600,7 @@ final class ArgvParser
         $yes = false;
         $allowHighLoad = false;
         $reportJsonPath = null;
+        $reportHtmlPath = null;
         $outputDir = null;
         $name = null;
         $agents = 1;
@@ -652,6 +658,9 @@ final class ArgvParser
                     case 'report-json':
                         $reportJsonPath = $value;
                         break;
+                    case 'report-html':
+                        $reportHtmlPath = $value;
+                        break;
                     case 'output-dir':
                         $outputDir = $value;
                         break;
@@ -698,6 +707,7 @@ final class ArgvParser
             yes: $yes,
             allowHighLoad: $allowHighLoad,
             reportJsonPath: $reportJsonPath,
+            reportHtmlPath: $reportHtmlPath,
             outputDir: $outputDir,
             name: $name,
             agents: $agents,

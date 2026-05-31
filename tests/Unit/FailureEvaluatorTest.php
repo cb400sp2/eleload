@@ -60,6 +60,7 @@ final class FailureEvaluatorTest extends TestCase
             reportMdPath: $overrides['reportMdPath'] ?? null,
             reportCsvPath: $overrides['reportCsvPath'] ?? null,
             reportHeatmapPath: $overrides['reportHeatmapPath'] ?? null,
+            reportJunitPath: $overrides['reportJunitPath'] ?? null,
             outputDir: $overrides['outputDir'] ?? null,
             name: $overrides['name'] ?? null,
             successStatusCodes: $overrides['successStatusCodes'] ?? null,

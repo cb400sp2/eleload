@@ -95,9 +95,14 @@ final class ScenarioResult
                     'name' => $bucket['name'],
                     'count' => 0,
                     'successCount' => 0,
+                    'failedCount' => 0,
+                    'successRate' => 0.0,
+                    'errorRate' => 0.0,
                     'avgMs' => 0.0,
                     'minMs' => 0.0,
+                    'p50Ms' => 0.0,
                     'p95Ms' => 0.0,
+                    'p99Ms' => 0.0,
                     'maxMs' => 0.0,
                     'rps' => 0.0,
                 ];
@@ -106,16 +111,25 @@ final class ScenarioResult
 
             sort($latencies);
             $avg = array_sum($latencies) / $count;
+            $p50 = $latencies[(int) ceil($count * 0.50) - 1];
             $p95 = $latencies[(int) ceil($count * 0.95) - 1];
+            $p99 = $latencies[(int) ceil($count * 0.99) - 1];
+            $successCount = $bucket['successCount'];
+            $failedCount = $count - $successCount;
 
             $result[] = [
                 'index' => $bucket['index'],
                 'name' => $bucket['name'],
                 'count' => $count,
-                'successCount' => $bucket['successCount'],
+                'successCount' => $successCount,
+                'failedCount' => $failedCount,
+                'successRate' => round(($successCount / $count) * 100.0, 2),
+                'errorRate' => round(($failedCount / $count) * 100.0, 2),
                 'avgMs' => round($avg, 2),
                 'minMs' => round($latencies[0], 2),
+                'p50Ms' => round($p50, 2),
                 'p95Ms' => round($p95, 2),
+                'p99Ms' => round($p99, 2),
                 'maxMs' => round($latencies[$count - 1], 2),
                 'rps' => round($count / $measuredDuration, 2),
             ];

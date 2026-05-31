@@ -64,6 +64,7 @@ test('RunOptions baselinePath defaults to null', function (): void {
         reportMdPath: null,
         reportCsvPath: null,
         reportHeatmapPath: null,
+        reportJunitPath: null,
         outputDir: null,
         name: null,
         successStatusCodes: null,

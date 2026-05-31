@@ -179,3 +179,85 @@ test('CsvReporter writes per-request rows and preserves multibyte text', functio
     assertContains('1,1,1,200,0,12.35,120,1,', $csv);
     assertContains('2,0,0,500,7,20.50,90,0,接続失敗', $csv);
 });
+
+test('JUnitReporter writes valid XML with threshold checks', function (): void {
+    $report = [
+        'meta' => ['test_name' => 'my-load-test'],
+        'summary' => [
+            'duration_sec' => 30.0,
+            'requests' => ['total' => 100, 'success' => 100, 'failed' => 0],
+        ],
+        'thresholds' => [
+            'checks' => [
+                ['name' => 'p95', 'actual' => 120.5, 'threshold' => 200.0, 'operator' => '<=', 'passed' => true],
+                ['name' => 'error_rate', 'actual' => 0.0, 'threshold' => 5.0, 'operator' => '<=', 'passed' => true],
+            ],
+            'failed' => false,
+        ],
+    ];
+
+    $tmpDir = sys_get_temp_dir() . '/eleload-tests-junit-' . uniqid('', true);
+    assertTrue(mkdir($tmpDir, 0775, true), 'Failed to create temp directory');
+    $junitPath = $tmpDir . '/junit.xml';
+
+    (new Eleload\Report\JUnitReporter())->write($report, $junitPath);
+
+    assertTrue(is_file($junitPath), 'JUnit report was not created');
+
+    $xml = (string) file_get_contents($junitPath);
+    assertContains('<?xml version="1.0" encoding="UTF-8"?>', $xml);
+    assertContains('testsuites', $xml);
+    assertContains('tests="2"', $xml);
+    assertContains('failures="0"', $xml);
+    assertContains('name="p95"', $xml);
+    assertContains('name="error_rate"', $xml);
+});
+
+test('JUnitReporter marks failed threshold as <failure>', function (): void {
+    $report = [
+        'meta' => ['test_name' => 'slow-test'],
+        'summary' => [
+            'duration_sec' => 10.0,
+            'requests' => ['total' => 50, 'success' => 45, 'failed' => 5],
+        ],
+        'thresholds' => [
+            'checks' => [
+                ['name' => 'p99', 'actual' => 500.0, 'threshold' => 300.0, 'operator' => '<=', 'passed' => false],
+            ],
+            'failed' => true,
+        ],
+    ];
+
+    $tmpDir = sys_get_temp_dir() . '/eleload-tests-junit-fail-' . uniqid('', true);
+    assertTrue(mkdir($tmpDir, 0775, true), 'Failed to create temp directory');
+    $junitPath = $tmpDir . '/junit.xml';
+
+    (new Eleload\Report\JUnitReporter())->write($report, $junitPath);
+
+    $xml = (string) file_get_contents($junitPath);
+    assertContains('failures="1"', $xml);
+    assertContains('<failure', $xml);
+    assertContains('Threshold violated', $xml);
+});
+
+test('JUnitReporter synthesises testcase when no thresholds defined', function (): void {
+    $report = [
+        'meta' => ['test_name' => 'basic-test'],
+        'summary' => [
+            'duration_sec' => 5.0,
+            'requests' => ['total' => 10, 'success' => 10, 'failed' => 0],
+        ],
+        'thresholds' => ['checks' => [], 'failed' => false],
+    ];
+
+    $tmpDir = sys_get_temp_dir() . '/eleload-tests-junit-synth-' . uniqid('', true);
+    assertTrue(mkdir($tmpDir, 0775, true), 'Failed to create temp directory');
+    $junitPath = $tmpDir . '/junit.xml';
+
+    (new Eleload\Report\JUnitReporter())->write($report, $junitPath);
+
+    $xml = (string) file_get_contents($junitPath);
+    assertContains('tests="1"', $xml);
+    assertContains('failures="0"', $xml);
+    assertContains('requests_succeeded', $xml);
+});
