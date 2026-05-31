@@ -79,6 +79,10 @@ jobs:
         continue-on-error: true
         run: composer psalm -- --no-cache --php-version=8.2
 
+      - name: Run Rector (dry-run)
+        continue-on-error: true
+        run: composer rector
+
   security-audit:
     name: Security Audit
     runs-on: ubuntu-latest

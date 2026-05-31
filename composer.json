@@ -25,7 +25,9 @@
     "cs-fix": "php-cs-fixer fix",
     "complexity": "phpcs --standard=phpcs.xml --report=full",
     "psalm": "php tools/psalm/vendor/bin/psalm",
-    "psalm-baseline": "php tools/psalm/vendor/bin/psalm --set-baseline=psalm-baseline.xml"
+    "psalm-baseline": "php tools/psalm/vendor/bin/psalm --set-baseline=psalm-baseline.xml",
+    "rector": "rector process --dry-run",
+    "rector-fix": "rector process"
   },
   "bin": [
     "bin/eleload"
@@ -37,7 +39,8 @@
     "infection/infection": "^0.29",
     "phpunit/phpunit": "^11.0",
     "symfony/event-dispatcher-contracts": "^3",
-    "squizlabs/php_codesniffer": "^4.0"
+    "squizlabs/php_codesniffer": "^4.0",
+    "rector/rector": "^2.4"
   },
   "config": {
     "allow-plugins": {
