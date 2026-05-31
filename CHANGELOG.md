@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/cb400sp2/eleload/compare/v1.2.0...v1.3.0) (2026-05-31)
+
+
+### Features
+
+* add cyclomatic complexity measurement with PHP_CodeSniffer ([#168](https://github.com/cb400sp2/eleload/issues/168)) ([87ea97c](https://github.com/cb400sp2/eleload/commit/87ea97cc88e7ee2f411adbb7d1916d52800a1dc2)), closes [#110](https://github.com/cb400sp2/eleload/issues/110)
+
 # [1.2.0](https://github.com/cb400sp2/eleload/compare/v1.1.0...v1.2.0) (2026-05-31)
 
 
