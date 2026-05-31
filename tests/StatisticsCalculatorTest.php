@@ -370,3 +370,89 @@ test('StatisticsCalculator meta includes schema_version and version', function (
     assertSame(\Eleload\Cli\Application::VERSION, $summary['meta']['version']);
     assertSame('schema-test', $summary['meta']['test_name']);
 });
+
+test('StatisticsCalculator time_buckets include per-bucket percentiles', function (): void {
+    $options = new RequestOptions(
+        url: 'https://example.com',
+        requests: 4,
+        concurrency: 1,
+        method: 'GET',
+        timeout: 10
+    );
+
+    // Four requests all in bucket 0: latencies 10, 20, 80, 90 → p50=20, p75=80, p95=90, p99=90
+    $result = new RunResult(
+        options: $options,
+        durationSec: 1.0,
+        requestResults: [
+            new RequestResult(1, 10.0, 200, 0.0, 0, '', true, null, 0.1),
+            new RequestResult(2, 20.0, 200, 0.0, 0, '', true, null, 0.2),
+            new RequestResult(3, 80.0, 200, 0.0, 0, '', true, null, 0.3),
+            new RequestResult(4, 90.0, 200, 0.0, 0, '', true, null, 0.4),
+        ]
+    );
+
+    $summary = (new StatisticsCalculator())->summarize($result);
+    $tb = $summary['time_buckets'];
+
+    assertSame(1, count($tb));
+    assertTrue(isset($tb[0]['p50']), 'time_bucket must have p50');
+    assertTrue(isset($tb[0]['p75']), 'time_bucket must have p75');
+    assertTrue(isset($tb[0]['p95']), 'time_bucket must have p95');
+    assertTrue(isset($tb[0]['p99']), 'time_bucket must have p99');
+    assertSame(20.0, $tb[0]['p50']);
+    assertSame(80.0, $tb[0]['p75']);
+    assertSame(90.0, $tb[0]['p95']);
+    assertSame(90.0, $tb[0]['p99']);
+});
+
+test('StatisticsCalculator time_buckets include latency_dist', function (): void {
+    $options = new RequestOptions(
+        url: 'https://example.com',
+        requests: 3,
+        concurrency: 1,
+        method: 'GET',
+        timeout: 10
+    );
+
+    // Three requests in bucket 0: 5 ms (0-10 bin), 30 ms (25-50 bin), 120 ms (100-250 bin)
+    $result = new RunResult(
+        options: $options,
+        durationSec: 1.0,
+        requestResults: [
+            new RequestResult(1, 5.0, 200, 0.0, 0, '', true, null, 0.1),
+            new RequestResult(2, 30.0, 200, 0.0, 0, '', true, null, 0.2),
+            new RequestResult(3, 120.0, 200, 0.0, 0, '', true, null, 0.3),
+        ]
+    );
+
+    $summary = (new StatisticsCalculator())->summarize($result);
+    $tb = $summary['time_buckets'];
+
+    assertSame(1, count($tb));
+    assertTrue(isset($tb[0]['latency_dist']), 'time_bucket must have latency_dist');
+    $dist = $tb[0]['latency_dist'];
+    assertTrue(is_array($dist), 'latency_dist must be an array');
+    assertTrue(count($dist) > 0, 'latency_dist must be non-empty');
+
+    $bin010 = null;
+    $bin2550 = null;
+    $bin100250 = null;
+    foreach ($dist as $bin) {
+        if ($bin['label'] === '0-10ms') {
+            $bin010 = $bin;
+        }
+        if ($bin['label'] === '25-50ms') {
+            $bin2550 = $bin;
+        }
+        if ($bin['label'] === '100-250ms') {
+            $bin100250 = $bin;
+        }
+    }
+    assertNotNull($bin010, '0-10ms bin must exist');
+    assertSame(1, $bin010['count']);
+    assertNotNull($bin2550, '25-50ms bin must exist');
+    assertSame(1, $bin2550['count']);
+    assertNotNull($bin100250, '100-250ms bin must exist');
+    assertSame(1, $bin100250['count']);
+});
