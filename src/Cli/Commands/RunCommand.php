@@ -22,6 +22,7 @@ use Eleload\Report\ConsoleReporter;
 use Eleload\Report\CsvReporter;
 use Eleload\Report\HtmlReporter;
 use Eleload\Report\JsonReporter;
+use Eleload\Report\JUnitReporter;
 use Eleload\Report\MarkdownReporter;
 use Eleload\Report\ReportPathGenerator;
 use Eleload\Telemetry\NullTracer;
@@ -74,6 +75,7 @@ final class RunCommand
         $htmlReporter = new HtmlReporter(__DIR__ . '/../../../templates/report.php');
         $markdownReporter = new MarkdownReporter();
         $csvReporter = new CsvReporter();
+        $junitReporter = new JUnitReporter();
         $pathGenerator = new ReportPathGenerator();
 
         // --- TUI Dashboard ---
@@ -159,6 +161,13 @@ final class RunCommand
             $csvReporter->write($result, $options->reportCsvPath);
             if (!$options->silent) {
                 $output->writeln('CSV report: ' . $options->reportCsvPath);
+            }
+        }
+
+        if ($options->reportJunitPath !== null) {
+            $junitReporter->write($report, $options->reportJunitPath);
+            if (!$options->silent) {
+                $output->writeln('JUnit report: ' . $options->reportJunitPath);
             }
         }
 
@@ -274,6 +283,7 @@ final class RunCommand
             'report_html' => $options->reportHtmlPath,
             'report_md' => $options->reportMdPath,
             'report_csv' => $options->reportCsvPath,
+            'report_junit' => $options->reportJunitPath,
             'output_dir' => $options->outputDir,
             'name' => $options->name,
             'rate' => $options->rate,
@@ -309,6 +319,7 @@ final class RunCommand
                 'html' => $options->reportHtmlPath,
                 'md' => $options->reportMdPath,
                 'csv' => $options->reportCsvPath,
+                'junit' => $options->reportJunitPath,
                 'output_dir' => $options->outputDir,
             ],
         ];
