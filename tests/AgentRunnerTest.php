@@ -9,7 +9,9 @@ use Eleload\LoadTesting\ScenarioStep;
 test('AgentRunner merges results from local agent processes', function (): void {
     $agentScript = tempnam(sys_get_temp_dir(), 'eleload_agent_script_');
     assertTrue($agentScript !== false);
-    file_put_contents($agentScript, <<<'PHP'
+    file_put_contents(
+        $agentScript,
+        <<<'PHP'
 <?php
 
 declare(strict_types=1);
