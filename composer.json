@@ -22,7 +22,8 @@
     "mutation": "infection --threads=4",
     "analyse": "phpstan analyse --memory-limit=512M",
     "cs-check": "php-cs-fixer fix --dry-run --diff",
-    "cs-fix": "php-cs-fixer fix"
+    "cs-fix": "php-cs-fixer fix",
+    "complexity": "phpcs --standard=phpcs.xml --report=full"
   },
   "bin": [
     "bin/eleload"
@@ -33,7 +34,8 @@
     "phpunit/php-code-coverage": "^11.0",
     "infection/infection": "^0.29",
     "phpunit/phpunit": "^11.0",
-    "symfony/event-dispatcher-contracts": "^3"
+    "symfony/event-dispatcher-contracts": "^3",
+    "squizlabs/php_codesniffer": "^4.0"
   },
   "config": {
     "allow-plugins": {

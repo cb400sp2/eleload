@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<ruleset name="eleload">
+    <description>PHP_CodeSniffer ruleset for cyclomatic complexity reporting.</description>
+
+    <file>src</file>
+    <arg name="colors"/>
+    <arg value="sp"/>
+
+    <!--
+        Cyclomatic Complexity (CC) thresholds:
+          CC ≤ 10  : acceptable
+          CC 11-20 : warning – consider refactoring
+          CC > 20  : error   – refactoring strongly recommended
+    -->
+    <rule ref="Generic.Metrics.CyclomaticComplexity">
+        <properties>
+            <property name="complexity" value="11"/>
+            <property name="absoluteComplexity" value="20"/>
+        </properties>
+    </rule>
+
+</ruleset>
