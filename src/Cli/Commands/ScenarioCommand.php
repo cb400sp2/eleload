@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Eleload\Cli\Commands;
 
+use Eleload\Cli\Application;
 use Eleload\Cli\ArgvParser;
 use Eleload\Cli\ConsoleOutput;
 use Eleload\Cli\ScenarioOptions;
@@ -13,6 +14,7 @@ use Eleload\LoadTesting\ScenarioDefinition;
 use Eleload\LoadTesting\ScenarioLoader;
 use Eleload\LoadTesting\ScenarioResult;
 use Eleload\LoadTesting\ScenarioRunner;
+use Eleload\Report\HtmlReporter;
 use Eleload\Report\JsonReporter;
 use Eleload\Report\ReportPathGenerator;
 
@@ -83,6 +85,14 @@ final class ScenarioCommand
             $jsonReporter->write($report, $options->reportJsonPath);
             if (!$options->silent) {
                 $output->writeln('JSON report: ' . $options->reportJsonPath);
+            }
+        }
+
+        if ($options->reportHtmlPath !== null) {
+            $htmlReporter = new HtmlReporter(__DIR__ . '/../../../templates/scenario.php');
+            $htmlReporter->write($report, $options->reportHtmlPath);
+            if (!$options->silent) {
+                $output->writeln('HTML report: ' . $options->reportHtmlPath);
             }
         }
 
@@ -185,6 +195,12 @@ final class ScenarioCommand
                 'error_rate' => round($result->errorRate(), 2),
             ],
             'steps' => $result->perStepSummary(),
+            'meta' => [
+                'tool' => 'eleload',
+                'version' => Application::VERSION,
+                'schema_version' => 1,
+                'test_name' => $result->definition->name,
+            ],
         ];
     }
 

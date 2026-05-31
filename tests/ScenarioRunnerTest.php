@@ -167,3 +167,21 @@ test('ScenarioRunner run perStepSummary has one entry per step', function (): vo
 
     assertSame(2, count($summary));
 });
+
+test('ScenarioRunner perStepSummary includes errorRate failedCount p50 p99', function (): void {
+    $def = new ScenarioDefinition('metrics', [
+        new ScenarioStep(url: 'http://127.0.0.1:1', timeout: 1),
+    ]);
+
+    $result = (new ScenarioRunner())->run($def, 1, null, 1);
+    $summary = $result->perStepSummary();
+
+    assertSame(1, count($summary));
+
+    $step = $summary[0];
+    assertTrue(array_key_exists('errorRate', $step), 'errorRate key must exist');
+    assertTrue(array_key_exists('failedCount', $step), 'failedCount key must exist');
+    assertTrue(array_key_exists('successRate', $step), 'successRate key must exist');
+    assertTrue(array_key_exists('p50Ms', $step), 'p50Ms key must exist');
+    assertTrue(array_key_exists('p99Ms', $step), 'p99Ms key must exist');
+});
