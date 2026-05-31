@@ -68,6 +68,10 @@ jobs:
       - name: Run PHP-CS-Fixer
         run: composer cs-check
 
+      - name: Run Cyclomatic Complexity check
+        continue-on-error: true
+        run: composer complexity
+
   security-audit:
     name: Security Audit
     runs-on: ubuntu-latest
