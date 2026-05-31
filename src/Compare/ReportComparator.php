@@ -45,6 +45,8 @@ final class ReportComparator
             'after' => $this->buildInputSummary($after),
             'metrics' => $metrics,
             'summary' => $counts,
+            'before_time_buckets' => $before['time_buckets'] ?? [],
+            'after_time_buckets' => $after['time_buckets'] ?? [],
         ];
     }
 

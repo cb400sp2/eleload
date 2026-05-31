@@ -64,8 +64,8 @@ test('compare command creates html and markdown reports', function (): void {
 
     assertContains('比較前', $html, 'HTML should preserve multibyte test name');
     assertContains('比較後', $html, 'HTML should preserve multibyte test name');
-    assertContains('IMPROVED', $html, 'HTML should show improved metric status');
-    assertContains('REGRESSED', $html, 'HTML should show regressed metric status');
+    assertContains('Improved', $html, 'HTML should show improved metric status');
+    assertContains('Regressed', $html, 'HTML should show regressed metric status');
     assertContains('比較前', $markdown, 'Markdown should preserve multibyte test name');
     assertContains('| RPS | 100.00 | 120.00 | +20.00 |', $markdown);
     assertContains('IMPROVED', $markdown);
