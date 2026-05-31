@@ -288,7 +288,61 @@ final class ScenarioLoader
             followRedirects: $followRedirects,
             extract: $extract,
             if: $this->parseIf($data['if'] ?? null, $label),
+            thinkTime: $this->parseThinkTime($data['think_time'] ?? null, $label),
         );
+    }
+
+    private function parseThinkTime(mixed $data, string $parentLabel): ?ThinkTime
+    {
+        if ($data === null) {
+            return null;
+        }
+
+        if (!is_array($data)) {
+            throw new InvalidArgumentException("{$parentLabel}: 'think_time' must be an object.");
+        }
+
+        $dist = $data['distribution'] ?? ThinkTime::DISTRIBUTION_FIXED;
+        if (!is_string($dist) || !in_array($dist, ThinkTime::ALLOWED_DISTRIBUTIONS, true)) {
+            throw new InvalidArgumentException(
+                "{$parentLabel}: 'think_time.distribution' must be one of: "
+                . implode(', ', ThinkTime::ALLOWED_DISTRIBUTIONS)
+            );
+        }
+
+        switch ($dist) {
+            case ThinkTime::DISTRIBUTION_FIXED:
+                if (!isset($data['ms']) || (!is_int($data['ms']) && !is_float($data['ms']))) {
+                    throw new InvalidArgumentException(
+                        "{$parentLabel}: 'think_time' with distribution 'fixed' requires a numeric 'ms'."
+                    );
+                }
+                return new ThinkTime(ThinkTime::DISTRIBUTION_FIXED, (float) $data['ms']);
+
+            case ThinkTime::DISTRIBUTION_RANDOM:
+                if (!isset($data['min_ms']) || (!is_int($data['min_ms']) && !is_float($data['min_ms']))) {
+                    throw new InvalidArgumentException(
+                        "{$parentLabel}: 'think_time' with distribution 'random' requires a numeric 'min_ms'."
+                    );
+                }
+                if (!isset($data['max_ms']) || (!is_int($data['max_ms']) && !is_float($data['max_ms']))) {
+                    throw new InvalidArgumentException(
+                        "{$parentLabel}: 'think_time' with distribution 'random' requires a numeric 'max_ms'."
+                    );
+                }
+                return new ThinkTime(ThinkTime::DISTRIBUTION_RANDOM, (float) $data['min_ms'], (float) $data['max_ms']);
+
+            case ThinkTime::DISTRIBUTION_EXPONENTIAL:
+                if (!isset($data['mean_ms']) || (!is_int($data['mean_ms']) && !is_float($data['mean_ms']))) {
+                    throw new InvalidArgumentException(
+                        "{$parentLabel}: 'think_time' with distribution 'exponential' requires a numeric 'mean_ms'."
+                    );
+                }
+                return new ThinkTime(ThinkTime::DISTRIBUTION_EXPONENTIAL, (float) $data['mean_ms']);
+
+            default:
+                return null; // unreachable
+        }
     }
 
     private function parseIf(mixed $data, string $parentLabel): ?ScenarioBranch
