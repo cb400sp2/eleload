@@ -8,16 +8,19 @@ use Eleload\Cli\ArgvParser;
 use Eleload\Cli\ConsoleOutput;
 use Eleload\Cli\RunOptions;
 use Eleload\Cli\Support\HighLoadGuard;
+use Eleload\Compare\ReportComparator;
 use Eleload\LoadTesting\CurlMultiRunner;
 use Eleload\LoadTesting\RequestOptions;
 use Eleload\Metrics\FailureEvaluator;
 use Eleload\Metrics\StatisticsCalculator;
+use Eleload\Report\CompareMarkdownReporter;
 use Eleload\Report\ConsoleReporter;
 use Eleload\Report\CsvReporter;
 use Eleload\Report\HtmlReporter;
 use Eleload\Report\JsonReporter;
 use Eleload\Report\MarkdownReporter;
 use Eleload\Report\ReportPathGenerator;
+use RuntimeException;
 
 final class RunCommand
 {
@@ -130,6 +133,45 @@ final class RunCommand
         }
 
         $exitCode = $report['summary']['requests']['failed'] > 0 || $report['thresholds']['failed'] ? 1 : 0;
+
+        // --- Baseline: save current report as baseline ---
+        if ($options->saveBaselinePath !== null) {
+            $jsonReporter->write($report, $options->saveBaselinePath);
+            if (!$options->silent) {
+                $output->writeln('Baseline saved: ' . $options->saveBaselinePath);
+            }
+        }
+
+        // --- Baseline: compare current report against baseline ---
+        if ($options->baselinePath !== null) {
+            $realBaseline = realpath($options->baselinePath);
+            if ($realBaseline === false || !is_file($realBaseline)) {
+                throw new RuntimeException("Baseline file not found: {$options->baselinePath}");
+            }
+            $baselineContent = file_get_contents($realBaseline);
+            if ($baselineContent === false) {
+                throw new RuntimeException("Failed to read baseline file: {$options->baselinePath}");
+            }
+            /** @var array<string, mixed> $baselineReport */
+            $baselineReport = json_decode($baselineContent, true, 512, JSON_THROW_ON_ERROR);
+
+            $comparator = new ReportComparator();
+            $comparison = $comparator->compare($baselineReport, $report);
+
+            $compareReporter = new CompareMarkdownReporter();
+            $compareMd = $compareReporter->render($comparison);
+
+            if (!$options->silent) {
+                $output->writeln('');
+                $output->writeln('=== Baseline Comparison ===');
+                $output->writeln($compareMd);
+            }
+
+            $regressions = $comparison['summary']['regressed'] ?? 0;
+            if ($regressions > 0) {
+                $exitCode = 1;
+            }
+        }
 
         if ($options->debug) {
             $output->writeln(sprintf('[debug] peak_memory_after_run=%d bytes', memory_get_peak_usage(true)));

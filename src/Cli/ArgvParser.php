@@ -70,6 +70,8 @@ final class ArgvParser
         $basicUserEnv = null;
         $basicPasswordEnv = null;
         $cookieEnv = null;
+        $baselinePath = null;
+        $saveBaselinePath = null;
 
         $i = 0;
         while ($i < count($args)) {
@@ -259,6 +261,12 @@ final class ArgvParser
                     case 'tcp-keepalive':
                         $tcpKeepaliveSec = $this->parseNonNegativeInt($name, $value);
                         break;
+                    case 'baseline':
+                        $baselinePath = $value;
+                        break;
+                    case 'save-baseline':
+                        $saveBaselinePath = $value;
+                        break;
                     default:
                         throw new InvalidArgumentException("Unknown option: --{$name}");
                 }
@@ -410,7 +418,9 @@ final class ArgvParser
             acceptEncoding: $acceptEncoding,
             noDecompress: $noDecompress,
             maxConnections: $maxConnections,
-            tcpKeepaliveSec: $tcpKeepaliveSec
+            tcpKeepaliveSec: $tcpKeepaliveSec,
+            baselinePath: $baselinePath,
+            saveBaselinePath: $saveBaselinePath,
         );
     }
 

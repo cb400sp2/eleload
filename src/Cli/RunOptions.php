@@ -60,7 +60,11 @@ final class RunOptions
         public readonly string $acceptEncoding = 'gzip',
         public readonly bool $noDecompress = false,
         public readonly int $maxConnections = 0,
-        public readonly int $tcpKeepaliveSec = 60
+        public readonly int $tcpKeepaliveSec = 60,
+        /** Compare this run against a previously saved JSON baseline. */
+        public readonly ?string $baselinePath = null,
+        /** Save this run's JSON report as the new baseline at this path. */
+        public readonly ?string $saveBaselinePath = null,
     ) {
     }
 }
