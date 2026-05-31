@@ -37,9 +37,13 @@ final class CurlMultiRunner
     /**
      * Executes the load test described by $options and returns aggregated results.
      *
+     * The optional $onProgress callback is invoked approximately once per second with
+     * (int $completed, int $errors, float $elapsedSec, int $total): void
+     * where $total is the configured request count (0 in duration mode).
+     *
      * @throws \RuntimeException
      */
-    public function run(RequestOptions $options): RunResult
+    public function run(RequestOptions $options, ?\Closure $onProgress = null): RunResult
     {
         $multi = curl_multi_init();
         // @phpstan-ignore-next-line (curl_multi_init always returns CurlMultiHandle in PHP 8+)
@@ -49,6 +53,7 @@ final class CurlMultiRunner
 
         $nextRequest = 1;
         $completed = 0;
+        $errors = 0;
         $running = 0;
         $inFlight = [];
         $results = [];
@@ -56,6 +61,7 @@ final class CurlMultiRunner
         $resultsHandle = null;
         $requestResultCount = 0;
         $startedAt = hrtime(true);
+        $lastProgressAt = $startedAt;
         $durationMode = $options->durationSec !== null;
         $keepSpilledResultsFile = false;
 
@@ -141,6 +147,16 @@ final class CurlMultiRunner
                     unset($inFlight[$handleId]);
                     curl_multi_remove_handle($multi, $handle);
                     $completed++;
+                    if (!$requestResult->isSuccess($options->successStatusCodes)) {
+                        $errors++;
+                    }
+                    if ($onProgress !== null) {
+                        $now = hrtime(true);
+                        if ($now - $lastProgressAt >= self::NANOSECONDS_PER_SECOND) {
+                            $onProgress($completed, $errors, ($now - $startedAt) / 1_000_000_000, $options->requests);
+                            $lastProgressAt = $now;
+                        }
+                    }
                 }
 
                 if ($this->isComplete($options, $startedAt, $completed, count($inFlight), $durationMode)) {
