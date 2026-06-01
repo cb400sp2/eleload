@@ -317,7 +317,7 @@ final class CurlMultiRunner
         }
 
         $memoryLimit = ini_get('memory_limit');
-        if (!is_string($memoryLimit) || $memoryLimit === '' || $memoryLimit === '-1') {
+        if ($memoryLimit === '' || $memoryLimit === '-1') {
             return null;
         }
 
@@ -345,12 +345,13 @@ final class CurlMultiRunner
 
         if ($unit === 'g' || $unit === 'm' || $unit === 'k') {
             $numberPart = substr($trimmed, 0, -1);
-            $multiplier = match ($unit) {
-                'g' => 1024 * 1024 * 1024,
-                'm' => 1024 * 1024,
-                'k' => 1024,
-                default => 1,
-            };
+            if ($unit === 'g') {
+                $multiplier = 1024 * 1024 * 1024;
+            } elseif ($unit === 'm') {
+                $multiplier = 1024 * 1024;
+            } elseif ($unit === 'k') {
+                $multiplier = 1024;
+            }
         }
 
         if (!is_numeric($numberPart)) {

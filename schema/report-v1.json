@@ -180,7 +180,9 @@
                 "tool":           { "type": "string", "const": "eleload" },
                 "version":        { "type": "string", "minLength": 1 },
                 "schema_version": { "type": "integer", "const": 1 },
-                "test_name":      { "type": ["string", "null"] }
+                "test_name":      { "type": ["string", "null"] },
+                "partial":        { "type": "boolean" },
+                "termination_reason": { "type": ["string", "null"] }
             }
         }
     }
