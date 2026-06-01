@@ -252,6 +252,8 @@ final class StatisticsCalculator
                 'version' => Application::VERSION,
                 'schema_version' => 1,
                 'test_name' => $runResult->options->name,
+                'partial' => $runResult->isPartial(),
+                'termination_reason' => $runResult->terminationReason(),
             ],
         ];
     }

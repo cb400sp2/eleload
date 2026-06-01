@@ -102,6 +102,13 @@ eleload run <url> [options]
 | `--block-private-networks` | プライベート/ループバックアドレスへのリクエストを拒否 |
 | `--memory-buffer-size=N` | ディスクへのスピル前のインメモリ最大結果数（デフォルト: 10000） |
 
+### グレースフル終了と partial report
+
+- `SIGINT` / `SIGTERM` 受信時、`run` は新規リクエスト投入を停止し、進行中リクエスト完了後にグレースフル終了します。
+- 実行中は `memory_get_peak_usage(true)` によるメモリ使用量監視を定期的に行います。
+- peak usage が `memory_limit` 付近（約 90%）に達した場合、致命的 OOM を避けるため早期終了し、partial report を確定します。
+- partial 終了時は JSON の `meta.partial=true` と `meta.termination_reason` が設定されます。
+
 ---
 
 ## `scenario` — マルチステップシナリオ

@@ -17,6 +17,8 @@
 - A threshold flag condition is violated (`--fail-on-p95`, `--fail-on-error-rate`, etc.)
 - A scenario file cannot be found, parsed, or has an unsupported extension
 - A runtime curl error prevents the test from completing
+- The run is interrupted by `SIGINT` / `SIGTERM` and only a partial report is produced
+- The run is stopped early by memory-pressure protection near `memory_limit`
 - An unexpected exception occurs
 
 ## Checking exit code in shell
