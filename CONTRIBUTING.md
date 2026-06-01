@@ -86,14 +86,15 @@ Use the format `issue-<number>-<short-slug>`, e.g. `issue-42-add-csv-reporter`.
 
 This project follows [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
-```
+```text
 <type>(<scope>): <subject>
 ```
 
 Common types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `ci`, `perf`.
 
 Examples:
-```
+
+```text
 feat: add CSV report output format
 fix: prevent division by zero when duration is 0
 docs: update scenario file format reference
@@ -119,7 +120,6 @@ Run `make help` to see all available development targets.
 ## Code of Conduct
 
 This project is governed by the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
-
 
 ## Security
 
