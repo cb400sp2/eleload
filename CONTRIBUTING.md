@@ -117,10 +117,6 @@ make hooks
 
 Run `make help` to see all available development targets.
 
-## Code of Conduct
-
-This project is governed by the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
-
 ## Security
 
 If you discover a security vulnerability, please follow the responsible disclosure
