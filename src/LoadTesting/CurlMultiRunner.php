@@ -53,8 +53,7 @@ final class CurlMultiRunner
         RequestOptions $options,
         ?\Closure $onProgress = null,
         ?\Closure $shouldStop = null
-    ): RunResult
-    {
+    ): RunResult {
         $multi = curl_multi_init();
         // @phpstan-ignore-next-line (curl_multi_init always returns CurlMultiHandle in PHP 8+)
         if (!$multi instanceof CurlMultiHandle) {
