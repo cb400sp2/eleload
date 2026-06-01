@@ -1,3 +1,20 @@
+# [1.6.0](https://github.com/cb400sp2/eleload/compare/v1.5.0...v1.6.0) (2026-06-01)
+
+
+### Bug Fixes
+
+* align schema and phpstan checks for partial run metadata ([c4699a4](https://github.com/cb400sp2/eleload/commit/c4699a44546489194ab0083ed3406431b54693dc))
+* **ci:** skip composer scripts for no-dev release installs ([354b7f7](https://github.com/cb400sp2/eleload/commit/354b7f74e6083cdbf985f22b1d6ad8bb3a7ea30c))
+
+
+### Features
+
+* add .mise.toml and .tool-versions for PHP version pinning ([0237ccf](https://github.com/cb400sp2/eleload/commit/0237ccf6254f866a526cd64a482733e66235d939)), closes [#105](https://github.com/cb400sp2/eleload/issues/105)
+* add captainhook pre-commit hooks ([#171](https://github.com/cb400sp2/eleload/issues/171)) ([ced5152](https://github.com/cb400sp2/eleload/commit/ced5152c8c74fdc1739cbdc1748c5efbe49d17c5)), closes [#102](https://github.com/cb400sp2/eleload/issues/102)
+* add devcontainer configuration for Codespaces ([2c30027](https://github.com/cb400sp2/eleload/commit/2c300271c64834c98601ff4dce1b5664eea9ca38)), closes [#104](https://github.com/cb400sp2/eleload/issues/104)
+* add Makefile for unified development tasks ([29cdaaa](https://github.com/cb400sp2/eleload/commit/29cdaaa9b817eb0d07acda63eaaaede6e2c34cc3)), closes [#103](https://github.com/cb400sp2/eleload/issues/103)
+* graceful partial shutdown on signal and memory pressure ([9830635](https://github.com/cb400sp2/eleload/commit/9830635a2ccbc248cf1c47b9bac0b75c18389800))
+
 # [1.5.0](https://github.com/cb400sp2/eleload/compare/v1.4.0...v1.5.0) (2026-05-31)
 
 
