@@ -102,6 +102,13 @@ eleload run <url> [options]
 | `--block-private-networks` | Reject requests to `localhost`, loopback, or RFC-1918 private addresses |
 | `--memory-buffer-size=N` | Max in-memory results before spilling to disk (default: 10000) |
 
+### Graceful Shutdown and Partial Reports
+
+- On `SIGINT`/`SIGTERM`, `run` stops dispatching new requests, waits for in-flight requests to finish, and then exits gracefully.
+- During execution, memory usage is periodically monitored via `memory_get_peak_usage(true)`.
+- When peak usage approaches `memory_limit` (about 90%), `run` stops early to avoid fatal OOM and finalizes a partial report.
+- Partial runs set `meta.partial=true` and include `meta.termination_reason` in JSON output.
+
 ---
 
 ## `scenario` — Multi-Step Scenario

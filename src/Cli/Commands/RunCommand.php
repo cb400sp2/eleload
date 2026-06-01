@@ -8,6 +8,7 @@ use Eleload\Cli\ArgvParser;
 use Eleload\Cli\ConsoleOutput;
 use Eleload\Cli\RunOptions;
 use Eleload\Cli\Support\HighLoadGuard;
+use Eleload\Cli\Support\TerminationSignalWatcher;
 use Eleload\Cli\TuiDashboard;
 use Eleload\Compare\ReportComparator;
 use Eleload\LoadTesting\CurlMultiRunner;
@@ -78,6 +79,8 @@ final class RunCommand
         $csvReporter = new CsvReporter();
         $junitReporter = new JUnitReporter();
         $pathGenerator = new ReportPathGenerator();
+        $terminationWatcher = new TerminationSignalWatcher();
+        $terminationWatcher->install();
 
         // --- TUI Dashboard ---
         $tui = null;
@@ -124,7 +127,10 @@ final class RunCommand
             maxConnections: $options->maxConnections,
             tcpKeepaliveSec: $options->tcpKeepaliveSec,
             grpcMethod: $options->grpcMethod,
-        ), $onProgress);
+        ), $onProgress, static function () use ($terminationWatcher): ?string {
+            $terminationWatcher->dispatchPendingSignals();
+            return $terminationWatcher->stopReason();
+        });
 
         if ($tui !== null) {
             $tui->finish();
@@ -132,6 +138,10 @@ final class RunCommand
 
         $report = $stats->summarize($result);
         $report['thresholds'] = $failureEvaluator->evaluate($report, $options);
+
+        if ($result->isPartial() && !$options->silent) {
+            $output->errorln($this->partialStopMessage($result->terminationReason()));
+        }
 
         if (!$options->silent) {
             $consoleReporter->render($report, $output, $options->verbose);
@@ -200,6 +210,10 @@ final class RunCommand
 
         $exitCode = ($reportRequests['failed'] ?? 0) > 0 || ($reportThresholdsMeta['failed'] ?? false) ? 1 : 0;
 
+        if ($result->isPartial()) {
+            $exitCode = 1;
+        }
+
         // --- Baseline: save current report as baseline ---
         if ($options->saveBaselinePath !== null) {
             $jsonReporter->write($report, $options->saveBaselinePath);
@@ -245,6 +259,8 @@ final class RunCommand
             'exit_code' => $exitCode,
             'failed_requests' => $reportRequests['failed'] ?? 0,
             'thresholds_failed' => $reportThresholdsMeta['failed'] ?? false,
+            'partial' => $result->isPartial(),
+            'termination_reason' => $result->terminationReason(),
         ]);
         $runSpan->setAttribute('exit_code', $exitCode);
         $runSpan->end();
@@ -265,6 +281,16 @@ final class RunCommand
         }
 
         return $exitCode;
+    }
+
+    private function partialStopMessage(?string $reason): string
+    {
+        return match ($reason) {
+            'sigint' => 'Run interrupted by SIGINT. Generated partial report from completed requests.',
+            'sigterm' => 'Run interrupted by SIGTERM. Generated partial report from completed requests.',
+            'memory_pressure' => 'Run stopped due to high memory usage near memory_limit. Generated partial report from completed requests.',
+            default => 'Run stopped before completion. Generated partial report from completed requests.',
+        };
     }
 
     private function printDebugContext(RunOptions $options, ConsoleOutput $output): void

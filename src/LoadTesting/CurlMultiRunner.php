@@ -22,12 +22,15 @@ final class CurlMultiRunner
     private const IDLE_SLEEP_USEC = 5_000;
     private const NANOSECONDS_PER_SECOND = 1_000_000_000;
     private const NANOSECONDS_PER_MICROSECOND = 1_000;
+    private const MEMORY_MONITOR_INTERVAL_NS = 250_000_000;
+    private const MEMORY_PRESSURE_THRESHOLD_RATIO = 0.90;
 
     /**
      * @param int $maxInMemoryRequestResults Maximum number of results to keep in memory before spilling to disk.
      */
     public function __construct(
-        private readonly int $maxInMemoryRequestResults = self::DEFAULT_MAX_IN_MEMORY_REQUEST_RESULTS
+        private readonly int $maxInMemoryRequestResults = self::DEFAULT_MAX_IN_MEMORY_REQUEST_RESULTS,
+        private readonly ?int $memorySoftLimitBytes = null
     ) {
         if ($this->maxInMemoryRequestResults < 1) {
             throw new InvalidArgumentException('maxInMemoryRequestResults must be >= 1.');
@@ -41,9 +44,16 @@ final class CurlMultiRunner
      * (int $completed, int $errors, float $elapsedSec, int $total): void
      * where $total is the configured request count (0 in duration mode).
      *
+     * The optional $shouldStop callback returns a non-empty reason string when
+     * the run should stop early (for example SIGINT/SIGTERM).
+     *
      * @throws \RuntimeException
      */
-    public function run(RequestOptions $options, ?\Closure $onProgress = null): RunResult
+    public function run(
+        RequestOptions $options,
+        ?\Closure $onProgress = null,
+        ?\Closure $shouldStop = null
+    ): RunResult
     {
         $multi = curl_multi_init();
         // @phpstan-ignore-next-line (curl_multi_init always returns CurlMultiHandle in PHP 8+)
@@ -64,10 +74,34 @@ final class CurlMultiRunner
         $lastProgressAt = $startedAt;
         $durationMode = $options->durationSec !== null;
         $keepSpilledResultsFile = false;
+        $stopReason = null;
+        $memoryStopThresholdBytes = $this->resolveMemoryStopThresholdBytes();
+        $nextMemoryCheckAt = $startedAt;
 
         try {
             while (true) {
+                if ($stopReason === null && $shouldStop !== null) {
+                    $requestedStopReason = $shouldStop();
+                    if (is_string($requestedStopReason) && $requestedStopReason !== '') {
+                        $stopReason = $requestedStopReason;
+                    }
+                }
+
+                $now = hrtime(true);
+                if (
+                    $stopReason === null &&
+                    $memoryStopThresholdBytes !== null &&
+                    $now >= $nextMemoryCheckAt
+                ) {
+                    $nextMemoryCheckAt = $now + self::MEMORY_MONITOR_INTERVAL_NS;
+
+                    if (memory_get_peak_usage(true) >= $memoryStopThresholdBytes) {
+                        $stopReason = 'memory_pressure';
+                    }
+                }
+
                 while (
+                    $stopReason === null &&
                     $this->canStartRequest($options, $startedAt, $nextRequest, $durationMode) &&
                     count($inFlight) < $this->effectiveConcurrency($options, $startedAt)
                 ) {
@@ -159,6 +193,10 @@ final class CurlMultiRunner
                     }
                 }
 
+                if ($stopReason !== null && count($inFlight) === 0) {
+                    break;
+                }
+
                 if ($this->isComplete($options, $startedAt, $completed, count($inFlight), $durationMode)) {
                     break;
                 }
@@ -186,7 +224,9 @@ final class CurlMultiRunner
                 durationSec: max($durationSec, 0.000_001),
                 requestResults: $results,
                 requestResultsPath: $resultsPath,
-                requestResultCount: $requestResultCount
+                requestResultCount: $requestResultCount,
+                partial: $stopReason !== null,
+                terminationReason: $stopReason
             );
         } finally {
             if ($resultsHandle !== null) {
@@ -265,6 +305,59 @@ final class CurlMultiRunner
         if (fwrite($resultsHandle, $encoded . PHP_EOL) === false) {
             throw new RuntimeException('Failed to write spilled request result.');
         }
+    }
+
+    /**
+     * Returns the soft memory threshold for early stop, or null when disabled.
+     */
+    private function resolveMemoryStopThresholdBytes(): ?int
+    {
+        if ($this->memorySoftLimitBytes !== null) {
+            return $this->memorySoftLimitBytes > 0 ? $this->memorySoftLimitBytes : null;
+        }
+
+        $memoryLimit = ini_get('memory_limit');
+        if (!is_string($memoryLimit) || $memoryLimit === '' || $memoryLimit === '-1') {
+            return null;
+        }
+
+        $bytes = $this->parseIniMemorySizeToBytes($memoryLimit);
+        if ($bytes === null || $bytes <= 0) {
+            return null;
+        }
+
+        return (int) floor($bytes * self::MEMORY_PRESSURE_THRESHOLD_RATIO);
+    }
+
+    /**
+     * Parses memory values like 128M, 1G, 512K into bytes.
+     */
+    private function parseIniMemorySizeToBytes(string $value): ?int
+    {
+        $trimmed = trim($value);
+        if ($trimmed === '') {
+            return null;
+        }
+
+        $unit = strtolower(substr($trimmed, -1));
+        $numberPart = $trimmed;
+        $multiplier = 1;
+
+        if ($unit === 'g' || $unit === 'm' || $unit === 'k') {
+            $numberPart = substr($trimmed, 0, -1);
+            $multiplier = match ($unit) {
+                'g' => 1024 * 1024 * 1024,
+                'm' => 1024 * 1024,
+                'k' => 1024,
+                default => 1,
+            };
+        }
+
+        if (!is_numeric($numberPart)) {
+            return null;
+        }
+
+        return (int) floor((float) $numberPart * $multiplier);
     }
 
     /**

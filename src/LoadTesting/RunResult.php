@@ -23,7 +23,9 @@ final class RunResult
         public readonly float $durationSec,
         public readonly array $requestResults,
         private readonly ?string $requestResultsPath = null,
-        private readonly ?int $requestResultCount = null
+        private readonly ?int $requestResultCount = null,
+        private readonly bool $partial = false,
+        private readonly ?string $terminationReason = null
     ) {
     }
 
@@ -41,6 +43,22 @@ final class RunResult
     public function hasSpilledRequestResults(): bool
     {
         return $this->requestResultsPath !== null;
+    }
+
+    /**
+     * Returns true when the run ended early (for example by SIGINT/SIGTERM or memory pressure).
+     */
+    public function isPartial(): bool
+    {
+        return $this->partial;
+    }
+
+    /**
+     * Returns the early-termination reason when available.
+     */
+    public function terminationReason(): ?string
+    {
+        return $this->terminationReason;
     }
 
     /**
