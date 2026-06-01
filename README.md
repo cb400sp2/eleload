@@ -167,6 +167,10 @@ In single-URL mode, 1 request = 1 transaction.
 - TLS peer verification is always on (`CURLOPT_SSL_VERIFYPEER`). Minimum TLS 1.2 is enforced.
 - See [SECURITY.md](SECURITY.md) for the vulnerability reporting policy.
 
+## Community
+
+- Please read and follow [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+
 ## License
 
 MIT
