@@ -28,6 +28,7 @@
     "psalm-baseline": "php tools/psalm/vendor/bin/psalm --set-baseline=psalm-baseline.xml",
     "rector": "rector process --dry-run",
     "rector-fix": "rector process",
+    "docs-api": "phpdoc --config=phpdoc.dist.xml",
     "post-install-cmd": "captainhook install --force --skip-existing"
   },
   "bin": [

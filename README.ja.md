@@ -158,6 +158,9 @@ php -d phar.readonly=0 bin/build-phar.php  # PHAR ビルド
 - [doc/ja/thresholds.md](doc/ja/thresholds.md) — CI しきい値オプション
 - [doc/ja/security.md](doc/ja/security.md) — セキュリティのベストプラクティス
 - [doc/ja/architecture.md](doc/ja/architecture.md) — コンポーネント図と内部設計
+- [doc/tutorials.md](doc/tutorials.md) — チュートリアルとレシピ集
+- [doc/ja/api-reference.md](doc/ja/api-reference.md) — API リファレンス生成（phpDocumentor）
+- [MIGRATION.md](MIGRATION.md) — 移行ガイドと廃止予定ポリシー
 
 ## ライセンス
 

@@ -158,6 +158,9 @@ In single-URL mode, 1 request = 1 transaction.
 - [doc/en/thresholds.md](doc/en/thresholds.md) — CI threshold options
 - [doc/en/security.md](doc/en/security.md) — Security best practices
 - [doc/en/architecture.md](doc/en/architecture.md) — Component diagram and internal design
+- [doc/tutorials.md](doc/tutorials.md) — Tutorial and recipe collection
+- [doc/en/api-reference.md](doc/en/api-reference.md) — API reference generation (phpDocumentor)
+- [MIGRATION.md](MIGRATION.md) — Migration guide and deprecation policy
 
 ## Security
 

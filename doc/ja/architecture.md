@@ -7,6 +7,38 @@
 `eleload` は依存ゼロの PHP 8.2+ CLI ツールです。すべての機能は `src/` 内に収まり、
 単一のエントリポイント `bin/eleload` から起動されます。
 
+## コア実行パイプライン
+
+`eleload run` の主要な実行経路は次のとおりです。
+
+```mermaid
+flowchart LR
+    CLI["CLI\nbin/eleload run ..."] --> Parser["Cli/ArgvParser"]
+    Parser --> App["Cli/Application"]
+    App --> Runner["LoadTesting/CurlMultiRunner"]
+    Runner --> Stats["Metrics/StatisticsCalculator"]
+    Stats --> Reporters["Report/*Reporter"]
+```
+
+## データフロー
+
+1. CLI がオペレーターから渡された引数を受け取ります。
+2. `Cli/ArgvParser` がフラグを検証し、型付きオプションを生成します。
+3. `Cli/Application` がコマンドをディスパッチし、依存関係を組み立てます。
+4. `LoadTesting/CurlMultiRunner` が HTTP リクエストを実行して `RunResult` を収集します。
+5. `Metrics/StatisticsCalculator` が生の結果を集計メトリクスへ変換します。
+6. `Report/*Reporter` が結果をコンソール表示または各種レポートファイルへ出力します。
+
+## クラス責務
+
+| クラス | 主な責務 | 入力 | 出力 |
+| ----- | ------- | ---- | ---- |
+| `Cli/ArgvParser` | CLI フラグの解析と検証 | `argv` 配列 | `RunOptions` / `ScenarioRunOptions` など |
+| `Cli/Application` | コマンドの振り分けと実行オーケストレーション | 解析済みコマンドとオプション | コマンド実行の副作用 |
+| `LoadTesting/CurlMultiRunner` | 並列リクエスト実行と必要時のディスクスピル | URL とリクエスト設定 | `RunResult` |
+| `Metrics/StatisticsCalculator` | スループット・レイテンシ・レート・しきい値関連の集計 | `RunResult` | 構造化メトリクス配列 |
+| `Report/*Reporter` | 複数フォーマットでの表示・保存 | 集計済みレポートペイロード | コンソール出力またはレポートファイル |
+
 ## コンポーネント図
 
 ```mermaid
