@@ -7,6 +7,38 @@
 `eleload` is a zero-dependency PHP 8.2+ CLI tool. All functionality lives inside `src/` and is
 invoked through a single entry point `bin/eleload`.
 
+## Core Run Pipeline
+
+The primary execution path for `eleload run` is:
+
+```mermaid
+flowchart LR
+    CLI["CLI\nbin/eleload run ..."] --> Parser["Cli/ArgvParser"]
+    Parser --> App["Cli/Application"]
+    App --> Runner["LoadTesting/CurlMultiRunner"]
+    Runner --> Stats["Metrics/StatisticsCalculator"]
+    Stats --> Reporters["Report/*Reporter"]
+```
+
+## Data Flow
+
+1. The CLI receives command-line arguments from the operator.
+2. `Cli/ArgvParser` validates flags and builds typed options.
+3. `Cli/Application` dispatches to the selected command and wires dependencies.
+4. `LoadTesting/CurlMultiRunner` executes HTTP requests and collects `RunResult` data.
+5. `Metrics/StatisticsCalculator` converts raw request results into summary metrics.
+6. `Report/*Reporter` classes render and persist output (Console, JSON, HTML, Markdown, CSV, JUnit).
+
+## Class Responsibilities
+
+| Class | Responsibility | Input | Output |
+| ----- | -------------- | ----- | ------ |
+| `Cli/ArgvParser` | Parse and validate CLI flags | `argv` list | `RunOptions` / `ScenarioRunOptions` / others |
+| `Cli/Application` | Route command and orchestrate command handlers | parsed command + options | command execution side effects |
+| `LoadTesting/CurlMultiRunner` | Concurrent request execution with optional memory spillover | URL + request options | `RunResult` |
+| `Metrics/StatisticsCalculator` | Compute throughput, latency, rates, and threshold context | `RunResult` | structured metrics array |
+| `Report/*Reporter` | Present and persist results in multiple formats | statistics report payload | console text or report files |
+
 ## Component Diagram
 
 ```mermaid

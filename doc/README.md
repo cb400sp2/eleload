@@ -21,6 +21,8 @@ Choose your language / 言語を選択してください:
 | [json-schema.md](en/json-schema.md) | JSON report schema |
 | [security.md](en/security.md) | Security best practices |
 | [architecture.md](en/architecture.md) | Component diagram and internal design |
+| [tutorials.md](tutorials.md) | Practical tutorials and recipe collection |
+| [api-reference.md](en/api-reference.md) | API reference generation with phpDocumentor |
 
 ## 日本語 (ja/)
 
@@ -36,3 +38,5 @@ Choose your language / 言語を選択してください:
 | [json-schema.md](ja/json-schema.md) | JSON レポートスキーマ |
 | [security.md](ja/security.md) | セキュリティのベストプラクティス |
 | [architecture.md](ja/architecture.md) | コンポーネント図と内部設計 |
+| [tutorials.md](tutorials.md) | 実践チュートリアルとレシピ集 |
+| [api-reference.md](ja/api-reference.md) | phpDocumentor による API リファレンス生成 |
