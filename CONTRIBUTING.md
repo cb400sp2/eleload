@@ -3,6 +3,11 @@
 Thank you for your interest in contributing!
 Please follow these guidelines to keep the project healthy.
 
+## Code of Conduct
+
+This project follows [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). By participating,
+you agree to uphold this code.
+
 ## Requirements
 
 - PHP 8.2 or higher
